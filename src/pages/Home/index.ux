@@ -1,21 +1,41 @@
 <template>
   <div class="wrapper">
     <div class="unpaid-overlay" show="{{ !isPaid }}">
-      <div class="unpaid-card">
-        <text class="unpaid-icon">🔒</text>
-        <text class="unpaid-title">您未开通</text>
-        <text class="unpaid-desc">开通后即可使用全部功能</text>
-        <div class="pay-button" onclick="createOrder" show="{{ !creatingOrder && !payUrl }}">
-          <text class="pay-button-text">微信支付 ¥1.00</text>
-        </div>
-        <text class="paying-text" show="{{ creatingOrder }}">正在创建订单...</text>
-        <div class="qrcode-container" show="{{ payUrl }}">
-          <text class="qrcode-title">请扫码支付</text>
-          <qrcode class="qrcode" value="{{ payUrl }}" eclevel="1" show="{{ payUrl }}" />
-          <text class="qrcode-hint">使用手机扫码支付</text>
-          <text class="polling-text" show="{{ polling }}">正在查询支付状态...</text>
-        </div>
-      </div>
+      <list class="scroll-container">
+        <list-item class="unpaid-card">
+          <div class="header-section">
+            <text class="unpaid-icon">🔒</text>
+            <text class="unpaid-title">您未开通</text>
+            <text class="unpaid-desc">开通后即可使用全部功能</text>
+          </div>
+
+          <div class="payment-card">
+            <div class="payment-method">
+              <div class="wechat-icon">
+                <text class="icon-text">微信</text>
+              </div>
+              <text class="payment-label">微信支付</text>
+            </div>
+
+            <div class="pay-button" onclick="createOrder" show="{{ !creatingOrder && !payUrl }}">
+              <text class="pay-button-text">支付 ¥1.00</text>
+            </div>
+            <text class="paying-text" show="{{ creatingOrder }}">正在创建订单...</text>
+
+            <div class="qrcode-container" show="{{ payUrl }}">
+              <text class="qrcode-title">请扫码支付</text>
+              <qrcode class="qrcode" value="{{ payUrl }}" eclevel="1" show="{{ payUrl }}" />
+              <text class="qrcode-hint">使用微信扫描二维码</text>
+              <text class="polling-text" show="{{ polling }}">正在查询支付状态...</text>
+            </div>
+          </div>
+
+          <div class="device-info">
+            <text class="device-label">设备ID</text>
+            <text class="device-id">{{ deviceId }}</text>
+          </div>
+        </list-item>
+      </list>
     </div>
     <list class="content" show="{{ isPaid }}">
       <list-item type="card">
@@ -292,7 +312,7 @@
         data: JSON.stringify({
           deviceId: global.deviceId,
           amount: 1.00,
-          payType: 'alipay'
+          payType: 'wxpay'
         }),
         header: {
           'Content-Type': 'application/json'
@@ -658,81 +678,154 @@
       width: 100%;
       height: 100%;
       background-color: rgba(0, 0, 0, 0.95);
-      @include flex-box-mixins(column, center, center);
       z-index: 100;
 
+      .scroll-container {
+        width: 100%;
+        height: 100%;
+        padding: 0 5 * $size-factor;
+        padding-bottom: 10 * $size-factor;
+      }
+
       .unpaid-card {
-        @include flex-box-mixins(column, center, center);
-        gap: 20px;
-        padding: 20px;
+        width: 100%;
+        @include flex-box-mixins(column, flex-start, center);
 
-        .unpaid-icon {
-          font-size: 60px;
-        }
-
-        .unpaid-title {
-          font-size: 24px;
-          color: $white;
-          font-weight: bold;
-        }
-
-        .unpaid-desc {
-          font-size: 14px;
-          color: $gray;
-        }
-
-        .pay-button {
-          background-color: $brand;
-          padding: 15px 40px;
-          border-radius: 8px;
-          margin-top: 10px;
-
-          .pay-button-text {
-            font-size: 18px;
-            color: $white;
-            font-weight: bold;
-          }
-
-          &:active {
-            opacity: 0.7;
-          }
-        }
-
-        .paying-text {
-          font-size: 16px;
-          color: $gray;
-          margin-top: 10px;
-        }
-
-        .qrcode-container {
-          margin-top: 20px;
+        .header-section {
           width: 100%;
-          @include flex-box-mixins(column, center, center);
-          gap: 10px;
+          @include flex-box-mixins(column, flex-start, center);
+          margin-top: 4 * $size-factor;
+          margin-bottom: 6 * $size-factor;
 
-          .qrcode-title {
-            font-size: 16px;
+          .unpaid-icon {
+            font-size: 12 * $size-factor;
+            margin-bottom: 2 * $size-factor;
+          }
+
+          .unpaid-title {
+            font-size: 10 * $size-factor;
             color: $white;
             font-weight: bold;
+            margin-bottom: 2 * $size-factor;
           }
 
-          .qrcode {
-            width: 180px;
-            height: 180px;
-            background-color: white;
-            border-radius: 8px;
-            padding: 10px;
+          .unpaid-desc {
+            font-size: 6 * $size-factor;
+            color: $light-gray;
+          }
+        }
+
+        .payment-card {
+          width: 100%;
+          background-color: rgba(255, 255, 255, 0.1);
+          border-radius: 8 * $size-factor;
+          padding: 6 * $size-factor;
+          margin-bottom: 6 * $size-factor;
+          @include flex-box-mixins(column, flex-start, center);
+
+          .payment-method {
+            width: 100%;
+            @include flex-box-mixins(row, center, center);
+            margin-bottom: 4 * $size-factor;
+
+            .wechat-icon {
+              width: 10 * $size-factor;
+              height: 10 * $size-factor;
+              background-color: #07c160;
+              border-radius: 2 * $size-factor;
+              @include flex-box-mixins(row, center, center);
+              margin-right: 3 * $size-factor;
+
+              .icon-text {
+                font-size: 5 * $size-factor;
+                color: $white;
+                font-weight: bold;
+              }
+            }
+
+            .payment-label {
+              font-size: 9 * $size-factor;
+              color: $white;
+              font-weight: bold;
+            }
           }
 
-          .qrcode-hint {
-            font-size: 12px;
+          .pay-button {
+            background-color: #07c160;
+            padding: 4 * $size-factor 8 * $size-factor;
+            border-radius: 8 * $size-factor;
+            margin-top: 2 * $size-factor;
+            margin-bottom: 2 * $size-factor;
+
+            .pay-button-text {
+              font-size: 8 * $size-factor;
+              color: $white;
+              font-weight: bold;
+            }
+
+            &:active {
+              opacity: 0.7;
+            }
+          }
+
+          .paying-text {
+            font-size: 7 * $size-factor;
             color: $gray;
+            margin-top: 2 * $size-factor;
           }
 
-          .polling-text {
-            font-size: 14px;
-            color: $brand;
-            margin-top: 5px;
+          .qrcode-container {
+            margin-top: 4 * $size-factor;
+            width: 100%;
+            @include flex-box-mixins(column, center, center);
+            gap: 3 * $size-factor;
+
+            .qrcode-title {
+              font-size: 8 * $size-factor;
+              color: $white;
+              font-weight: bold;
+            }
+
+            .qrcode {
+              width: 60 * $size-factor;
+              height: 60 * $size-factor;
+              background-color: white;
+              border-radius: 4 * $size-factor;
+              padding: 2 * $size-factor;
+            }
+
+            .qrcode-hint {
+              font-size: 7 * $size-factor;
+              color: $light-gray;
+            }
+
+            .polling-text {
+              font-size: 6 * $size-factor;
+              color: #07c160;
+              margin-top: 1 * $size-factor;
+            }
+          }
+        }
+
+        .device-info {
+          width: 100%;
+          background-color: rgba(255, 255, 255, 0.05);
+          border-radius: 6 * $size-factor;
+          padding: 4 * $size-factor;
+          @include flex-box-mixins(column, flex-start, center);
+
+          .device-label {
+            font-size: 6 * $size-factor;
+            color: $gray;
+            margin-bottom: 2 * $size-factor;
+          }
+
+          .device-id {
+            font-size: 7 * $size-factor;
+            color: $white;
+            font-weight: bold;
+            word-break: break-all;
+            text-align: center;
           }
         }
       }

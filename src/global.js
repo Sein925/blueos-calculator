@@ -9,5 +9,5 @@ global.router = router
 global.fetch = fetch.fetch
 
 global.calculatorHistory = []
-global.backendUrl = 'http://localhost:3000'
+global.backendUrl = 'https://calculator.666-114514.eu.org'
 global.deviceId = 'default-device-id'
