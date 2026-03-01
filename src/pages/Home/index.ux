@@ -351,31 +351,10 @@
       }
       
       this.creatingOrder = true
-      fetch.fetch({
-        url: `${global.backendUrl}/api/create-order`,
-        method: 'POST',
-        data: JSON.stringify({
-          deviceId: global.deviceId,
-          amount: 1.0,
-          payType: 'wxpay',
-        }),
-        header: {
-          'Content-Type': 'application/json',
-        },
-        responseType: 'json',
-        success: (response) => {
-          if (response.data.success) {
-            this.currentOrderNo = response.data.orderNo
-            this.payUrl = response.data.payUrl
-            this.startPolling()
-          }
-          this.creatingOrder = false
-        },
-        fail: (data, code) => {
-          console.error('创建订单失败:', data, code)
-          this.creatingOrder = false
-        },
-      })
+      this.payUrl = `${global.backendUrl}/pay?deviceId=${global.deviceId}`
+      this.currentOrderNo = ''
+      this.creatingOrder = false
+      this.startPolling()
     },
 
     startPolling() {
@@ -394,14 +373,12 @@
     },
 
     checkOrderStatus() {
-      if (!this.currentOrderNo) return
-
       fetch.fetch({
-        url: `${global.backendUrl}/api/order-status?orderNo=${this.currentOrderNo}`,
+        url: `${global.backendUrl}/api/check-payment?deviceId=${global.deviceId}`,
         method: 'GET',
         responseType: 'json',
         success: (response) => {
-          if (response.data.status === 'paid') {
+          if (response.data.isPaid) {
             this.stopPolling()
             this.payUrl = ''
             this.isPaid = true
@@ -409,7 +386,8 @@
           }
         },
         fail: (data, code) => {
-          console.error('查询订单失败:', data, code)
+          global.addErrorLog('checkOrderStatus', data, code)
+          this.refreshErrorLogs()
         },
       })
     },

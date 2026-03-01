@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>科学计算器 - 开通支付</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .icon {
+      font-size: 60px;
+      margin-bottom: 15px;
+    }
+    h1 {
+      color: #333;
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    .description {
+      color: #666;
+      font-size: 14px;
+    }
+    .price-section {
+      text-align: center;
+      padding: 30px 0;
+      border-top: 1px solid #eee;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 30px;
+    }
+    .price-label {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .price {
+      color: #e74c3c;
+      font-size: 48px;
+      font-weight: bold;
+    }
+    .payment-methods {
+      margin-bottom: 30px;
+    }
+    .payment-option {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .payment-option:hover {
+      border-color: #667eea;
+    }
+    .payment-option.selected {
+      border-color: #667eea;
+      background: #f0f4ff;
+    }
+    .payment-icon {
+      width: 40px;
+      height: 40px;
+      margin-right: 15px;
+      border-radius: 8px;
+    }
+    .payment-name {
+      flex: 1;
+      font-weight: 500;
+      color: #333;
+    }
+    .radio {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #ddd;
+      border-radius: 50%;
+      position: relative;
+    }
+    .payment-option.selected .radio {
+      border-color: #667eea;
+    }
+    .payment-option.selected .radio::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px;
+      height: 10px;
+      background: #667eea;
+      border-radius: 50%;
+    }
+    .pay-button {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .pay-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+    .pay-button:active {
+      transform: translateY(0);
+    }
+    .pay-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .loading {
+      display: none;
+    }
+    .loading.active {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid white;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .success-message {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .success-message.active {
+      display: block;
+    }
+    .success-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+    .success-title {
+      color: #27ae60;
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    .success-text {
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="payment-form">
+      <div class="header">
+        <div class="icon">🔢</div>
+        <h1>科学计算器</h1>
+        <p class="description">开通完整功能，解锁高级计算</p>
+      </div>
+      <div class="price-section">
+        <div class="price-label">开通价格</div>
+        <div class="price">¥1.00</div>
+      </div>
+      <div class="payment-methods">
+        <div class="payment-option selected" data-type="wxpay">
+          <svg class="payment-icon" viewBox="0 0 1024 1024" fill="#07c160">
+            <path d="M410.6 648.7c-4.3 0-8.6-1.4-12.2-4.2-55.1-43.2-88.3-90.4-99.6-141.5-3.2-14.8 1.8-30.2 14-40.4 12.2-10.1 28.5-13.3 43.3-8.6 14.8 4.7 25.6 16.5 28.5 31.6 6.1 30.7 25.6 62.8 58.6 88.8 4 3.2 6.5 8 6.5 13 0 5.6-2.5 10.8-6.8 14.3-3.6 3.1-8.3 4.8-13.1 4.8-0.3 0-0.5 0-0.8 0z"></path>
+            <path d="M686.9 648.7c-4.3 0-8.6-1.4-12.2-4.2-55.1-43.2-88.3-90.4-99.6-141.5-3.2-14.8 1.8-30.2 14-40.4 12.2-10.1 28.5-13.3 43.3-8.6 14.8 4.7 25.6 16.5 28.5 31.6 6.1 30.7 25.6 62.8 58.6 88.8 4 3.2 6.5 8 6.5 13 0 5.6-2.5 10.8-6.8 14.3-3.6 3.1-8.3 4.8-13.1 4.8-0.3 0-0.5 0-0.8 0z"></path>
+            <path d="M512 120c-216.9 0-392 175.1-392 392s175.1 392 392 392c68.9 0 133.7-17.8 190.5-48.9 4.5-2.5 7.5-5.9 9.8-9.8 2.3-3.9 3.1-8.3 2.4-12.6-0.7-4.3-2.5-8.2-5.3-11.3-2.8-3.1-6.6-5.3-10.8-6.3-34.4-8.2-69.2-12.5-104.1-12.8-0.2 0-0.3 0-0.5 0-204.9 0-371.4-166.5-371.4-371.4s166.5-371.4 371.4-371.4 371.4 166.5 371.4 371.4c0 101.4-40.9 193.1-107.5 261.3 2.5 18.6 3.8 37.5 3.8 56.5 0 20.5-1.5 40.8-4.5 60.8 29.6-18.9 55.8-42.2 77.4-69.4 60.5-76.5 93.7-172.4 93.7-276 0-216.9-175.1-392-392-392z"></path>
+          </svg>
+          <div class="payment-name">微信支付</div>
+          <div class="radio"></div>
+        </div>
+        <div class="payment-option" data-type="alipay">
+          <svg class="payment-icon" viewBox="0 0 1024 1024" fill="#1677ff">
+            <path d="M512 64c247.4 0 448 200.6 448 448S759.4 960 512 960 64 759.4 64 512 264.6 64 512 64z m244.2 610.4c-34.3-42.9-87.4-70.6-148.2-77.5 3.7-10 92.2-253.2 92.2-253.2H578l-54.2 146.7c-29.4-7.4-60.3-12.2-92.8-14.6l85.6-226.2-0.1 0.1H414l-6.6 23.5c-70.8 16.7-132.5 47.6-183.7 90.9 21.7-40.5 53.9-77.4 96.3-108.6 48.3-35.6 107.2-60.8 175.5-74.9l21.4-69.2h214.9l-91.4 247.8c45.1 10.6 85.5 29.5 119.2 55.1 35.3 26.6 61.7 59.3 78 97.1-11.7-0.2-23.8-0.2-35.9-0.2z"></path>
+          </svg>
+          <div class="payment-name">支付宝</div>
+          <div class="radio"></div>
+        </div>
+      </div>
+      <button class="pay-button" id="payBtn">
+        <span class="loading" id="loading"></span>
+        <span id="btnText">立即支付</span>
+      </button>
+    </div>
+    <div class="success-message" id="success-message">
+      <div class="success-icon">✅</div>
+      <h2 class="success-title">支付成功！</h2>
+      <p class="success-text">请返回手表应用查看</p>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const deviceId = urlParams.get('deviceId');
+    let selectedPayType = 'wxpay';
+
+    document.querySelectorAll('.payment-option').forEach(option => {
+      option.addEventListener('click', () => {
+        document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        selectedPayType = option.dataset.type;
+      });
+    });
+
+    document.getElementById('payBtn').addEventListener('click', async () => {
+      if (!deviceId) {
+        alert('缺少设备ID');
+        return;
+      }
+
+      const payBtn = document.getElementById('payBtn');
+      const loading = document.getElementById('loading');
+      const btnText = document.getElementById('btnText');
+
+      payBtn.disabled = true;
+      loading.classList.add('active');
+      btnText.textContent = '处理中...';
+
+      try {
+        const response = await fetch('/api/create-order', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            deviceId: deviceId,
+            amount: 1.00,
+            payType: selectedPayType,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (result.success && result.payUrl) {
+          window.location.href = result.payUrl;
+        } else {
+          alert('创建订单失败，请重试');
+          payBtn.disabled = false;
+          loading.classList.remove('active');
+          btnText.textContent = '立即支付';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('网络错误，请重试');
+        payBtn.disabled = false;
+        loading.classList.remove('active');
+        btnText.textContent = '立即支付';
+      }
+    });
+  </script>
+</body>
+</html>

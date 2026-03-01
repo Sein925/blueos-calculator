@@ -5,6 +5,8 @@ const { Pool } = require('pg')
 const axios = require('axios')
 const crypto = require('crypto')
 const QRCode = require('qrcode')
+const path = require('path')
+const fs = require('fs')
 const app = express()
 const port = 3000
 
@@ -110,6 +112,15 @@ const YI_PAY_CONFIG = {
   notifyUrl: process.env.YI_PAY_NOTIFY_URL,
   returnUrl: process.env.YI_PAY_RETURN_URL
 }
+
+app.get('/pay', (req, res) => {
+  const payPagePath = path.join(__dirname, 'views', 'pay.html')
+  if (fs.existsSync(payPagePath)) {
+    res.sendFile(payPagePath)
+  } else {
+    res.status(404).send('支付页面未找到')
+  }
+})
 
 app.get('/api/check-payment', async (req, res) => {
   try {
@@ -258,7 +269,63 @@ app.get('/api/payment/return', (req, res) => {
       return res.send('签名验证失败')
     }
 
-    res.send('支付成功！请返回应用查看。')
+    const successHtml = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>支付成功</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 60px 40px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    .icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #27ae60;
+      font-size: 28px;
+      margin-bottom: 15px;
+    }
+    .description {
+      color: #666;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">✅</div>
+    <h1>支付成功！</h1>
+    <p class="description">请返回手表应用，计算器功能已解锁</p>
+  </div>
+</body>
+</html>
+`
+    res.send(successHtml)
   } catch (err) {
     console.error('返回处理失败:', err)
     res.send('处理失败')
