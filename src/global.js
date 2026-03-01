@@ -3,6 +3,11 @@
  * 如果需要增加全局变量，请同步更新 app.d.ts，可用于代码提示、错误检测
  */
 import router from '@blueos.app.appmanager.router'
+import fetch from '@blueos.network.fetch'
+
 global.router = router
+global.fetch = fetch.fetch
 
 global.calculatorHistory = []
+global.backendUrl = 'http://localhost:3000'
+global.deviceId = 'default-device-id'

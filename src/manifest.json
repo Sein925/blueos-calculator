@@ -10,6 +10,9 @@
   "features": [
     {
       "name": "blueos.app.appmanager.router"
+    },
+    {
+      "name": "blueos.network.fetch"
     }
   ],
   "deviceTypeList": [
