@@ -10,33 +10,15 @@
           </div>
 
           <div class="payment-card">
-            <div class="payment-method">
-              <image
-                src="./../../assets/images/wx.png"
-                class="wechat-icon"></image>
-              <text class="payment-label">微信支付</text>
+            <div class="pay-button">
+              <text class="pay-button-text">支付 ¥0.50</text>
             </div>
 
-            <div
-              class="pay-button"
-              onclick="createOrder"
-              show="{{ !creatingOrder && !payUrl }}">
-              <text class="pay-button-text">支付 ¥1.00</text>
-            </div>
-            <text class="paying-text" show="{{ creatingOrder }}">
-              正在创建订单...
-            </text>
-
-            <div class="qrcode-container" show="{{ payUrl }}">
+            <div class="qrcode-container">
               <text class="qrcode-title">请扫码支付</text>
               <qrcode
                 class="qrcode"
-                value="{{ payUrl }}"
-                show="{{ payUrl }}"></qrcode>
-              <text class="qrcode-hint">使用微信扫描二维码</text>
-              <text class="polling-text" show="{{ polling }}">
-                正在查询支付状态...
-              </text>
+                value="{{ payUrl }}"></qrcode>
             </div>
           </div>
 
@@ -285,7 +267,6 @@
     data: {
       display: '0',
       history: '',
-      currentValue: '0',
       previousValue: '',
       operator: '',
       waitingForOperand: false,
@@ -296,7 +277,6 @@
       checkingPayment: true,
       creatingOrder: false,
       payUrl: '',
-      currentOrderNo: '',
       polling: false,
       pollingTimer: null,
     },
@@ -304,6 +284,7 @@
     onInit() {
       this.deviceId = global.deviceId
       this.checkPayment()
+      this.payUrl = `${global.backendUrl}/pay?deviceId=${global.deviceId}`
     },
 
     checkPayment() {
@@ -324,7 +305,7 @@
         this.checkingPayment = false
         return
       }
-      
+
       fetch.fetch({
         url: `${global.backendUrl}/api/check-payment?deviceId=${global.deviceId}`,
         method: 'GET',
@@ -342,19 +323,6 @@
           this.checkingPayment = false
         },
       })
-    },
-
-    createOrder() {
-      if (!global.isDeviceIdValid()) {
-        console.log('Device ID invalid, cannot create order')
-        return
-      }
-      
-      this.creatingOrder = true
-      this.payUrl = `${global.backendUrl}/pay?deviceId=${global.deviceId}`
-      this.currentOrderNo = ''
-      this.creatingOrder = false
-      this.startPolling()
     },
 
     startPolling() {
@@ -386,8 +354,7 @@
           }
         },
         fail: (data, code) => {
-          global.addErrorLog('checkOrderStatus', data, code)
-          this.refreshErrorLogs()
+          console.error('查询订单失败:', data, code)
         },
       })
     },
@@ -403,7 +370,6 @@
       } else {
         this.display = this.display === '0' ? num : this.display + num
       }
-      this.currentValue = this.display
     },
 
     inputDecimal() {
@@ -417,7 +383,6 @@
       } else if (this.display.indexOf('.') === -1) {
         this.display += '.'
       }
-      this.currentValue = this.display
     },
 
     inputOperator(op) {
@@ -498,7 +463,6 @@
 
       this.history = `${expression} =`
       this.display = this.formatResult(result)
-      this.currentValue = this.display
       this.previousValue = ''
       this.operator = ''
       this.waitingForOperand = true
@@ -523,7 +487,6 @@
     clearAll() {
       this.display = '0'
       this.history = ''
-      this.currentValue = '0'
       this.previousValue = ''
       this.operator = ''
       this.waitingForOperand = false
@@ -536,14 +499,12 @@
         return
       }
       this.display = '0'
-      this.currentValue = '0'
     },
 
     toggleSign() {
       if (this.error) return
       const value = parseFloat(this.display)
       this.display = this.formatResult(-value)
-      this.currentValue = this.display
     },
 
     toggleAdvanced() {
@@ -605,7 +566,6 @@
 
       const expression = `${func}(${value})`
       this.display = this.formatResult(result)
-      this.currentValue = this.display
       this.waitingForOperand = true
       this.addToHistory(expression, this.display)
     },
@@ -628,7 +588,6 @@
       }
 
       this.display = this.formatResult(value)
-      this.currentValue = this.display
       this.waitingForOperand = true
     },
 
@@ -636,7 +595,6 @@
       if (this.error) return
       const value = parseFloat(this.display)
       this.display = this.formatResult(value / 100)
-      this.currentValue = this.display
     },
 
     memoryClear() {
@@ -648,7 +606,6 @@
         this.clearAll()
       }
       this.display = this.formatResult(this.memory)
-      this.currentValue = this.display
       this.waitingForOperand = true
     },
 
@@ -746,25 +703,6 @@
           margin-bottom: 6 * $size-factor;
           @include flex-box-mixins(column, flex-start, center);
 
-          .payment-method {
-            width: 100%;
-            @include flex-box-mixins(row, center, center);
-            margin-bottom: 4 * $size-factor;
-
-            .wechat-icon {
-              width: 10 * $size-factor;
-              height: 10 * $size-factor;
-              border-radius: 2 * $size-factor;
-              margin-right: 3 * $size-factor;
-            }
-
-            .payment-label {
-              font-size: 9 * $size-factor;
-              color: $white;
-              font-weight: bold;
-            }
-          }
-
           .pay-button {
             background-color: #07c160;
             padding: 4 * $size-factor 8 * $size-factor;
@@ -777,23 +715,12 @@
               color: $white;
               font-weight: bold;
             }
-
-            &:active {
-              opacity: 0.7;
-            }
-          }
-
-          .paying-text {
-            font-size: 7 * $size-factor;
-            color: $gray;
-            margin-top: 2 * $size-factor;
           }
 
           .qrcode-container {
-            margin-top: 4 * $size-factor;
             width: 100%;
+            height: 100%;
             @include flex-box-mixins(column, center, center);
-            gap: 3 * $size-factor;
 
             .qrcode-title {
               font-size: 8 * $size-factor;
@@ -806,19 +733,7 @@
               height: 60 * $size-factor;
               background-color: white;
               border-radius: 4 * $size-factor;
-              padding: 2 * $size-factor;
-            }
-
-            .qrcode-hint {
-              font-size: 7 * $size-factor;
-              color: $light-gray;
-              margin-top: 20px;
-            }
-
-            .polling-text {
-              font-size: 6 * $size-factor;
-              color: #07c160;
-              margin-top: 1 * $size-factor;
+              margin-top: 4 * $size-factor;
             }
           }
         }
