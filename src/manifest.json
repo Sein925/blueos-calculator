@@ -13,6 +13,9 @@
     },
     {
       "name": "blueos.network.fetch"
+    },
+    {
+      "name": "blueos.hardware.deviceInfo"
     }
   ],
   "deviceTypeList": [
@@ -45,5 +48,10 @@
   },
   "display": {
     "backgroundColor": "#000"
-  }
+  },
+  "permissions": [
+    {
+      "name": "watch.permission.DEVICE_INFO"
+    }
+  ]
 }

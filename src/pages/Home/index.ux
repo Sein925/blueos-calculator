@@ -11,22 +11,32 @@
 
           <div class="payment-card">
             <div class="payment-method">
-              <div class="wechat-icon">
-                <text class="icon-text">微信</text>
-              </div>
+              <image
+                src="./../../assets/images/wx.png"
+                class="wechat-icon"></image>
               <text class="payment-label">微信支付</text>
             </div>
 
-            <div class="pay-button" onclick="createOrder" show="{{ !creatingOrder && !payUrl }}">
+            <div
+              class="pay-button"
+              onclick="createOrder"
+              show="{{ !creatingOrder && !payUrl }}">
               <text class="pay-button-text">支付 ¥1.00</text>
             </div>
-            <text class="paying-text" show="{{ creatingOrder }}">正在创建订单...</text>
+            <text class="paying-text" show="{{ creatingOrder }}">
+              正在创建订单...
+            </text>
 
             <div class="qrcode-container" show="{{ payUrl }}">
               <text class="qrcode-title">请扫码支付</text>
-              <qrcode class="qrcode" value="{{ payUrl }}" eclevel="1" show="{{ payUrl }}" />
+              <qrcode
+                class="qrcode"
+                value="{{ payUrl }}"
+                show="{{ payUrl }}"></qrcode>
               <text class="qrcode-hint">使用微信扫描二维码</text>
-              <text class="polling-text" show="{{ polling }}">正在查询支付状态...</text>
+              <text class="polling-text" show="{{ polling }}">
+                正在查询支付状态...
+              </text>
             </div>
           </div>
 
@@ -81,13 +91,19 @@
             </div>
 
             <div class="button-row" show="{{ showAdvanced }}">
-              <div class="btn btn-scientific" onclick="scientificFunction('sin')">
+              <div
+                class="btn btn-scientific"
+                onclick="scientificFunction('sin')">
                 <text>sin</text>
               </div>
-              <div class="btn btn-scientific" onclick="scientificFunction('cos')">
+              <div
+                class="btn btn-scientific"
+                onclick="scientificFunction('cos')">
                 <text>cos</text>
               </div>
-              <div class="btn btn-scientific" onclick="scientificFunction('tan')">
+              <div
+                class="btn btn-scientific"
+                onclick="scientificFunction('tan')">
                 <text>tan</text>
               </div>
               <div class="btn btn-operator" onclick="inputOperator('*')">
@@ -111,13 +127,19 @@
             </div>
 
             <div class="button-row" show="{{ showAdvanced }}">
-              <div class="btn btn-scientific" onclick="scientificFunction('sqrt')">
+              <div
+                class="btn btn-scientific"
+                onclick="scientificFunction('sqrt')">
                 <text>√</text>
               </div>
-              <div class="btn btn-scientific" onclick="scientificFunction('square')">
+              <div
+                class="btn btn-scientific"
+                onclick="scientificFunction('square')">
                 <text>x²</text>
               </div>
-              <div class="btn btn-scientific" onclick="scientificFunction('cube')">
+              <div
+                class="btn btn-scientific"
+                onclick="scientificFunction('cube')">
                 <text>x³</text>
               </div>
               <div class="btn btn-operator" onclick="inputOperator('-')">
@@ -141,10 +163,14 @@
             </div>
 
             <div class="button-row" show="{{ showAdvanced }}">
-              <div class="btn btn-scientific" onclick="scientificFunction('log')">
+              <div
+                class="btn btn-scientific"
+                onclick="scientificFunction('log')">
                 <text>log</text>
               </div>
-              <div class="btn btn-scientific" onclick="scientificFunction('ln')">
+              <div
+                class="btn btn-scientific"
+                onclick="scientificFunction('ln')">
                 <text>ln</text>
               </div>
               <div class="btn btn-scientific" onclick="inputConstant('pi')">
@@ -218,22 +244,15 @@
         </div>
       </list-item>
 
-      <list-item type="card" style="margin-top: 14px;">
+      <list-item type="card" style="margin-top: 14px">
         <div class="nav-card" onclick="openHistoryPage">
           <text class="nav-label">历史</text>
         </div>
       </list-item>
 
-      <list-item type="card" style="margin-top: 14px;">
+      <list-item type="card" style="margin-top: 14px">
         <div class="nav-card" onclick="openAboutPage">
           <text class="nav-label">关于</text>
-        </div>
-      </list-item>
-
-      <list-item type="card" style="margin-top: 14px;">
-        <div class="device-id-card">
-          <text class="device-id-label">设备ID</text>
-          <text class="device-id-text">{{ deviceId }}</text>
         </div>
       </list-item>
     </list>
@@ -311,11 +330,11 @@
         method: 'POST',
         data: JSON.stringify({
           deviceId: global.deviceId,
-          amount: 1.00,
-          payType: 'wxpay'
+          amount: 1.0,
+          payType: 'wxpay',
         }),
         header: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         responseType: 'json',
         success: (response) => {
@@ -350,7 +369,7 @@
 
     checkOrderStatus() {
       if (!this.currentOrderNo) return
-      
+
       fetch.fetch({
         url: `${global.backendUrl}/api/order-status?orderNo=${this.currentOrderNo}`,
         method: 'GET',
@@ -731,16 +750,8 @@
             .wechat-icon {
               width: 10 * $size-factor;
               height: 10 * $size-factor;
-              background-color: #07c160;
               border-radius: 2 * $size-factor;
-              @include flex-box-mixins(row, center, center);
               margin-right: 3 * $size-factor;
-
-              .icon-text {
-                font-size: 5 * $size-factor;
-                color: $white;
-                font-weight: bold;
-              }
             }
 
             .payment-label {
@@ -797,6 +808,7 @@
             .qrcode-hint {
               font-size: 7 * $size-factor;
               color: $light-gray;
+              margin-top: 20px;
             }
 
             .polling-text {
