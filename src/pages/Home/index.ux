@@ -307,6 +307,17 @@
     },
 
     checkPayment() {
+      global.getPaymentStatus((localPaid) => {
+        if (localPaid) {
+          this.isPaid = true
+          this.checkingPayment = false
+        } else {
+          this.checkPaymentFromServer()
+        }
+      })
+    },
+
+    checkPaymentFromServer() {
       fetch.fetch({
         url: `${global.backendUrl}/api/check-payment?deviceId=${global.deviceId}`,
         method: 'GET',
@@ -314,6 +325,9 @@
         success: (response) => {
           this.isPaid = response.data.isPaid
           this.checkingPayment = false
+          if (response.data.isPaid) {
+            global.savePaymentStatus(true)
+          }
         },
         fail: (data, code) => {
           console.error('付费检查失败:', data, code)
@@ -379,6 +393,7 @@
             this.stopPolling()
             this.payUrl = ''
             this.isPaid = true
+            global.savePaymentStatus(true)
           }
         },
         fail: (data, code) => {
@@ -703,7 +718,6 @@
         width: 100%;
         height: 100%;
         padding: 0 5 * $size-factor;
-        padding-bottom: 10 * $size-factor;
       }
 
       .unpaid-card {

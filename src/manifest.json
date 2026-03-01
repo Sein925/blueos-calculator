@@ -7,6 +7,11 @@
     "education"
   ],
   "icon": "/assets/images/logo.png",
+  "permissions": [
+    {
+      "name": "watch.permission.DEVICE_INFO"
+    }
+  ],
   "features": [
     {
       "name": "blueos.app.appmanager.router"
@@ -16,6 +21,9 @@
     },
     {
       "name": "blueos.hardware.deviceInfo"
+    },
+    {
+      "name": "blueos.storage.storage"
     }
   ],
   "deviceTypeList": [
@@ -48,10 +56,5 @@
   },
   "display": {
     "backgroundColor": "#000"
-  },
-  "permissions": [
-    {
-      "name": "watch.permission.DEVICE_INFO"
-    }
-  ]
+  }
 }
