@@ -1,0 +1,121 @@
+<import name="d-back" src="./../../components/d-back"></import>
+
+<template>
+  <div class="wrapper">
+    <d-back value="关于"></d-back>
+    <list class="content">
+      <list-item type="about">
+        <div class="about-content">
+          <text class="app-name">{{ appName }}</text>
+          <text class="app-version">版本: {{ appVersion }}</text>
+          <image class="app-logo" src="/assets/images/logo.png"></image>
+          <text class="app-desc">一款强大的手表端科学计算器</text>
+        </div>
+      </list-item>
+      <list-item type="card">
+        <div class="option-card" style="margin-bottom: 0" @click="feedback">
+          <text class="card-label">意见反馈</text>
+        </div>
+      </list-item>
+      <list-item type="card">
+        <div class="option-card" style="margin-top: 18px" @click="donate">
+          <text class="card-label">打赏</text>
+        </div>
+      </list-item>
+      <list-item>
+        <div class="copyright">
+          <text class="app-desc">©2026 Dasein</text>
+        </div>
+      </list-item>
+    </list>
+  </div>
+</template>
+
+<script>
+  export default {
+    data: {
+      appName: '科学计算器',
+      appVersion: '1.0.0',
+    },
+
+    feedback() {
+      global.router.push({
+        uri: '/pages/About/Feedback',
+      })
+    },
+
+    donate() {
+      global.router.push({
+        uri: '/pages/About/Donate',
+      })
+    },
+  }
+</script>
+
+<style lang="scss">
+  @import './../../assets/styles/style.scss';
+
+  .wrapper {
+    width: 100%;
+    height: 100%;
+    @include flex-box-mixins(column, center, flex-start);
+
+    .content {
+      width: 100%;
+      padding: 0 5 * $size-factor;
+    }
+
+    .about-content {
+      width: 100%;
+      @include flex-box-mixins(column, flex-start, center);
+
+      .app-name {
+        font-size: 9 * $size-factor;
+        font-weight: bold;
+        color: $white;
+        margin-bottom: 2 * $size-factor;
+      }
+
+      .app-version {
+        font-size: 5 * $size-factor;
+        color: $gray;
+        margin-bottom: 6 * $size-factor;
+      }
+
+      .app-logo {
+        width: 34 * $size-factor;
+        height: 34 * $size-factor;
+        margin-bottom: 8 * $size-factor;
+      }
+    }
+
+    .app-desc {
+      font-size: 5 * $size-factor;
+      color: $light-gray;
+    }
+
+    .option-card {
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 8 * $size-factor;
+      padding: 24px 30px;
+      margin: 6 * $size-factor 0;
+      @include flex-box-mixins(row, flex-start, center);
+
+      .card-label {
+        font-size: 8 * $size-factor;
+        color: $white;
+      }
+
+      &:active {
+        opacity: 0.4;
+      }
+    }
+
+    .copyright {
+      width: 100%;
+      @include flex-box-mixins(row, center, center);
+      margin-bottom: 2 * $size-factor;
+    }
+  }
+</style>

@@ -1,0 +1,138 @@
+<import name="d-back" src="./../../components/d-back"></import>
+
+<template>
+  <div class="wrapper">
+    <d-back value="历史记录"></d-back>
+    <list class="content">
+      <list-item type="about">
+        <div class="history-content">
+          <text class="page-title">历史记录</text>
+          <text class="page-desc">最近20条计算记录</text>
+        </div>
+      </list-item>
+      <list-item type="card">
+        <div class="option-card" style="margin-bottom: 0" @click="clearHistory">
+          <text class="card-label">清除历史</text>
+        </div>
+      </list-item>
+      <list-item for="item in historyList" type="card">
+        <div class="history-card" style="margin-top: 18px">
+          <text class="history-expression">{{ item.expression }}</text>
+          <text class="history-result">= {{ item.result }}</text>
+        </div>
+      </list-item>
+      <list-item>
+        <div class="empty-hint" show="{{ historyList.length === 0 }}">
+          <text class="app-desc">暂无历史记录</text>
+        </div>
+      </list-item>
+    </list>
+  </div>
+</template>
+
+<script>
+  export default {
+    data: {
+      historyList: []
+    },
+
+    onInit() {
+      this.historyList = global.calculatorHistory || []
+    },
+
+    onShow() {
+      this.historyList = global.calculatorHistory || []
+    },
+
+    clearHistory() {
+      global.calculatorHistory = []
+      this.historyList = []
+    }
+  }
+</script>
+
+<style lang="scss">
+  @import './../../assets/styles/style.scss';
+
+  .wrapper {
+    width: 100%;
+    height: 100%;
+    @include flex-box-mixins(column, center, flex-start);
+
+    .content {
+      width: 100%;
+      padding: 0 5 * $size-factor;
+    }
+
+    .history-content {
+      width: 100%;
+      @include flex-box-mixins(column, flex-start, center);
+
+      .page-title {
+        font-size: 9 * $size-factor;
+        font-weight: bold;
+        color: $white;
+        margin-bottom: 2 * $size-factor;
+      }
+
+      .page-desc {
+        font-size: 5 * $size-factor;
+        color: $gray;
+        margin-bottom: 6 * $size-factor;
+      }
+    }
+
+    .app-desc {
+      font-size: 5 * $size-factor;
+      color: $light-gray;
+    }
+
+    .option-card {
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 8 * $size-factor;
+      padding: 24px 30px;
+      @include flex-box-mixins(row, flex-start, center);
+
+      .card-label {
+        font-size: 8 * $size-factor;
+        color: $white;
+      }
+
+      &:active {
+        opacity: 0.4;
+      }
+    }
+
+    .history-card {
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 8 * $size-factor;
+      padding: 24px 30px;
+      margin: 6 * $size-factor 0;
+      @include flex-box-mixins(column, flex-start, flex-start);
+
+      .history-expression {
+        font-size: 6 * $size-factor;
+        color: $light-gray;
+      }
+
+      .history-result {
+        font-size: 9 * $size-factor;
+        color: $white;
+        font-weight: bold;
+        margin-top: 2 * $size-factor;
+      }
+
+      &:active {
+        opacity: 0.4;
+      }
+    }
+
+    .empty-hint {
+      width: 100%;
+      @include flex-box-mixins(row, center, center);
+      padding: 40px 0;
+    }
+  }
+</style>

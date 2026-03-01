@@ -1,0 +1,21 @@
+$brand: #09ba07;
+
+$white: #ffffff;
+$black: #000000;
+$grey: #9393aa;
+$gray: #999;
+$light-gray: #ccc;
+$red: #fa0101;
+$green: #ffff00;
+
+$size-factor: 5px;
+
+@mixin flex-box-mixins(
+  $direction: row,
+  $justify: center,
+  $align-items: center
+) {
+  flex-direction: $direction;
+  justify-content: $justify;
+  align-items: $align-items;
+}

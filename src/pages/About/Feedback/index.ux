@@ -1,0 +1,57 @@
+<import name="d-back" src="./../../../components/d-back"></import>
+
+<template>
+  <div class="wrapper">
+    <d-back></d-back>
+    <list class="content">
+      <list-item type="card">
+        <div class="card">
+          <text class="card-label">电子邮箱</text>
+          <text class="card-value">yikangyyds@gmail.com</text>
+        </div>
+      </list-item>
+      <list-item type="card">
+        <div class="card">
+          <text class="card-label">轻腕社区</text>
+          <text class="card-value">100002646</text>
+        </div>
+      </list-item>
+    </list>
+  </div>
+</template>
+
+<style lang="scss">
+  .wrapper {
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+
+    .content {
+      width: 100%;
+      padding: 0 25px;
+    }
+
+    list-item {
+      width: 100%;
+    }
+
+    .card {
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 40px;
+      padding: 20px 30px 26px 30px;
+      margin: 10px 0;
+      flex-direction: column;
+
+      .card-label {
+        font-size: 42px;
+        color: #fff;
+      }
+
+      .card-value {
+        font-size: 30px;
+        color: #ccc;
+      }
+    }
+  }
+</style>

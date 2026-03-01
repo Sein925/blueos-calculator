@@ -1,0 +1,658 @@
+<template>
+  <div class="wrapper">
+    <list class="content">
+      <list-item type="card">
+        <div class="calculator-card">
+          <div class="display-card">
+            <div class="scroll-display">
+              <text class="history-display">{{ history }}</text>
+            </div>
+            <div class="scroll-display">
+              <text class="main-display">{{ display }}</text>
+            </div>
+          </div>
+
+          <div class="buttons-container">
+            <div class="button-row">
+              <div class="btn btn-function" onclick="memoryClear">
+                <text>MC</text>
+              </div>
+              <div class="btn btn-function" onclick="memoryRecall">
+                <text>MR</text>
+              </div>
+              <div class="btn btn-function" onclick="memoryAdd">
+                <text>M+</text>
+              </div>
+              <div class="btn btn-function" onclick="memorySubtract">
+                <text>M-</text>
+              </div>
+            </div>
+
+            <div class="button-row" show="{{ !showAdvanced }}">
+              <div class="btn btn-function" onclick="clearAll">
+                <text>C</text>
+              </div>
+              <div class="btn btn-function" onclick="clearEntry">
+                <text>CE</text>
+              </div>
+              <div class="btn btn-function" onclick="toggleSign">
+                <text>±</text>
+              </div>
+              <div class="btn btn-operator" onclick="inputOperator('/')">
+                <text>÷</text>
+              </div>
+            </div>
+
+            <div class="button-row" show="{{ showAdvanced }}">
+              <div class="btn btn-scientific" onclick="scientificFunction('sin')">
+                <text>sin</text>
+              </div>
+              <div class="btn btn-scientific" onclick="scientificFunction('cos')">
+                <text>cos</text>
+              </div>
+              <div class="btn btn-scientific" onclick="scientificFunction('tan')">
+                <text>tan</text>
+              </div>
+              <div class="btn btn-operator" onclick="inputOperator('*')">
+                <text>×</text>
+              </div>
+            </div>
+
+            <div class="button-row" show="{{ !showAdvanced }}">
+              <div class="btn btn-number" onclick="inputNumber('7')">
+                <text>7</text>
+              </div>
+              <div class="btn btn-number" onclick="inputNumber('8')">
+                <text>8</text>
+              </div>
+              <div class="btn btn-number" onclick="inputNumber('9')">
+                <text>9</text>
+              </div>
+              <div class="btn btn-operator" onclick="inputOperator('*')">
+                <text>×</text>
+              </div>
+            </div>
+
+            <div class="button-row" show="{{ showAdvanced }}">
+              <div class="btn btn-scientific" onclick="scientificFunction('sqrt')">
+                <text>√</text>
+              </div>
+              <div class="btn btn-scientific" onclick="scientificFunction('square')">
+                <text>x²</text>
+              </div>
+              <div class="btn btn-scientific" onclick="scientificFunction('cube')">
+                <text>x³</text>
+              </div>
+              <div class="btn btn-operator" onclick="inputOperator('-')">
+                <text>-</text>
+              </div>
+            </div>
+
+            <div class="button-row" show="{{ !showAdvanced }}">
+              <div class="btn btn-number" onclick="inputNumber('4')">
+                <text>4</text>
+              </div>
+              <div class="btn btn-number" onclick="inputNumber('5')">
+                <text>5</text>
+              </div>
+              <div class="btn btn-number" onclick="inputNumber('6')">
+                <text>6</text>
+              </div>
+              <div class="btn btn-operator" onclick="inputOperator('-')">
+                <text>-</text>
+              </div>
+            </div>
+
+            <div class="button-row" show="{{ showAdvanced }}">
+              <div class="btn btn-scientific" onclick="scientificFunction('log')">
+                <text>log</text>
+              </div>
+              <div class="btn btn-scientific" onclick="scientificFunction('ln')">
+                <text>ln</text>
+              </div>
+              <div class="btn btn-scientific" onclick="inputConstant('pi')">
+                <text>π</text>
+              </div>
+              <div class="btn btn-operator" onclick="inputOperator('+')">
+                <text>+</text>
+              </div>
+            </div>
+
+            <div class="button-row" show="{{ !showAdvanced }}">
+              <div class="btn btn-number" onclick="inputNumber('1')">
+                <text>1</text>
+              </div>
+              <div class="btn btn-number" onclick="inputNumber('2')">
+                <text>2</text>
+              </div>
+              <div class="btn btn-number" onclick="inputNumber('3')">
+                <text>3</text>
+              </div>
+              <div class="btn btn-operator" onclick="inputOperator('+')">
+                <text>+</text>
+              </div>
+            </div>
+
+            <div class="button-row" show="{{ showAdvanced }}">
+              <div class="btn btn-scientific" onclick="inputConstant('e')">
+                <text>e</text>
+              </div>
+              <div class="btn btn-scientific" onclick="inputPercent()">
+                <text>%</text>
+              </div>
+              <div class="btn btn-scientific" onclick="inputOperator('^')">
+                <text>^</text>
+              </div>
+              <div class="btn btn-equals" onclick="calculate">
+                <text>=</text>
+              </div>
+            </div>
+
+            <div class="button-row" show="{{ !showAdvanced }}">
+              <div class="btn btn-number" onclick="inputNumber('0')">
+                <text>0</text>
+              </div>
+              <div class="btn btn-number" onclick="inputDecimal()">
+                <text>.</text>
+              </div>
+              <div class="btn btn-function" onclick="toggleAdvanced">
+                <text>2nd</text>
+              </div>
+              <div class="btn btn-equals" onclick="calculate">
+                <text>=</text>
+              </div>
+            </div>
+
+            <div class="button-row" show="{{ showAdvanced }}">
+              <div class="btn btn-function" onclick="clearAll">
+                <text>C</text>
+              </div>
+              <div class="btn btn-function" onclick="clearEntry">
+                <text>CE</text>
+              </div>
+              <div class="btn btn-function" onclick="toggleAdvanced">
+                <text>2nd</text>
+              </div>
+              <div class="btn btn-function" onclick="toggleSign">
+                <text>±</text>
+              </div>
+            </div>
+          </div>
+        </div>
+      </list-item>
+
+      <list-item type="card" style="margin-top: 14px;">
+        <div class="nav-card" onclick="openHistoryPage">
+          <text class="nav-label">历史</text>
+        </div>
+      </list-item>
+
+      <list-item type="card" style="margin-top: 14px;">
+        <div class="nav-card" onclick="openAboutPage">
+          <text class="nav-label">关于</text>
+        </div>
+      </list-item>
+    </list>
+  </div>
+</template>
+
+<script>
+  const PI = 3.141592653589793
+  const E = 2.718281828459045
+
+  function isInteger(num) {
+    return num === Math.floor(num)
+  }
+
+  function sin(x) {
+    return Math.sin((x * PI) / 180)
+  }
+
+  function cos(x) {
+    return Math.cos((x * PI) / 180)
+  }
+
+  function tan(x) {
+    return Math.tan((x * PI) / 180)
+  }
+
+  export default {
+    data: {
+      display: '0',
+      history: '',
+      currentValue: '0',
+      previousValue: '',
+      operator: '',
+      waitingForOperand: false,
+      memory: 0,
+      showAdvanced: false,
+      error: false,
+    },
+
+    onInit() {},
+
+    inputNumber(num) {
+      if (this.error) {
+        this.clearAll()
+      }
+
+      if (this.waitingForOperand) {
+        this.display = num
+        this.waitingForOperand = false
+      } else {
+        this.display = this.display === '0' ? num : this.display + num
+      }
+      this.currentValue = this.display
+    },
+
+    inputDecimal() {
+      if (this.error) {
+        this.clearAll()
+      }
+
+      if (this.waitingForOperand) {
+        this.display = '0.'
+        this.waitingForOperand = false
+      } else if (this.display.indexOf('.') === -1) {
+        this.display += '.'
+      }
+      this.currentValue = this.display
+    },
+
+    inputOperator(op) {
+      if (this.error) {
+        this.clearAll()
+      }
+
+      const inputValue = parseFloat(this.display)
+
+      if (this.previousValue !== '' && !this.waitingForOperand) {
+        const result = this.performCalculation()
+        if (result === 'Error') {
+          this.display = 'Error'
+          this.error = true
+          return
+        }
+        this.display = this.formatResult(result)
+        this.previousValue = result
+      } else {
+        this.previousValue = inputValue
+      }
+
+      this.waitingForOperand = true
+      this.operator = op
+      this.history = `${this.previousValue} ${this.getOperatorSymbol(op)}`
+    },
+
+    getOperatorSymbol(op) {
+      const symbols = {
+        '+': '+',
+        '-': '-',
+        '*': '×',
+        '/': '÷',
+        '^': '^',
+      }
+      return symbols[op] || op
+    },
+
+    performCalculation() {
+      const prev = parseFloat(this.previousValue)
+      const current = parseFloat(this.display)
+
+      switch (this.operator) {
+        case '+':
+          return prev + current
+        case '-':
+          return prev - current
+        case '*':
+          return prev * current
+        case '/':
+          if (current === 0) return 'Error'
+          return prev / current
+        case '^':
+          return Math.pow(prev, current)
+        default:
+          return current
+      }
+    },
+
+    calculate() {
+      if (this.error) {
+        this.clearAll()
+        return
+      }
+
+      if (this.operator === '' || this.waitingForOperand) {
+        return
+      }
+
+      const expression = `${this.previousValue} ${this.getOperatorSymbol(this.operator)} ${this.display}`
+      const result = this.performCalculation()
+
+      if (result === 'Error') {
+        this.display = 'Error'
+        this.error = true
+        return
+      }
+
+      this.history = `${expression} =`
+      this.display = this.formatResult(result)
+      this.currentValue = this.display
+      this.previousValue = ''
+      this.operator = ''
+      this.waitingForOperand = true
+
+      this.addToHistory(expression, this.display)
+    },
+
+    formatResult(num) {
+      if (typeof num === 'string') {
+        return num
+      }
+      if (isInteger(num)) {
+        return num.toString()
+      }
+      const str = num.toString()
+      if (str.length > 15) {
+        return num.toPrecision(15)
+      }
+      return str
+    },
+
+    clearAll() {
+      this.display = '0'
+      this.history = ''
+      this.currentValue = '0'
+      this.previousValue = ''
+      this.operator = ''
+      this.waitingForOperand = false
+      this.error = false
+    },
+
+    clearEntry() {
+      if (this.error) {
+        this.clearAll()
+        return
+      }
+      this.display = '0'
+      this.currentValue = '0'
+    },
+
+    toggleSign() {
+      if (this.error) return
+      const value = parseFloat(this.display)
+      this.display = this.formatResult(-value)
+      this.currentValue = this.display
+    },
+
+    toggleAdvanced() {
+      this.showAdvanced = !this.showAdvanced
+    },
+
+    scientificFunction(func) {
+      if (this.error) {
+        this.clearAll()
+        return
+      }
+
+      const value = parseFloat(this.display)
+      let result
+
+      switch (func) {
+        case 'sin':
+          result = sin(value)
+          break
+        case 'cos':
+          result = cos(value)
+          break
+        case 'tan':
+          result = tan(value)
+          break
+        case 'sqrt':
+          if (value < 0) {
+            this.display = 'Error'
+            this.error = true
+            return
+          }
+          result = Math.sqrt(value)
+          break
+        case 'square':
+          result = Math.pow(value, 2)
+          break
+        case 'cube':
+          result = Math.pow(value, 3)
+          break
+        case 'log':
+          if (value <= 0) {
+            this.display = 'Error'
+            this.error = true
+            return
+          }
+          result = Math.log10(value)
+          break
+        case 'ln':
+          if (value <= 0) {
+            this.display = 'Error'
+            this.error = true
+            return
+          }
+          result = Math.log(value)
+          break
+        default:
+          return
+      }
+
+      const expression = `${func}(${value})`
+      this.display = this.formatResult(result)
+      this.currentValue = this.display
+      this.waitingForOperand = true
+      this.addToHistory(expression, this.display)
+    },
+
+    inputConstant(constant) {
+      if (this.error) {
+        this.clearAll()
+      }
+
+      let value
+      switch (constant) {
+        case 'pi':
+          value = PI
+          break
+        case 'e':
+          value = E
+          break
+        default:
+          return
+      }
+
+      this.display = this.formatResult(value)
+      this.currentValue = this.display
+      this.waitingForOperand = true
+    },
+
+    inputPercent() {
+      if (this.error) return
+      const value = parseFloat(this.display)
+      this.display = this.formatResult(value / 100)
+      this.currentValue = this.display
+    },
+
+    memoryClear() {
+      this.memory = 0
+    },
+
+    memoryRecall() {
+      if (this.error) {
+        this.clearAll()
+      }
+      this.display = this.formatResult(this.memory)
+      this.currentValue = this.display
+      this.waitingForOperand = true
+    },
+
+    memoryAdd() {
+      if (this.error) return
+      this.memory += parseFloat(this.display)
+    },
+
+    memorySubtract() {
+      if (this.error) return
+      this.memory -= parseFloat(this.display)
+    },
+
+    addToHistory(expression, result) {
+      global.calculatorHistory.unshift({
+        expression: expression,
+        result: result,
+      })
+      if (global.calculatorHistory.length > 20) {
+        global.calculatorHistory.pop()
+      }
+    },
+
+    openHistoryPage() {
+      global.router.push({
+        uri: 'pages/History',
+      })
+    },
+
+    openAboutPage() {
+      global.router.push({
+        uri: 'pages/About',
+      })
+    },
+  }
+</script>
+
+<style lang="scss">
+  @import './../../assets/styles/style.scss';
+
+  .wrapper {
+    width: 100%;
+    height: 100%;
+    @include flex-box-mixins(column, center, flex-start);
+
+    .content {
+      width: 100%;
+      padding: 0 5 * $size-factor;
+    }
+  }
+
+  .calculator-card {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8 * $size-factor;
+    padding: 24px 30px;
+    margin-top: 20px;
+    @include flex-box-mixins(column, flex-start, center);
+  }
+
+  .display-card {
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 6 * $size-factor;
+    padding: 16px 20px;
+    margin-bottom: 18px;
+    @include flex-box-mixins(column, flex-start, center);
+  }
+
+  .scroll-display {
+    width: 100%;
+    height: 40px;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    white-space: nowrap;
+  }
+
+  .history-display {
+    color: $gray;
+    font-size: 5 * $size-factor;
+    font-weight: 500;
+    text-align: right;
+    line-height: 40px;
+  }
+
+  .main-display {
+    color: $white;
+    font-size: 7 * $size-factor;
+    font-weight: bold;
+    text-align: right;
+    line-height: 40px;
+  }
+
+  .buttons-container {
+    width: 100%;
+    @include flex-box-mixins(column, flex-start, center);
+    gap: 12px;
+  }
+
+  .button-row {
+    width: 100%;
+    @include flex-box-mixins(row, space-between, center);
+    gap: 12px;
+  }
+
+  .btn {
+    flex: 1;
+    height: 11 * $size-factor;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 6 * $size-factor;
+    @include flex-box-mixins(row, center, center);
+
+    text {
+      font-size: 5.5 * $size-factor;
+      font-weight: 500;
+      color: $white;
+    }
+
+    &:active {
+      opacity: 0.4;
+    }
+  }
+
+  .btn-number {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .btn-operator {
+    background-color: $brand;
+  }
+
+  .btn-function {
+    background-color: rgba(9, 186, 7, 0.2);
+
+    text {
+      color: $brand;
+    }
+  }
+
+  .btn-scientific {
+    background-color: rgba(25, 118, 210, 0.2);
+
+    text {
+      color: #1976d2;
+    }
+  }
+
+  .btn-equals {
+    background-color: $brand;
+  }
+
+  .nav-card {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8 * $size-factor;
+    padding: 24px 30px;
+    @include flex-box-mixins(row, flex-start, center);
+
+    .nav-label {
+      font-size: 8 * $size-factor;
+      color: $white;
+    }
+
+    &:active {
+      opacity: 0.4;
+    }
+  }
+</style>

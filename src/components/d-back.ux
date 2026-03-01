@@ -1,0 +1,45 @@
+<template>
+  <div class="top" @click="handleBack">
+    <vw-icon icon="arrow-left" size="sm"></vw-icon>
+    <text>{{ value }}</text>
+  </div>
+</template>
+
+<script>
+  export default {
+    props: {
+      value: '返回',
+    },
+
+    handleBack() {
+      global.router.back()
+    },
+  }
+</script>
+
+<style lang="scss">
+  .top {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 14px 32px 10px 32px;
+
+    @media (device: watch-round) {
+      justify-content: center;
+
+      text {
+        margin-right: 40px;
+      }
+    }
+
+    text {
+      color: #fff;
+      font-size: 38px;
+      font-weight: bold;
+    }
+
+    &:active {
+      opacity: 0.4;
+    }
+  }
+</style>
