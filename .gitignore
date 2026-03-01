@@ -5,5 +5,3 @@
 /backend/node_modules
 /sign
 blue-os.zip
-.env
-backend/.env

@@ -12,7 +12,8 @@
     "pg": "^8.11.3",
     "cors": "^2.8.5",
     "axios": "^1.6.2",
-    "qrcode": "^1.5.3"
+    "qrcode": "^1.5.3",
+    "dotenv": "^16.3.1"
   },
   "keywords": ["calculator", "backend", "api"],
   "author": "",
