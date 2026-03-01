@@ -17,6 +17,7 @@ declare const global: {
   deviceId: string;
   savePaymentStatus: (isPaid: boolean) => void;
   getPaymentStatus: (callback: (isPaid: boolean) => void) => void;
+  isDeviceIdValid: () => boolean;
 }
 
 declare const Promise: typeof Promise

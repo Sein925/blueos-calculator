@@ -7,14 +7,37 @@ import device from '@blueos.hardware.deviceInfo'
 import fetch from '@blueos.network.fetch'
 import storage from '@blueos.storage.storage'
 
-device.getDeviceId({
-  success: function (data) {
-    global.deviceId = data.deviceId
-  },
-  fail: function (code) {
-    console.log(`handling fail, code = ${code}`)
-  },
-})
+const FAIL_MESSAGE = '获取失败，请联系作者'
+
+if (device.getDeviceId) {
+  device.getDeviceId({
+    success: function (data) {
+      global.deviceId = data.deviceId
+    },
+    fail: function (code) {
+      console.log(`handling fail, code = ${code}`)
+      global.deviceId = FAIL_MESSAGE
+    },
+  })
+} else if (device.getId) {
+  device.getId({
+    type: ['device'],
+    success: function (data) {
+      global.deviceId = data.device || FAIL_MESSAGE
+    },
+    fail: function (code) {
+      console.log(`handling fail, code = ${code}`)
+      global.deviceId = FAIL_MESSAGE
+    },
+  })
+} else {
+  global.deviceId = FAIL_MESSAGE
+  console.log('Device ID API not available')
+}
+
+global.isDeviceIdValid = function () {
+  return !!(global.deviceId && global.deviceId !== FAIL_MESSAGE)
+}
 
 global.router = router
 global.fetch = fetch.fetch

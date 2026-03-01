@@ -318,6 +318,13 @@
     },
 
     checkPaymentFromServer() {
+      if (!global.isDeviceIdValid()) {
+        console.log('Device ID invalid, skipping payment check')
+        this.isPaid = false
+        this.checkingPayment = false
+        return
+      }
+      
       fetch.fetch({
         url: `${global.backendUrl}/api/check-payment?deviceId=${global.deviceId}`,
         method: 'GET',
@@ -338,6 +345,11 @@
     },
 
     createOrder() {
+      if (!global.isDeviceIdValid()) {
+        console.log('Device ID invalid, cannot create order')
+        return
+      }
+      
       this.creatingOrder = true
       fetch.fetch({
         url: `${global.backendUrl}/api/create-order`,
