@@ -52,7 +52,6 @@
       global.calculatorHistory = []
       global.saveHistory()
       this.historyList = []
-      this.$element('content').notifyDataSetChanged()
     }
   }
 </script>
