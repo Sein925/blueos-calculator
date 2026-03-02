@@ -7,23 +7,9 @@
     "education"
   ],
   "icon": "/assets/images/logo.png",
-  "permissions": [
-    {
-      "name": "watch.permission.DEVICE_INFO"
-    }
-  ],
   "features": [
     {
       "name": "blueos.app.appmanager.router"
-    },
-    {
-      "name": "blueos.network.fetch"
-    },
-    {
-      "name": "blueos.hardware.deviceInfo"
-    },
-    {
-      "name": "blueos.storage.storage"
     }
   ],
   "deviceTypeList": [

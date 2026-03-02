@@ -1,35 +1,6 @@
 <template>
   <div class="wrapper">
-    <div class="unpaid-overlay" show="{{ !isPaid }}">
-      <list class="scroll-container">
-        <list-item class="unpaid-card">
-          <div class="header-section">
-            <text class="unpaid-icon">🔒</text>
-            <text class="unpaid-title">您未开通</text>
-            <text class="unpaid-desc">开通后即可使用全部功能</text>
-          </div>
-
-          <div class="payment-card">
-            <div class="pay-button">
-              <text class="pay-button-text">支付 ¥0.50</text>
-            </div>
-
-            <div class="qrcode-container">
-              <text class="qrcode-title">请扫码支付</text>
-              <qrcode
-                class="qrcode"
-                value="{{ payUrl }}"></qrcode>
-            </div>
-          </div>
-
-          <div class="device-info">
-            <text class="device-label">设备ID</text>
-            <text class="device-id">{{ deviceId }}</text>
-          </div>
-        </list-item>
-      </list>
-    </div>
-    <list class="content" show="{{ isPaid }}">
+    <list class="content">
       <list-item type="card">
         <div class="calculator-card">
           <div class="display-card">
@@ -242,8 +213,6 @@
 </template>
 
 <script>
-  import fetch from '@blueos.network.fetch'
-
   const PI = 3.141592653589793
   const E = 2.718281828459045
 
@@ -273,90 +242,6 @@
       memory: 0,
       showAdvanced: false,
       error: false,
-      isPaid: false,
-      checkingPayment: true,
-      creatingOrder: false,
-      payUrl: '',
-      polling: false,
-      pollingTimer: null,
-    },
-
-    onInit() {
-      this.deviceId = global.deviceId
-      this.checkPayment()
-      this.payUrl = `${global.backendUrl}/pay?deviceId=${global.deviceId}`
-    },
-
-    checkPayment() {
-      global.getPaymentStatus((localPaid) => {
-        if (localPaid) {
-          this.isPaid = true
-          this.checkingPayment = false
-        } else {
-          this.checkPaymentFromServer()
-        }
-      })
-    },
-
-    checkPaymentFromServer() {
-      if (!global.isDeviceIdValid()) {
-        console.log('Device ID invalid, skipping payment check')
-        this.isPaid = false
-        this.checkingPayment = false
-        return
-      }
-
-      fetch.fetch({
-        url: `${global.backendUrl}/api/check-payment?deviceId=${global.deviceId}`,
-        method: 'GET',
-        responseType: 'json',
-        success: (response) => {
-          this.isPaid = response.data.isPaid
-          this.checkingPayment = false
-          if (response.data.isPaid) {
-            global.savePaymentStatus(true)
-          }
-        },
-        fail: (data, code) => {
-          console.error('付费检查失败:', data, code)
-          this.isPaid = false
-          this.checkingPayment = false
-        },
-      })
-    },
-
-    startPolling() {
-      this.polling = true
-      this.pollingTimer = setInterval(() => {
-        this.checkOrderStatus()
-      }, 3000)
-    },
-
-    stopPolling() {
-      this.polling = false
-      if (this.pollingTimer) {
-        clearInterval(this.pollingTimer)
-        this.pollingTimer = null
-      }
-    },
-
-    checkOrderStatus() {
-      fetch.fetch({
-        url: `${global.backendUrl}/api/check-payment?deviceId=${global.deviceId}`,
-        method: 'GET',
-        responseType: 'json',
-        success: (response) => {
-          if (response.data.isPaid) {
-            this.stopPolling()
-            this.payUrl = ''
-            this.isPaid = true
-            global.savePaymentStatus(true)
-          }
-        },
-        fail: (data, code) => {
-          console.error('查询订单失败:', data, code)
-        },
-      })
     },
 
     inputNumber(num) {
@@ -651,116 +536,6 @@
     height: 100%;
     position: relative;
     @include flex-box-mixins(column, center, flex-start);
-
-    .unpaid-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.95);
-      z-index: 100;
-
-      .scroll-container {
-        width: 100%;
-        height: 100%;
-        padding: 0 5 * $size-factor;
-      }
-
-      .unpaid-card {
-        width: 100%;
-        @include flex-box-mixins(column, flex-start, center);
-
-        .header-section {
-          width: 100%;
-          @include flex-box-mixins(column, flex-start, center);
-          margin-top: 4 * $size-factor;
-          margin-bottom: 6 * $size-factor;
-
-          .unpaid-icon {
-            font-size: 12 * $size-factor;
-            margin-bottom: 2 * $size-factor;
-          }
-
-          .unpaid-title {
-            font-size: 10 * $size-factor;
-            color: $white;
-            font-weight: bold;
-            margin-bottom: 2 * $size-factor;
-          }
-
-          .unpaid-desc {
-            font-size: 6 * $size-factor;
-            color: $light-gray;
-          }
-        }
-
-        .payment-card {
-          width: 100%;
-          background-color: rgba(255, 255, 255, 0.1);
-          border-radius: 8 * $size-factor;
-          padding: 6 * $size-factor;
-          margin-bottom: 6 * $size-factor;
-          @include flex-box-mixins(column, flex-start, center);
-
-          .pay-button {
-            background-color: #07c160;
-            padding: 4 * $size-factor 8 * $size-factor;
-            border-radius: 8 * $size-factor;
-            margin-top: 2 * $size-factor;
-            margin-bottom: 2 * $size-factor;
-
-            .pay-button-text {
-              font-size: 8 * $size-factor;
-              color: $white;
-              font-weight: bold;
-            }
-          }
-
-          .qrcode-container {
-            width: 100%;
-            height: 100%;
-            @include flex-box-mixins(column, center, center);
-
-            .qrcode-title {
-              font-size: 8 * $size-factor;
-              color: $white;
-              font-weight: bold;
-            }
-
-            .qrcode {
-              width: 60 * $size-factor;
-              height: 60 * $size-factor;
-              background-color: white;
-              border-radius: 4 * $size-factor;
-              margin-top: 4 * $size-factor;
-            }
-          }
-        }
-
-        .device-info {
-          width: 100%;
-          background-color: rgba(255, 255, 255, 0.05);
-          border-radius: 6 * $size-factor;
-          padding: 4 * $size-factor;
-          @include flex-box-mixins(column, flex-start, center);
-
-          .device-label {
-            font-size: 6 * $size-factor;
-            color: $gray;
-            margin-bottom: 2 * $size-factor;
-          }
-
-          .device-id {
-            font-size: 7 * $size-factor;
-            color: $white;
-            font-weight: bold;
-            word-break: break-all;
-            text-align: center;
-          }
-        }
-      }
-    }
 
     .content {
       width: 100%;
