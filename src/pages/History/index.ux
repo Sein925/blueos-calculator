@@ -37,16 +37,22 @@
     },
 
     onInit() {
-      this.historyList = global.calculatorHistory || []
+      this.loadHistory()
     },
 
     onShow() {
-      this.historyList = global.calculatorHistory || []
+      this.loadHistory()
+    },
+
+    loadHistory() {
+      this.historyList = (global.calculatorHistory || []).slice()
     },
 
     clearHistory() {
       global.calculatorHistory = []
+      global.saveHistory()
       this.historyList = []
+      this.$element('content').notifyDataSetChanged()
     }
   }
 </script>
@@ -72,7 +78,7 @@
         font-size: 9 * $size-factor;
         font-weight: bold;
         color: $white;
-        margin-bottom: 2 * $size-factor;
+        margin: 2 * $size-factor;
       }
 
       .page-desc {
@@ -109,7 +115,6 @@
       background-color: rgba(255, 255, 255, 0.1);
       border-radius: 8 * $size-factor;
       padding: 24px 30px;
-      margin: 6 * $size-factor 0;
       @include flex-box-mixins(column, flex-start, flex-start);
 
       .history-expression {

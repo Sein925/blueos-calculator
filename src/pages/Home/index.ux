@@ -203,7 +203,7 @@
         </div>
       </list-item>
 
-      <list-item type="card" style="margin-top: 14px">
+      <list-item type="card" style="margin: 14px 0">
         <div class="nav-card" onclick="openAboutPage">
           <text class="nav-label">关于</text>
         </div>
@@ -512,6 +512,7 @@
       if (global.calculatorHistory.length > 20) {
         global.calculatorHistory.pop()
       }
+      global.saveHistory()
     },
 
     openHistoryPage() {

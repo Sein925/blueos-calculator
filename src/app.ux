@@ -6,6 +6,8 @@
 import './global.js'
 
 export default {
-  onCreate() {}
+  onCreate() {
+    global.loadHistory()
+  }
 }
 </script>
