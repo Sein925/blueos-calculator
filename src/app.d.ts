@@ -11,8 +11,11 @@ declare const global: {
   router: Router;
   storage: Storage;
   calculatorHistory: HistoryItem[];
+  angleMode: 'deg' | 'rad';
   loadHistory: () => void;
   saveHistory: () => void;
+  loadSettings: () => void;
+  saveSettings: () => void;
 }
 
 declare const Promise: typeof Promise

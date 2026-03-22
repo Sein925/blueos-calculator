@@ -8,38 +8,23 @@
               <text class="history-display">{{ history }}</text>
             </div>
             <div class="scroll-display">
-              <text class="main-display">{{ display }}</text>
+              <marquee class="main-display">{{ display }}</marquee>
             </div>
           </div>
 
           <div class="buttons-container">
-            <div class="button-row">
-              <div class="btn btn-function" onclick="memoryClear">
-                <text>MC</text>
-              </div>
-              <div class="btn btn-function" onclick="memoryRecall">
-                <text>MR</text>
-              </div>
-              <div class="btn btn-function" onclick="memoryAdd">
-                <text>M+</text>
-              </div>
-              <div class="btn btn-function" onclick="memorySubtract">
-                <text>M-</text>
-              </div>
-            </div>
-
             <div class="button-row" show="{{ !showAdvanced }}">
               <div class="btn btn-function" onclick="clearAll">
                 <text>C</text>
               </div>
-              <div class="btn btn-function" onclick="clearEntry">
-                <text>CE</text>
+              <div class="btn btn-function" onclick="backspace">
+                <text>←</text>
               </div>
               <div class="btn btn-function" onclick="toggleSign">
                 <text>±</text>
               </div>
-              <div class="btn btn-operator" onclick="inputOperator('/')">
-                <text>÷</text>
+              <div class="btn btn-operator" onclick="inputOperator('+')">
+                <text>+</text>
               </div>
             </div>
 
@@ -59,8 +44,8 @@
                 onclick="scientificFunction('tan')">
                 <text>tan</text>
               </div>
-              <div class="btn btn-operator" onclick="inputOperator('*')">
-                <text>×</text>
+              <div class="btn btn-operator" onclick="inputOperator('+')">
+                <text>+</text>
               </div>
             </div>
 
@@ -74,8 +59,8 @@
               <div class="btn btn-number" onclick="inputNumber('9')">
                 <text>9</text>
               </div>
-              <div class="btn btn-operator" onclick="inputOperator('*')">
-                <text>×</text>
+              <div class="btn btn-operator" onclick="inputOperator('-')">
+                <text>-</text>
               </div>
             </div>
 
@@ -110,8 +95,8 @@
               <div class="btn btn-number" onclick="inputNumber('6')">
                 <text>6</text>
               </div>
-              <div class="btn btn-operator" onclick="inputOperator('-')">
-                <text>-</text>
+              <div class="btn btn-operator" onclick="inputOperator('*')">
+                <text>×</text>
               </div>
             </div>
 
@@ -129,8 +114,8 @@
               <div class="btn btn-scientific" onclick="inputConstant('pi')">
                 <text>π</text>
               </div>
-              <div class="btn btn-operator" onclick="inputOperator('+')">
-                <text>+</text>
+              <div class="btn btn-operator" onclick="inputOperator('*')">
+                <text>×</text>
               </div>
             </div>
 
@@ -144,8 +129,8 @@
               <div class="btn btn-number" onclick="inputNumber('3')">
                 <text>3</text>
               </div>
-              <div class="btn btn-operator" onclick="inputOperator('+')">
-                <text>+</text>
+              <div class="btn btn-operator" onclick="inputOperator('/')">
+                <text>÷</text>
               </div>
             </div>
 
@@ -159,8 +144,8 @@
               <div class="btn btn-scientific" onclick="inputOperator('^')">
                 <text>^</text>
               </div>
-              <div class="btn btn-equals" onclick="calculate">
-                <text>=</text>
+              <div class="btn btn-operator" onclick="inputOperator('/')">
+                <text>÷</text>
               </div>
             </div>
 
@@ -183,14 +168,14 @@
               <div class="btn btn-function" onclick="clearAll">
                 <text>C</text>
               </div>
-              <div class="btn btn-function" onclick="clearEntry">
-                <text>CE</text>
+              <div class="btn btn-function" onclick="backspace">
+                <text>←</text>
               </div>
               <div class="btn btn-function" onclick="toggleAdvanced">
                 <text>2nd</text>
               </div>
-              <div class="btn btn-function" onclick="toggleSign">
-                <text>±</text>
+              <div class="btn btn-equals" onclick="calculate">
+                <text>=</text>
               </div>
             </div>
           </div>
@@ -199,7 +184,13 @@
 
       <list-item type="card" style="margin-top: 14px">
         <div class="nav-card" onclick="openHistoryPage">
-          <text class="nav-label">历史</text>
+          <text class="nav-label">历史记录</text>
+        </div>
+      </list-item>
+
+      <list-item type="card" style="margin-top: 14px">
+        <div class="nav-card" onclick="openSettingsPage">
+          <text class="nav-label">设置</text>
         </div>
       </list-item>
 
@@ -221,15 +212,26 @@
   }
 
   function sin(x) {
-    return Math.sin((x * PI) / 180)
+    const rad = global.angleMode === 'deg' ? (x * PI) / 180 : x
+    if (isMultipleOf(rad, PI)) return 0
+    return Math.sin(rad)
   }
 
   function cos(x) {
-    return Math.cos((x * PI) / 180)
+    const rad = global.angleMode === 'deg' ? (x * PI) / 180 : x
+    if (isMultipleOf(rad - PI / 2, PI)) return 0
+    return Math.cos(rad)
   }
 
   function tan(x) {
-    return Math.tan((x * PI) / 180)
+    const rad = global.angleMode === 'deg' ? (x * PI) / 180 : x
+    if (isMultipleOf(rad - PI / 2, PI)) return 'Error'
+    return Math.tan(rad)
+  }
+
+  function isMultipleOf(value, base) {
+    const remainder = Math.abs(value % base)
+    return remainder < 1e-9 || Math.abs(remainder - base) < 1e-9
   }
 
   export default {
@@ -386,6 +388,18 @@
       this.display = '0'
     },
 
+    backspace() {
+      if (this.error) return
+      if (
+        this.display.length === 1 ||
+        (this.display.length === 2 && this.display.startsWith('-'))
+      ) {
+        this.display = '0'
+      } else {
+        this.display = this.display.slice(0, -1)
+      }
+    },
+
     toggleSign() {
       if (this.error) return
       const value = parseFloat(this.display)
@@ -526,6 +540,12 @@
         uri: 'pages/About',
       })
     },
+
+    openSettingsPage() {
+      global.router.push({
+        uri: 'pages/Settings',
+      })
+    },
   }
 </script>
 
@@ -548,7 +568,7 @@
     width: 100%;
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 8 * $size-factor;
-    padding: 24px 30px;
+    padding: 24px 30px 12px 30px;
     margin-top: 20px;
     @include flex-box-mixins(column, flex-start, center);
   }
@@ -588,25 +608,24 @@
 
   .buttons-container {
     width: 100%;
-    @include flex-box-mixins(column, flex-start, center);
-    gap: 12px;
+    height: 340px;
+    @include flex-box-mixins(column, space-between, space-between);
   }
 
   .button-row {
     width: 100%;
     @include flex-box-mixins(row, space-between, center);
-    gap: 12px;
   }
 
   .btn {
     flex: 1;
-    height: 11 * $size-factor;
+    height: 62px;
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 6 * $size-factor;
     @include flex-box-mixins(row, center, center);
 
     text {
-      font-size: 5.5 * $size-factor;
+      font-size: 7 * $size-factor;
       font-weight: 500;
       color: $white;
     }
