@@ -10,69 +10,69 @@ const HISTORY_STORAGE_KEY = 'calculator_history'
 const SETTINGS_STORAGE_KEY = 'calculator_settings'
 
 global.loadHistory = function () {
-  storage.get({
-    key: HISTORY_STORAGE_KEY,
-    success: function (data) {
-      if (data) {
-        try {
-          global.calculatorHistory = JSON.parse(data)
-        } catch (e) {
-          global.calculatorHistory = []
-        }
-      } else {
+  try {
+    const result = storage.getSync({ key: HISTORY_STORAGE_KEY })
+    if (typeof result === 'string' && result) {
+      try {
+        global.calculatorHistory = JSON.parse(result)
+      } catch (e) {
         global.calculatorHistory = []
       }
-    },
-    fail: function () {
+    } else {
       global.calculatorHistory = []
-    },
-  })
+    }
+  } catch (e) {
+    global.calculatorHistory = []
+  }
 }
 
 global.saveHistory = function () {
-  storage.set({
-    key: HISTORY_STORAGE_KEY,
-    value: JSON.stringify(global.calculatorHistory),
-    success: function () {
-    },
-    fail: function () {
-    },
-  })
+  try {
+    storage.set({
+      key: HISTORY_STORAGE_KEY,
+      value: JSON.stringify(global.calculatorHistory),
+      success: function () {
+      },
+      fail: function () {
+      },
+    })
+  } catch (e) {
+  }
 }
 
 global.loadSettings = function () {
-  storage.get({
-    key: SETTINGS_STORAGE_KEY,
-    success: function (data) {
-      if (data) {
-        try {
-          const settings = JSON.parse(data)
-          global.angleMode = settings.angleMode || 'deg'
-        } catch (e) {
-          global.angleMode = 'deg'
-        }
-      } else {
+  try {
+    const result = storage.getSync({ key: SETTINGS_STORAGE_KEY })
+    if (typeof result === 'string' && result) {
+      try {
+        const settings = JSON.parse(result)
+        global.angleMode = settings.angleMode || 'deg'
+      } catch (e) {
         global.angleMode = 'deg'
       }
-    },
-    fail: function () {
+    } else {
       global.angleMode = 'deg'
-    },
-  })
+    }
+  } catch (e) {
+    global.angleMode = 'deg'
+  }
 }
 
 global.saveSettings = function () {
-  const settings = {
-    angleMode: global.angleMode || 'deg',
+  try {
+    const settings = {
+      angleMode: global.angleMode || 'deg',
+    }
+    storage.set({
+      key: SETTINGS_STORAGE_KEY,
+      value: JSON.stringify(settings),
+      success: function () {
+      },
+      fail: function () {
+      },
+    })
+  } catch (e) {
   }
-  storage.set({
-    key: SETTINGS_STORAGE_KEY,
-    value: JSON.stringify(settings),
-    success: function () {
-    },
-    fail: function () {
-    },
-  })
 }
 
 global.loadSettings()
