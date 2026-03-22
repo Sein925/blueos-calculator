@@ -213,25 +213,16 @@
 
   function evaluateExpression(expr) {
     if (expr.length === 0) return 0
-    if (expr.length === 1) return typeof expr[0] === 'number' ? expr[0] : parseFloat(expr[0])
+    if (expr.length === 1) return parseFloat(expr[0])
 
     let tokens = []
-    let currentNum = ''
-
     for (let i = 0; i < expr.length; i++) {
       const token = expr[i]
-      if (typeof token === 'number' || (typeof token === 'string' && !isNaN(parseFloat(token)))) {
-        currentNum += token
+      if (i % 2 === 0) {
+        tokens.push(parseFloat(token))
       } else {
-        if (currentNum !== '') {
-          tokens.push(parseFloat(currentNum))
-          currentNum = ''
-        }
         tokens.push(token)
       }
-    }
-    if (currentNum !== '') {
-      tokens.push(parseFloat(currentNum))
     }
 
     for (let i = 1; i < tokens.length; i += 2) {
@@ -266,7 +257,7 @@
   }
 
   function roundResult(num) {
-    if (!isFinite(num)) return NaN
+    if (!isFinite(num)) return 0 / 0
     const str = num.toPrecision(12)
     return parseFloat(str)
   }
@@ -340,7 +331,16 @@
       }
 
       if (this.pendingFunction) {
+        const funcInput = this.display
         this.executePendingFunction()
+        const funcResult = this.display
+        this.expression.push(funcResult)
+        this.expression.push(op)
+        this.operator = op
+        this.waitingForOperand = true
+        this.history = `${this.pendingFunction}(${funcInput}) ${this.getOperatorSymbol(op)} `
+        this.pendingFunction = ''
+        return
       }
 
       if (this.waitingForOperand) {
@@ -349,13 +349,15 @@
           this.waitingForOperand = false
           return
         }
-        this.expression[this.expression.length - 1] = op
-        this.operator = op
-        this.history = this.buildHistory()
+        if (this.expression.length > 0) {
+          this.expression[this.expression.length - 1] = op
+          this.operator = op
+          this.history = this.buildHistory()
+        }
         return
       }
 
-      this.expression.push(parseFloat(this.display))
+      this.expression.push(this.display)
       this.expression.push(op)
       this.operator = op
       this.waitingForOperand = true
@@ -364,8 +366,10 @@
 
     buildHistory() {
       return this.expression.map(item => {
-        if (typeof item === 'number') return this.formatResult(item)
-        return this.getOperatorSymbol(item)
+        if (item === '+' || item === '-' || item === '*' || item === '/' || item === '^') {
+          return this.getOperatorSymbol(item)
+        }
+        return item
       }).join(' ') + ' '
     },
 
@@ -387,9 +391,11 @@
       }
 
       if (this.pendingFunction) {
-        const input = this.pendingFunctionInput
+        const func = this.pendingFunction
+        const input = this.display
         this.executePendingFunction()
-        this.history = `${this.pendingFunction}(${input}) =`
+        this.history = `${func}(${input}) =`
+        this.expression = []
         return
       }
 
@@ -397,7 +403,7 @@
         return
       }
 
-      this.expression.push(parseFloat(this.display))
+      this.expression.push(this.display)
 
       const exprStr = this.buildHistory().replace(/ $/, '') + ' ='
       const result = evaluateExpression(this.expression)
@@ -535,9 +541,14 @@
           return
       }
 
-      this.display = this.formatResult(result)
+      const formattedResult = this.formatResult(result)
+      this.display = formattedResult
       this.waitingForOperand = true
       this.pendingFunction = ''
+      
+      if (this.history.endsWith(' = ') || this.history.endsWith(' =')) {
+        this.history = ''
+      }
     },
 
     inputConstant(constant) {
