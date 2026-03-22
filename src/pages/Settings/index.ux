@@ -66,13 +66,13 @@
     }
 
     .card-value {
-      font-size: 8 * $size-factor;
+      font-size: 7 * $size-factor;
       color: $brand;
       font-weight: bold;
     }
 
     &:active {
-      opacity: 0.6;
+      opacity: 0.4;
     }
   }
 </style>

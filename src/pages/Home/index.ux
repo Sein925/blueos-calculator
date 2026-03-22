@@ -244,6 +244,7 @@
       memory: 0,
       showAdvanced: false,
       error: false,
+      pendingFunction: '',
     },
 
     inputNumber(num) {
@@ -275,6 +276,10 @@
     inputOperator(op) {
       if (this.error) {
         this.clearAll()
+      }
+
+      if (this.pendingFunction) {
+        this.executePendingFunction()
       }
 
       const inputValue = parseFloat(this.display)
@@ -335,6 +340,12 @@
         return
       }
 
+      if (this.pendingFunction) {
+        this.executePendingFunction()
+        this.history = `${this.pendingFunction}(${this.display}) =`
+        return
+      }
+
       if (this.operator === '' || this.waitingForOperand) {
         return
       }
@@ -380,14 +391,6 @@
       this.error = false
     },
 
-    clearEntry() {
-      if (this.error) {
-        this.clearAll()
-        return
-      }
-      this.display = '0'
-    },
-
     backspace() {
       if (this.error) return
       if (
@@ -413,13 +416,24 @@
     scientificFunction(func) {
       if (this.error) {
         this.clearAll()
-        return
       }
+
+      if (this.pendingFunction) {
+        this.executePendingFunction()
+      }
+
+      this.pendingFunction = func
+      this.history = `${func}(`
+      this.waitingForOperand = true
+    },
+
+    executePendingFunction() {
+      if (!this.pendingFunction) return
 
       const value = parseFloat(this.display)
       let result
 
-      switch (func) {
+      switch (this.pendingFunction) {
         case 'sin':
           result = sin(value)
           break
@@ -433,6 +447,7 @@
           if (value < 0) {
             this.display = 'Error'
             this.error = true
+            this.pendingFunction = ''
             return
           }
           result = Math.sqrt(value)
@@ -447,6 +462,7 @@
           if (value <= 0) {
             this.display = 'Error'
             this.error = true
+            this.pendingFunction = ''
             return
           }
           result = Math.log10(value)
@@ -455,18 +471,19 @@
           if (value <= 0) {
             this.display = 'Error'
             this.error = true
+            this.pendingFunction = ''
             return
           }
           result = Math.log(value)
           break
         default:
+          this.pendingFunction = ''
           return
       }
 
-      const expression = `${func}(${value})`
       this.display = this.formatResult(result)
       this.waitingForOperand = true
-      this.addToHistory(expression, this.display)
+      this.pendingFunction = ''
     },
 
     inputConstant(constant) {
