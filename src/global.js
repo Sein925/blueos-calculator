@@ -11,16 +11,23 @@ const SETTINGS_STORAGE_KEY = 'calculator_settings'
 
 global.loadHistory = function () {
   try {
-    const result = storage.getSync({ key: HISTORY_STORAGE_KEY })
-    if (typeof result === 'string' && result) {
-      try {
-        global.calculatorHistory = JSON.parse(result)
-      } catch (e) {
+    storage.get({
+      key: HISTORY_STORAGE_KEY,
+      success: function (data) {
+        if (data) {
+          try {
+            global.calculatorHistory = JSON.parse(data)
+          } catch (e) {
+            global.calculatorHistory = []
+          }
+        } else {
+          global.calculatorHistory = []
+        }
+      },
+      fail: function () {
         global.calculatorHistory = []
-      }
-    } else {
-      global.calculatorHistory = []
-    }
+      },
+    })
   } catch (e) {
     global.calculatorHistory = []
   }
@@ -42,17 +49,24 @@ global.saveHistory = function () {
 
 global.loadSettings = function () {
   try {
-    const result = storage.getSync({ key: SETTINGS_STORAGE_KEY })
-    if (typeof result === 'string' && result) {
-      try {
-        const settings = JSON.parse(result)
-        global.angleMode = settings.angleMode || 'deg'
-      } catch (e) {
+    storage.get({
+      key: SETTINGS_STORAGE_KEY,
+      success: function (data) {
+        if (data) {
+          try {
+            const settings = JSON.parse(data)
+            global.angleMode = settings.angleMode || 'deg'
+          } catch (e) {
+            global.angleMode = 'deg'
+          }
+        } else {
+          global.angleMode = 'deg'
+        }
+      },
+      fail: function () {
         global.angleMode = 'deg'
-      }
-    } else {
-      global.angleMode = 'deg'
-    }
+      },
+    })
   } catch (e) {
     global.angleMode = 'deg'
   }

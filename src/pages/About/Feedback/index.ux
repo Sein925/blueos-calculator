@@ -1,23 +1,21 @@
 <import name="d-back" src="./../../../components/d-back"></import>
 
 <template>
-  <div class="wrapper">
-    <d-back></d-back>
-    <list class="content">
-      <list-item type="card">
-        <div class="card">
-          <text class="card-label">电子邮箱</text>
-          <text class="card-value">yikangyyds@gmail.com</text>
-        </div>
-      </list-item>
-      <list-item type="card">
-        <div class="card">
-          <text class="card-label">轻腕社区</text>
-          <text class="card-value">999999999</text>
-        </div>
-      </list-item>
-    </list>
-  </div>
+  <list class="wrapper" title="true">
+    <list-item>
+      <d-back></d-back>
+    </list-item>
+    <list-item class="content">
+      <div class="card">
+        <text class="card-label">电子邮箱</text>
+        <text class="card-value">yikangyyds@gmail.com</text>
+      </div>
+      <div class="card">
+        <text class="card-label">轻腕社区</text>
+        <text class="card-value">999999999</text>
+      </div>
+    </list-item>
+  </list>
 </template>
 
 <style lang="scss">
@@ -29,6 +27,7 @@
     .content {
       width: 100%;
       padding: 0 25px;
+      flex-direction: column;
     }
 
     list-item {

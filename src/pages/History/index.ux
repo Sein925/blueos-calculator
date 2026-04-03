@@ -1,39 +1,42 @@
 <import name="d-back" src="./../../components/d-back"></import>
 
 <template>
-  <div class="wrapper">
-    <d-back value="历史记录"></d-back>
-    <list class="content">
-      <list-item type="about">
+  <list class="wrapper" title="true">
+    <list-item>
+      <d-back value="历史记录"></d-back>
+    </list-item>
+    <list-item class="content">
+      <div type="about">
         <div class="history-content">
           <text class="page-title">历史记录</text>
           <text class="page-desc">最近20条计算记录</text>
         </div>
-      </list-item>
-      <list-item type="card">
+      </div>
+      <div type="card">
         <div class="option-card" style="margin-bottom: 0" @click="clearHistory">
           <text class="card-label">清除历史</text>
         </div>
-      </list-item>
-      <list-item for="item in historyList" type="card">
+      </div>
+      <div for="item in historyList" type="card">
         <div class="history-card" style="margin-top: 18px">
           <text class="history-expression">{{ item.expression }}</text>
           <text class="history-result">= {{ item.result }}</text>
         </div>
-      </list-item>
-      <list-item>
+      </div>
+      <div style="height: 26px" show="{{ historyList.length !== 0 }}"></div>
+      <div>
         <div class="empty-hint" show="{{ historyList.length === 0 }}">
           <text class="app-desc">暂无历史记录</text>
         </div>
-      </list-item>
-    </list>
-  </div>
+      </div>
+    </list-item>
+  </list>
 </template>
 
 <script>
   export default {
     data: {
-      historyList: []
+      historyList: [],
     },
 
     onInit() {
@@ -52,7 +55,7 @@
       global.calculatorHistory = []
       global.saveHistory()
       this.historyList = []
-    }
+    },
   }
 </script>
 
@@ -67,6 +70,7 @@
     .content {
       width: 100%;
       padding: 0 5 * $size-factor;
+      @include flex-box-mixins(column, center, flex-start);
     }
 
     .history-content {

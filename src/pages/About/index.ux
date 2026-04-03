@@ -1,41 +1,43 @@
 <import name="d-back" src="./../../components/d-back"></import>
 
 <template>
-  <div class="wrapper">
-    <d-back value="关于"></d-back>
-    <list class="content">
-      <list-item type="about">
+  <list class="wrapper" title="true">
+    <list-item>
+      <d-back value="关于"></d-back>
+    </list-item>
+    <list-item class="content">
+      <div type="about">
         <div class="about-content">
           <text class="app-name">{{ appName }}</text>
           <text class="app-version">版本: {{ appVersion }}</text>
           <image class="app-logo" src="/assets/images/logo.png"></image>
           <text class="app-desc">一款强大的手表端科学计算器</text>
         </div>
-      </list-item>
-      <list-item type="card">
+      </div>
+      <div type="card">
         <div class="option-card" style="margin-bottom: 0" @click="feedback">
           <text class="card-label">意见反馈</text>
         </div>
-      </list-item>
-      <list-item type="card">
+      </div>
+      <div type="card">
         <div class="option-card" style="margin-top: 18px" @click="donate">
           <text class="card-label">打赏</text>
         </div>
-      </list-item>
-      <list-item>
+      </div>
+      <div>
         <div class="copyright">
           <text class="app-desc">©2026 Dasein</text>
         </div>
-      </list-item>
-    </list>
-  </div>
+      </div>
+    </list-item>
+  </list>
 </template>
 
 <script>
   export default {
     data: {
       appName: '科学计算器',
-      appVersion: '1.0.1',
+      appVersion: '1.0.2',
     },
 
     feedback() {
@@ -63,6 +65,7 @@
     .content {
       width: 100%;
       padding: 0 5 * $size-factor;
+      @include flex-box-mixins(column, center, flex-start);
     }
 
     .about-content {
@@ -115,7 +118,7 @@
     .copyright {
       width: 100%;
       @include flex-box-mixins(row, center, center);
-      margin-bottom: 2 * $size-factor;
+      margin-bottom: 4 * $size-factor;
     }
   }
 </style>

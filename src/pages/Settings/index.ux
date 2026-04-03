@@ -1,19 +1,21 @@
 <import name="d-back" src="./../../components/d-back"></import>
 
 <template>
-  <div class="wrapper">
-    <d-back value="设置"></d-back>
-    <list class="content">
-      <list-item type="card">
+  <list class="wrapper" title="true">
+    <list-item>
+      <d-back value="设置"></d-back>
+    </list-item>
+    <list-item class="content">
+      <div>
         <div class="option-card" onclick="toggleAngleMode">
           <text class="card-label">角度模式</text>
           <text class="card-value">
             {{ angleMode === 'deg' ? 'DEG' : 'RAD' }}
           </text>
         </div>
-      </list-item>
-    </list>
-  </div>
+      </div>
+    </list-item>
+  </list>
 </template>
 
 <script>
