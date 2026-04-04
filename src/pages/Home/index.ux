@@ -347,7 +347,12 @@
 
       if (this.waitingForOperand) {
         if (this.expression.length > 0) {
-          this.expression[this.expression.length - 1] = op
+          const lastItem = this.expression[this.expression.length - 1]
+          if (lastItem === '+' || lastItem === '-' || lastItem === '*' || lastItem === '/' || lastItem === '^') {
+            this.expression[this.expression.length - 1] = op
+          } else {
+            this.expression.push(op)
+          }
           this.operator = op
           this.history = this.buildHistory()
         }
@@ -398,11 +403,7 @@
       }
 
       if (this.pendingFunction) {
-        const func = this.pendingFunction
-        const input = this.display
         this.executePendingFunction()
-        this.history = `${func}(${input}) =`
-        this.expression = []
         return
       }
 
@@ -426,7 +427,7 @@
       this.history = `${exprStr}`
       this.addToHistory(exprStr.replace(' =', ''), this.formatResult(result))
       this.display = this.formatResult(result)
-      this.expression = []
+      this.expression = [this.formatResult(result)]
       this.waitingForOperand = true
     },
 
@@ -497,9 +498,10 @@
       if (!this.pendingFunction) return
 
       const value = parseFloat(this.display)
+      const funcName = this.pendingFunction
       let result
 
-      switch (this.pendingFunction) {
+      switch (funcName) {
         case 'sin':
           result = sin(value)
           break
@@ -548,12 +550,15 @@
       }
 
       const formattedResult = this.formatResult(result)
+      const expressionStr = `${funcName}(${value})`
       this.display = formattedResult
+      this.expression = [formattedResult]
       this.waitingForOperand = true
       this.pendingFunction = ''
+      this.history = `${expressionStr} =`
 
-      if (this.history.endsWith(' = ') || this.history.endsWith(' =')) {
-        this.history = ''
+      if (formattedResult !== 'Error' && isFinite(result)) {
+        this.addToHistory(expressionStr, formattedResult)
       }
     },
 

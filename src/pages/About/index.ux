@@ -37,7 +37,7 @@
   export default {
     data: {
       appName: '科学计算器',
-      appVersion: '1.0.2',
+      appVersion: '1.0.3',
     },
 
     feedback() {
