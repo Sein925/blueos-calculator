@@ -1,7 +1,10 @@
 import router from '@blueos.app.appmanager.router'
 import storage from '@blueos.storage.storage'
+import fetch from '@blueos.network.fetch'
 
 global.router = router
+global.storage = storage
+global.fetch = fetch
 
 global.calculatorHistory = []
 global.angleMode = 'deg'

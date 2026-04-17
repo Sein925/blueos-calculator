@@ -1,11 +1,19 @@
 <template>
   <div class="wrapper">
-    <list class="content">
-      <list-item type="card">
-        <div class="calculator-card">
+    <swiper class="swiper-container" index="1" indicator="true">
+      <div class="swiper-slide advanced-panel">
+        <div class="panel-content">
+          <text class="panel-title">高级功能</text>
+        </div>
+      </div>
+
+      <div class="swiper-slide calculator-panel">
+        <div class="calculator-card fullscreen">
           <div class="display-card">
             <div class="scroll-display">
-              <text class="history-display">{{ history }}</text>
+              <text class="history-display" style="margin-bottom: 4px">
+                {{ history }}
+              </text>
             </div>
             <div class="scroll-display">
               <marquee class="main-display">{{ display }}</marquee>
@@ -21,7 +29,9 @@
                 <text>±</text>
               </div>
               <div class="btn btn-function" onclick="backspace">
-                <image src="./../../assets/images/backspace.svg" width="46px"></image>
+                <image
+                  src="./../../assets/images/backspace.svg"
+                  width="46px"></image>
               </div>
               <div class="btn btn-operator" onclick="inputOperator('/')">
                 <text>÷</text>
@@ -165,7 +175,10 @@
             </div>
 
             <div class="button-row" show="{{ showAdvanced }}">
-              <div class="btn btn-function" style="flex: 3" onclick="toggleAdvanced">
+              <div
+                class="btn btn-function"
+                style="flex: 3"
+                onclick="toggleAdvanced">
                 <text>2nd</text>
               </div>
               <div class="btn btn-equals" style="flex: 1" onclick="calculate">
@@ -174,26 +187,30 @@
             </div>
           </div>
         </div>
-      </list-item>
+      </div>
 
-      <list-item type="card" style="margin-top: 14px">
-        <div class="nav-card" onclick="openHistoryPage">
-          <text class="nav-label">历史记录</text>
-        </div>
-      </list-item>
+      <div class="swiper-slide nav-panel">
+        <list class="content">
+          <list-item type="card" style="margin-top: 20px">
+            <div class="nav-card" onclick="openHistoryPage">
+              <text class="nav-label">历史记录</text>
+            </div>
+          </list-item>
 
-      <list-item type="card" style="margin-top: 14px">
-        <div class="nav-card" onclick="openSettingsPage">
-          <text class="nav-label">设置</text>
-        </div>
-      </list-item>
+          <list-item type="card" style="margin-top: 14px">
+            <div class="nav-card" onclick="openSettingsPage">
+              <text class="nav-label">设置</text>
+            </div>
+          </list-item>
 
-      <list-item type="card" style="margin: 14px 0 20px 0">
-        <div class="nav-card" onclick="openAboutPage">
-          <text class="nav-label">关于</text>
-        </div>
-      </list-item>
-    </list>
+          <list-item type="card" style="margin-top: 14px">
+            <div class="nav-card" onclick="openAboutPage">
+              <text class="nav-label">关于</text>
+            </div>
+          </list-item>
+        </list>
+      </div>
+    </swiper>
   </div>
 </template>
 
@@ -348,7 +365,13 @@
       if (this.waitingForOperand) {
         if (this.expression.length > 0) {
           const lastItem = this.expression[this.expression.length - 1]
-          if (lastItem === '+' || lastItem === '-' || lastItem === '*' || lastItem === '/' || lastItem === '^') {
+          if (
+            lastItem === '+' ||
+            lastItem === '-' ||
+            lastItem === '*' ||
+            lastItem === '/' ||
+            lastItem === '^'
+          ) {
             this.expression[this.expression.length - 1] = op
           } else {
             this.expression.push(op)
@@ -627,8 +650,40 @@
     width: 100%;
     height: 100%;
     position: relative;
-    @include flex-box-mixins(column, center, flex-start);
+  }
 
+  .swiper-container {
+    width: 100%;
+    height: 100%;
+  }
+
+  .swiper-slide {
+    width: 100%;
+    height: 100%;
+    @include flex-box-mixins(column, center, flex-start);
+  }
+
+  .advanced-panel {
+    .panel-content {
+      width: 90%;
+      padding-top: 60px;
+      @include flex-box-mixins(column, center, center);
+
+      .panel-title {
+        font-size: 48px;
+        color: $gray;
+      }
+    }
+  }
+
+  .calculator-panel {
+    .content {
+      width: 100%;
+      padding: 0 5 * $size-factor;
+    }
+  }
+
+  .nav-panel {
     .content {
       width: 100%;
       padding: 0 5 * $size-factor;
@@ -637,44 +692,40 @@
 
   .calculator-card {
     width: 100%;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.05);
     border-radius: 8 * $size-factor;
-    padding: 24px 30px 12px 30px;
-    margin-top: 20px;
+    padding: 16px 24px 18px 24px;
     @include flex-box-mixins(column, flex-start, center);
   }
 
   .display-card {
     width: 100%;
-    background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 6 * $size-factor;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
     padding: 16px 20px;
-    margin-bottom: 18px;
+    margin-bottom: 8px;
     @include flex-box-mixins(column, flex-start, center);
   }
 
   .scroll-display {
     width: 100%;
-    height: 40px;
-    overflow-x: scroll;
-    overflow-y: hidden;
-    white-space: nowrap;
+    height: 36px;
   }
 
   .history-display {
     color: $gray;
     font-size: 5 * $size-factor;
-    font-weight: 500;
+    font-weight: 400;
     text-align: right;
-    line-height: 40px;
+    line-height: 36px;
   }
 
   .main-display {
     color: $white;
     font-size: 7 * $size-factor;
-    font-weight: bold;
+    font-weight: 600;
     text-align: right;
-    line-height: 40px;
+    line-height: 48px;
   }
 
   .buttons-container {
@@ -685,6 +736,7 @@
   .button-row {
     width: 100%;
     @include flex-box-mixins(row, space-between, center);
+    margin: 4px 0;
   }
 
   .btn {
@@ -693,6 +745,7 @@
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 8 * $size-factor;
     @include flex-box-mixins(row, center, center);
+    margin: 0 4px;
 
     text {
       font-size: 7 * $size-factor;
@@ -718,6 +771,7 @@
 
     text {
       color: $brand;
+      font-weight: 600;
     }
   }
 
@@ -726,6 +780,7 @@
 
     text {
       color: #1976d2;
+      font-weight: 500;
     }
   }
 

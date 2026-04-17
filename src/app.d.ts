@@ -1,6 +1,7 @@
 /// <reference types="@blueos" />
 type Router = typeof import('@blueos.app.appmanager.router');
 type Storage = typeof import('@blueos.storage.storage');
+type Fetch = typeof import('@blueos.network.fetch');
 
 interface HistoryItem {
   expression: string;
@@ -10,6 +11,7 @@ interface HistoryItem {
 declare const global: {
   router: Router;
   storage: Storage;
+  fetch: Fetch;
   calculatorHistory: HistoryItem[];
   angleMode: 'deg' | 'rad';
   loadHistory: () => void;

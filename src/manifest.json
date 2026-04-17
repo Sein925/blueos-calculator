@@ -1,8 +1,8 @@
 {
   "package": "com.dasein.calculator",
   "name": "科学计算器",
-  "versionName": "1.0.3",
-  "versionCode": 260404,
+  "versionName": "1.1.0",
+  "versionCode": 260418,
   "appCategory": [
     "education"
   ],
@@ -13,6 +13,9 @@
     },
     {
       "name": "blueos.storage.storage"
+    },
+    {
+      "name": "blueos.network.fetch"
     }
   ],
   "deviceTypeList": [
@@ -24,7 +27,7 @@
     "designWidth": 466
   },
   "router": {
-    "entry": "pages/Home",
+    "entry": "pages/Welcome",
     "pages": {
       "pages/Home": {
         "component": "index"
@@ -42,6 +45,12 @@
         "component": "index"
       },
       "pages/Settings": {
+        "component": "index"
+      },
+      "pages/Debug": {
+        "component": "index"
+      },
+      "pages/Welcome": {
         "component": "index"
       }
     }
