@@ -4,6 +4,7 @@
       <div class="swiper-slide advanced-panel">
         <div class="panel-content">
           <text class="panel-title">高级功能</text>
+          <text class="panel-desc">敬请期待</text>
         </div>
       </div>
 
@@ -676,6 +677,12 @@
       .panel-title {
         font-size: 48px;
         color: $gray;
+        margin-bottom: 20px;
+      }
+
+      .panel-desc {
+        font-size: 32px;
+        color: rgba(255, 255, 255, 0.4);
       }
     }
   }
