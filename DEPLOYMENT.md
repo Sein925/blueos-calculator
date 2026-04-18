@@ -1,4 +1,4 @@
-# BlueOS Calculator - EdgeOne 部署指南
+# BlueOS Calculator - EdgeOne Pages 部署指南
 
 ## 前置条件
 
@@ -6,17 +6,14 @@
 - ✅ EdgeOne Pages 账户
 - ✅ 域名（可选，EdgeOne 会提供默认域名）
 
-## ⚠️ EdgeOne Pages 特殊要求
+## ✅ EdgeOne Pages 边缘函数已配置！
 
-根据 EdgeOne Pages 文档，后端函数必须满足以下要求：
+本项目已按照 EdgeOne Pages 边缘函数要求重构：
 
-1. **文件名必须是 `[[default]].js` 格式**
-2. **使用 ES6 模块语法**（`import/export`）
-3. **导出 app 实例**（`export default app`）
-4. **不要监听端口**（EdgeOne 会自动处理）
-5. **在 package.json 中设置 `"type": "module"`**
-
-本项目已按照这些要求配置！
+1. **使用 `./edge-functions` 目录结构**
+2. **使用原生 Edge Functions API**（onRequest 等 handlers）
+3. **无需 Express 或其他框架**
+4. **使用 Web Service Worker API**
 
 ## 部署步骤
 
@@ -34,25 +31,16 @@
 
 ### 3. 配置构建设置
 
-在构建设置页面，配置以下内容：
-
-**根目录：**
-```
-backend
-```
-
-**构建命令：**
-```bash
-npm install
-```
-
-**输出目录：**
-```
-.
-```
+EdgeOne Pages 会自动识别边缘函数，无需额外配置！
 
 **框架预设：**
-选择 `Express.js` 或 `Node.js`
+选择 `Edge Functions` 或保持默认
+
+**构建命令：**
+留空或使用：
+```bash
+# 无需构建命令，边缘函数会自动被识别
+```
 
 ### 4. 配置环境变量
 
@@ -64,13 +52,13 @@ npm install
 
 ### 5. 配置数据库
 
-确保数据库连接信息正确：
+数据库连接信息已在代码中配置：
 - 数据库地址：`mysql6.sqlpub.com:3311`
 - 数据库名：`blueos_calculator`
 - 用户名：`dasein`
 - 密码：`NiGrg1RNwfsybSx4`
 
-这些已经配置在 `backend/[[default]].js` 中。
+这些配置在 `edge-functions/_utils/db.js` 中。
 
 ### 6. 配置快支付回调地址
 
@@ -109,18 +97,33 @@ https://your-domain.pages.edgeone.app/api/health
 
 ```
 blueos-calculator/
-├── backend/              # 后端项目
-│   ├── [[default]].js    # EdgeOne 函数入口文件（重要！）
-│   ├── package.json      # 依赖配置（已配置 type: module）
-│   ├── .gitignore        # Git 忽略文件
-│   └── README.md         # 后端文档
-├── src/                  # 前端项目
+├── edge-functions/          # 边缘函数目录（重要！）
+│   ├── _utils/              # 共享工具函数
+│   │   ├── db.js           # 数据库连接
+│   │   ├── crypto.js       # 加密/签名工具
+│   │   └── kuaizhifu.js    # 快支付配置
+│   └── api/                # API 路由
+│       ├── health.js       # /api/health
+│       └── vip/            # /api/vip/*
+│           ├── order.js    # POST /api/vip/order
+│           ├── notify.js   # GET /api/vip/notify
+│           └── status/
+│               └── [device_id].js  # GET /api/vip/status/:device_id
+├── src/                   # 前端项目
 │   ├── pages/            # 页面
 │   ├── components/       # 组件
 │   └── manifest.json     # 应用配置
-├── DEPLOYMENT.md         # 本部署指南
-└── CHANGELOG.md          # 更新日志
+└── DEPLOYMENT.md         # 本部署指南
 ```
+
+## Edge Functions 路由说明
+
+| 文件路径 | 路由 | 说明 |
+|---------|------|------|
+| `/edge-functions/api/health.js` | `/api/health` | 健康检查 |
+| `/edge-functions/api/vip/order.js` | `/api/vip/order` | 创建VIP订单（POST） |
+| `/edge-functions/api/vip/notify.js` | `/api/vip/notify` | 支付异步通知（GET） |
+| `/edge-functions/api/vip/status/[device_id].js` | `/api/vip/status/:device_id` | 查询VIP状态（GET） |
 
 ## 后端 API 接口
 
@@ -133,21 +136,19 @@ blueos-calculator/
 
 ## 常见问题
 
-### Q: EdgeOne 未识别为函数？
+### Q: EdgeOne 未识别到边缘函数？
 
 A: 确保以下几点：
-1. 文件名必须是 `[[default]].js`
-2. package.json 中有 `"type": "module"`
-3. 使用 `export default app` 导出
-4. 不要调用 `app.listen()`
+1. 函数文件在 `./edge-functions` 目录下
+2. 使用正确的 handler 方法（`onRequest`, `onRequestGet`, `onRequestPost` 等）
+3. 文件扩展名是 `.js`
 
 ### Q: 部署失败怎么办？
 
 A: 检查以下几点：
-1. 根目录设置为 `backend`
-2. 构建命令正确：`npm install`
-3. package.json 存在且配置正确
-4. 依赖能正常安装
+1. 查看构建日志中的错误信息
+2. 确保代码语法正确
+3. 检查边缘函数是否正确导出
 
 ### Q: 数据库连接失败？
 
@@ -177,15 +178,7 @@ A: 在 EdgeOne Pages 控制台的项目详情中找到"日志"或"监控"选项�
 
 ## 本地开发
 
-如需本地开发测试：
-
-```bash
-cd backend
-npm install
-npm run dev
-```
-
-注意：本地开发需要修改代码添加 `app.listen()`，但部署前请移除！
+Edge Functions 使用标准的 Web Service Worker API，可以在本地使用支持的工具进行测试。
 
 ## 联系支持
 
