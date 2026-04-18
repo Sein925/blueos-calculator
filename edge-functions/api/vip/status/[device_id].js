@@ -1,4 +1,4 @@
-import { getDBPool } from '../../../_utils/db.js';
+import { supabaseGet } from '../../../_utils/supabase.js';
 
 export async function onRequestGet(context) {
   console.log('[Status] ===== 查询VIP状态 =====');
@@ -7,49 +7,63 @@ export async function onRequestGet(context) {
     const { device_id } = context.params;
     console.log('[Status] 查询设备:', device_id);
     
-    const pool = await getDBPool();
-    console.log('[Status] 数据库连接成功');
+    console.log('[Status] 查询VIP订单...');
+    const orders = await supabaseGet('vip_orders', 
+      { device_id, status: 'success' },
+      { 
+        orderBy: 'paid_at', 
+        ascending: false, 
+        limit: 1,
+        columns: 'package_type, paid_at'
+      }
+    );
     
-    const connection = await pool.getConnection();
+    console.log('[Status] 查询结果:', orders);
     
-    try {
-      console.log('[Status] 查询VIP订单...');
-      const [result] = await connection.query(
-        `SELECT 
-            vo.*,
-            CASE 
-              WHEN vo.package_type = 'permanent' THEN DATE_ADD(vo.paid_at, INTERVAL 100 YEAR)
-              WHEN vo.package_type = 'year' THEN DATE_ADD(vo.paid_at, INTERVAL 1 YEAR)
-              WHEN vo.package_type = 'quarter' THEN DATE_ADD(vo.paid_at, INTERVAL 3 MONTH)
-              ELSE DATE_ADD(vo.paid_at, INTERVAL 1 MONTH)
-            END as expire_date
-         FROM vip_orders vo
-         WHERE vo.device_id = ? AND vo.status = 'success'
-         ORDER BY vo.paid_at DESC
-         LIMIT 1`,
-        [device_id]
-      );
+    let isVip = false;
+    let expireDate = null;
+    
+    if (orders && orders.length > 0) {
+      const order = orders[0];
+      const paidAt = new Date(order.paid_at);
+      let expireAt;
       
-      console.log('[Status] 查询结果:', result.length);
-      
-      const isVip = result.length > 0 && new Date(result[0].expire_date) > new Date();
-      console.log('[Status] VIP状态:', isVip);
-      
-      if (isVip) {
-        console.log('[Status] 过期时间:', result[0].expire_date);
+      switch (order.package_type) {
+        case 'permanent':
+          expireAt = new Date(paidAt);
+          expireAt.setFullYear(expireAt.getFullYear() + 100);
+          break;
+        case 'year':
+          expireAt = new Date(paidAt);
+          expireAt.setFullYear(expireAt.getFullYear() + 1);
+          break;
+        case 'quarter':
+          expireAt = new Date(paidAt);
+          expireAt.setMonth(expireAt.getMonth() + 3);
+          break;
+        case 'month':
+        default:
+          expireAt = new Date(paidAt);
+          expireAt.setMonth(expireAt.getMonth() + 1);
+          break;
       }
       
-      console.log('[Status] ===== 查询VIP状态成功 =====');
+      isVip = new Date() < expireAt;
+      expireDate = isVip ? expireAt.toISOString() : null;
       
-      return jsonResponse({
-        success: true,
-        is_vip: isVip,
-        expire_date: isVip ? result[0].expire_date : null
-      });
-    } finally {
-      connection.release();
-      console.log('[Status] 数据库连接已释放');
+      console.log('[Status] VIP状态:', isVip);
+      if (isVip) {
+        console.log('[Status] 过期时间:', expireDate);
+      }
     }
+    
+    console.log('[Status] ===== 查询VIP状态成功 =====');
+    
+    return jsonResponse({
+      success: true,
+      is_vip: isVip,
+      expire_date: expireDate
+    });
   } catch (error) {
     console.error('[Status] ===== 查询VIP状态失败 =====');
     console.error('[Status] 错误信息:', error);

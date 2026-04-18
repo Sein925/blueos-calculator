@@ -1,6 +1,6 @@
-import { getDBPool } from '../../_utils/db.js';
 import { verifySign } from '../../_utils/crypto.js';
 import { KUAIZHIFU_CONFIG } from '../../_utils/kuaizhifu.js';
+import { supabaseGet, supabaseUpdate } from '../../_utils/supabase.js';
 
 export async function onRequestGet(context) {
   console.log('[Notify] ===== 收到支付通知 =====');
@@ -30,47 +30,35 @@ export async function onRequestGet(context) {
     
     console.log('[Notify] 支付成功，更新订单状态...');
     
-    const pool = await getDBPool();
-    const connection = await pool.getConnection();
+    console.log('[Notify] 查询订单...');
+    const orders = await supabaseGet('vip_orders', { out_trade_no });
     
-    try {
-      console.log('[Notify] 查询订单...');
-      const [orderResult] = await connection.query(
-        'SELECT * FROM vip_orders WHERE out_trade_no = ?',
-        [out_trade_no]
-      );
-      
-      if (orderResult.length === 0) {
-        console.log('[Notify] 订单不存在:', out_trade_no);
-        return new Response('success');
-      }
-      
-      const order = orderResult[0];
-      console.log('[Notify] 订单信息:', order);
-      
-      if (order.status === 'success') {
-        console.log('[Notify] 订单已处理:', out_trade_no);
-        return new Response('success');
-      }
-      
-      if (parseFloat(order.amount) !== parseFloat(money)) {
-        console.log('[Notify] 金额不匹配:', order.amount, money);
-        return new Response('success');
-      }
-      
-      console.log('[Notify] 更新订单状态...');
-      await connection.query(
-        'UPDATE vip_orders SET status = ?, kuaizhifu_trade_no = ?, paid_at = NOW() WHERE out_trade_no = ?',
-        ['success', trade_no, out_trade_no]
-      );
-      
-      console.log('[Notify] 订单状态更新成功');
-      
-    } finally {
-      connection.release();
-      console.log('[Notify] 数据库连接已释放');
+    if (!orders || orders.length === 0) {
+      console.log('[Notify] 订单不存在:', out_trade_no);
+      return new Response('success');
     }
     
+    const order = orders[0];
+    console.log('[Notify] 订单信息:', order);
+    
+    if (order.status === 'success') {
+      console.log('[Notify] 订单已处理:', out_trade_no);
+      return new Response('success');
+    }
+    
+    if (parseFloat(order.amount) !== parseFloat(money)) {
+      console.log('[Notify] 金额不匹配:', order.amount, money);
+      return new Response('success');
+    }
+    
+    console.log('[Notify] 更新订单状态...');
+    await supabaseUpdate('vip_orders', { out_trade_no }, {
+      status: 'success',
+      kuaizhifu_trade_no: trade_no,
+      paid_at: new Date().toISOString()
+    });
+    
+    console.log('[Notify] 订单状态更新成功');
     console.log('[Notify] ===== 支付通知处理成功 =====');
     return new Response('success');
   } catch (error) {

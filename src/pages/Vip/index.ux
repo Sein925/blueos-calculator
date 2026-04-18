@@ -125,14 +125,19 @@
       
       const packageType = this.getPackageType()
       
+      const postData = JSON.stringify({
+        device_id: this.deviceId,
+        package_type: packageType
+      })
+      
       global.fetch.fetch({
         url: this.serverUrl + 'api/vip/order',
         method: 'POST',
         responseType: 'json',
-        data: {
-          device_id: this.deviceId,
-          package_type: packageType
+        header: {
+          'Content-Type': 'application/json'
         },
+        data: postData,
         success: (response) => {
           this.loading = false
           
