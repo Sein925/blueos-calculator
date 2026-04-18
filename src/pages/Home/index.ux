@@ -9,11 +9,11 @@
 
       <div class="swiper-slide calculator-panel">
         <div class="calculator-card fullscreen">
-          <div class="display-card">
+          <div class="display-card" onclick="openHistoryPage">
             <div class="scroll-display">
-              <text class="history-display" style="margin-bottom: 4px">
+              <marquee class="history-display" style="margin-bottom: 4px">
                 {{ history }}
-              </text>
+              </marquee>
             </div>
             <div class="scroll-display">
               <marquee class="main-display">{{ display }}</marquee>
@@ -191,18 +191,14 @@
 
       <div class="swiper-slide nav-panel">
         <list class="content">
-          <list-item type="card" style="margin-top: 20px">
-            <div class="nav-card" onclick="openHistoryPage">
-              <text class="nav-label">历史记录</text>
-            </div>
+          <list-item>
+            <text class="section-title">其他</text>
           </list-item>
-
           <list-item type="card" style="margin-top: 14px">
             <div class="nav-card" onclick="openSettingsPage">
               <text class="nav-label">设置</text>
             </div>
           </list-item>
-
           <list-item type="card" style="margin-top: 14px">
             <div class="nav-card" onclick="openAboutPage">
               <text class="nav-label">关于</text>
@@ -326,6 +322,10 @@
       if (this.waitingForOperand) {
         this.display = num
         this.waitingForOperand = false
+        if (this.expression.length === 1) {
+          this.expression = []
+          this.history = ''
+        }
       } else {
         this.display = this.display === '0' ? num : this.display + num
       }
@@ -339,6 +339,10 @@
       if (this.waitingForOperand) {
         this.display = '0.'
         this.waitingForOperand = false
+        if (this.expression.length === 1) {
+          this.expression = []
+          this.history = ''
+        }
       } else if (this.display.indexOf('.') === -1) {
         this.display += '.'
       }
@@ -665,7 +669,7 @@
 
   .advanced-panel {
     .panel-content {
-      width: 90%;
+      width: 100%;
       padding-top: 60px;
       @include flex-box-mixins(column, center, center);
 
@@ -679,15 +683,22 @@
   .calculator-panel {
     .content {
       width: 100%;
-      padding: 0 5 * $size-factor;
+      padding: 0 6 * $size-factor;
     }
   }
 
   .nav-panel {
     .content {
       width: 100%;
-      padding: 0 5 * $size-factor;
+      padding: 4 * $size-factor 6 * $size-factor;
     }
+  }
+
+  .section-title {
+    color: $light-gray;
+    font-size: 32px;
+    margin-top: 20px;
+    margin-left: 10px;
   }
 
   .calculator-card {
@@ -703,7 +714,7 @@
     background-color: rgba(0, 0, 0, 0.3);
     border-radius: 12px;
     padding: 16px 20px;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
     @include flex-box-mixins(column, flex-start, center);
   }
 
@@ -736,16 +747,14 @@
   .button-row {
     width: 100%;
     @include flex-box-mixins(row, space-between, center);
-    margin: 4px 0;
   }
 
   .btn {
     flex: 1;
-    height: 68px;
+    height: 72px;
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 8 * $size-factor;
     @include flex-box-mixins(row, center, center);
-    margin: 0 4px;
 
     text {
       font-size: 7 * $size-factor;
