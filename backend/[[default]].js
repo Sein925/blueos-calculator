@@ -1,8 +1,9 @@
-const express = require('express');
-const mysql = require('mysql2/promise');
-const cors = require('cors');
-const crypto = require('crypto');
-const querystring = require('querystring');
+import express from 'express';
+import mysql from 'mysql2/promise';
+import cors from 'cors';
+import crypto from 'crypto';
+import querystring from 'querystring';
+import https from 'https';
 
 const app = express();
 app.use(cors());
@@ -26,8 +27,6 @@ const KUAIZHIFU_CONFIG = {
   submitUrl: 'https://www.kuaizhifu.cn/submit.php',
   apiUrl: 'https://www.kuaizhifu.cn/mapi.php'
 };
-
-const https = require('https');
 
 let pool;
 
@@ -401,9 +400,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+initDB();
 
-app.listen(PORT, async () => {
-  console.log(`🚀 服务器运行在端口 ${PORT}`);
-  await initDB();
-});
+export default app;
