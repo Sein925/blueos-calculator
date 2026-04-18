@@ -1,0 +1,166 @@
+<template>
+  <div class="wrapper">
+    <swiper class="guide-swiper" index="0" indicator="true" indicator-type="arc">
+      <div class="guide-slide">
+        <div class="slide-content">
+          <image class="guide-icon" src="./../../assets/images/logo.png"></image>
+          <text class="guide-title">欢迎使用</text>
+          <text class="guide-desc">简单易用的科学计算器</text>
+        </div>
+      </div>
+
+      <div class="guide-slide">
+        <div class="slide-content">
+          <div class="icon-box">
+            <text class="icon-text">÷×</text>
+          </div>
+          <text class="guide-title">基础计算</text>
+          <text class="guide-desc">支持加减乘除四则运算</text>
+        </div>
+      </div>
+
+      <div class="guide-slide">
+        <div class="slide-content">
+          <div class="icon-box">
+            <text class="icon-text">2nd</text>
+          </div>
+          <text class="guide-title">科学计算</text>
+          <text class="guide-desc">点击2nd切换科学计算</text>
+        </div>
+      </div>
+
+      <div class="guide-slide">
+        <div class="slide-content">
+          <div class="icon-box">
+            <text class="icon-text">📜</text>
+          </div>
+          <text class="guide-title">历史记录</text>
+          <text class="guide-desc">点击结果框查看历史</text>
+        </div>
+      </div>
+
+      <div class="guide-slide">
+        <div class="slide-content">
+          <div class="icon-box">
+            <text class="icon-text">←→</text>
+          </div>
+          <text class="guide-title">滑动切换</text>
+          <text class="guide-desc">左右滑动查看更多功能</text>
+        </div>
+      </div>
+
+      <div class="guide-slide">
+        <div class="slide-content">
+          <text class="guide-title">开始使用</text>
+          <text class="guide-desc">愿计算变得简单愉快</text>
+        </div>
+        <div class="start-btn-wrapper" style="margin-top: 36px">
+          <div class="start-btn" onclick="startUsing">
+            <text class="start-text">开始使用</text>
+          </div>
+        </div>
+      </div>
+    </swiper>
+  </div>
+</template>
+
+<script>
+  export default {
+    data: {
+      
+    },
+
+    startUsing() {
+      global.storage.set({
+        key: 'hasSeenGuide',
+        value: 'true'
+      })
+      global.router.replace({
+        uri: '/pages/Home'
+      })
+    }
+  }
+</script>
+
+<style lang="scss">
+  @import './../../assets/styles/style.scss';
+
+  .wrapper {
+    width: 100%;
+    height: 100%;
+    @include flex-box-mixins(column, flex-start, center);
+  }
+
+  .guide-swiper {
+    width: 100%;
+    height: 100%;
+  }
+
+  .guide-slide {
+    width: 100%;
+    height: 100%;
+    @include flex-box-mixins(column, center, center);
+  }
+
+  .slide-content {
+    @include flex-box-mixins(column, center, center);
+  }
+
+  .start-btn-wrapper {
+    width: 100%;
+    @include flex-box-mixins(row, center, center);
+    margin-top: 60px;
+  }
+
+  .guide-icon {
+    width: 150px;
+    height: 150px;
+    margin-bottom: 40px;
+  }
+
+  .icon-box {
+    width: 140px;
+    height: 140px;
+    border-radius: 28px;
+    background-color: rgba(255, 255, 255, 0.1);
+    @include flex-box-mixins(row, center, center);
+    margin-bottom: 48px;
+  }
+
+  .icon-text {
+    font-size: 48px;
+    font-weight: bold;
+    color: $white;
+  }
+
+  .guide-title {
+    font-size: 56px;
+    font-weight: 600;
+    color: $white;
+    margin-bottom: 20px;
+  }
+
+  .guide-desc {
+    font-size: 36px;
+    color: $gray;
+  }
+
+  .start-btn {
+    width: 240px;
+    padding: 22px 0;
+    background-color: $brand;
+    border-radius: 48px;
+    @include flex-box-mixins(row, center, center);
+
+    &:active {
+      opacity: 0.4;
+    }
+  }
+
+  .start-text {
+    font-size: 38px;
+    font-weight: 600;
+    color: $white;
+    text-align: center;
+  }
+</style>

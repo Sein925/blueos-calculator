@@ -52,6 +52,9 @@
       },
       "pages/Welcome": {
         "component": "index"
+      },
+      "pages/Guide": {
+        "component": "index"
       }
     }
   },

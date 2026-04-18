@@ -35,10 +35,30 @@
 
     onInit() {
       this.timerId = setTimeout(() => {
-        global.router.replace({
-          uri: '/pages/Home',
-        })
+        this.checkAndNavigate()
       }, 1000)
+    },
+
+    checkAndNavigate() {
+      global.storage.get({
+        key: 'hasSeenGuide',
+        success: (data) => {
+          if (data && data === 'true') {
+            global.router.replace({
+              uri: '/pages/Home',
+            })
+          } else {
+            global.router.replace({
+              uri: '/pages/Guide',
+            })
+          }
+        },
+        fail: () => {
+          global.router.replace({
+            uri: '/pages/Guide',
+          })
+        }
+      })
     },
 
     onDestroy() {
