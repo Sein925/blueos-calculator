@@ -16,6 +16,8 @@ declare const global: {
   device: Device;
   calculatorHistory: HistoryItem[];
   angleMode: 'deg' | 'rad';
+  isVip: boolean;
+  vipExpireDateText: string;
   loadHistory: () => void;
   saveHistory: () => void;
   loadSettings: () => void;

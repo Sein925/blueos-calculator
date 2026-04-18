@@ -66,6 +66,9 @@
       },
       "pages/Vip": {
         "component": "index"
+      },
+      "pages/Advanced/Date": {
+        "component": "index"
       }
     }
   },

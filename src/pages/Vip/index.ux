@@ -9,8 +9,11 @@
       <div class="vip-intro">
         <text class="intro-title">解锁高级功能</text>
         <text class="intro-desc">开通VIP即可使用所有高级功能</text>
+        <text if="{{ isVip }}" class="vip-expire">
+          VIP到期时间：{{ expireDateText }}
+        </text>
       </div>
-      
+
       <div class="vip-card" onclick="selectVip(1)">
         <div class="card-header">
           <text class="card-title">月卡</text>
@@ -55,16 +58,36 @@
         <text class="card-desc">9元/永久</text>
       </div>
 
+      <div class="pay-method-wrapper">
+        <text class="pay-method-title">选择支付方式</text>
+        <div class="pay-method-options">
+          <div
+            class="pay-method-item"
+            style="background-color: {{ selectedPayMethod === 'alipay' ? '#1677FF' : 'rgba(255, 255, 255, 0.1)' }}; margin-right: 16px"
+            onclick="selectPayMethod('alipay')">
+            <text class="pay-method-name">支付宝</text>
+          </div>
+          <div
+            class="pay-method-item"
+            style="background-color: {{ selectedPayMethod === 'wechat' ? '#07C160' : 'rgba(255, 255, 255, 0.1)' }}"
+            onclick="selectPayMethod('wechat')">
+            <text class="pay-method-name">微信</text>
+          </div>
+        </div>
+      </div>
+
       <div class="pay-btn-wrapper">
         <div class="pay-btn" onclick="createOrder">
-          <text class="pay-btn-text">{{ loading ? '创建订单中...' : '创建订单' }}</text>
+          <text class="pay-btn-text">
+            {{ loading ? '创建订单中...' : '创建订单' }}
+          </text>
         </div>
       </div>
 
       <div if="{{ payUrl }}" class="qrcode-wrapper">
         <text class="qrcode-title">扫描二维码支付</text>
         <div class="qrcode-container">
-          <qrcode value="{{ payUrl }}" class="qrcode" type="png"></qrcode>
+          <qrcode value="{{ payUrl }}" class="qrcode"></qrcode>
         </div>
         <text class="qrcode-hint">支付成功后会自动开通</text>
       </div>
@@ -80,30 +103,97 @@
   export default {
     data: {
       selectedVip: 1,
+      selectedPayMethod: 'alipay',
       deviceId: '获取中...',
       loading: false,
       payUrl: '',
-      serverUrl: 'https://cal.666-114514.eu.org/'
+      serverUrl: 'https://cal.666-114514.eu.org/',
+      isVip: false,
+      expireDateText: '',
     },
 
     onInit() {
-      this.getDeviceId()
-    },
-
-    getDeviceId() {
+      // 获取设备ID
       global.device.getId({
         type: ['device'],
         success: (ret) => {
           this.deviceId = ret.device || '获取失败'
+
+          // 从KV存储加载VIP状态，没有数据时请求网络
+          global.storage.get({
+            key: 'vip_status',
+            success: (data) => {
+              if (data) {
+                // KV里有数据，直接使用
+                const vipData = JSON.parse(data)
+                this.isVip = vipData.isVip
+                this.expireDateText = vipData.expireDateText || ''
+              } else if (this.deviceId !== '获取失败') {
+                // KV里没有数据，从网络获取
+                this.fetchFromServer()
+              }
+            },
+            fail: () => {
+              // KV加载失败，从网络获取
+              if (this.deviceId !== '获取失败') {
+                this.fetchFromServer()
+              }
+            },
+          })
         },
         fail: () => {
           this.deviceId = '获取失败'
-        }
+        },
       })
+    },
+
+    fetchFromServer() {
+      global.fetch.fetch({
+        url: this.serverUrl + 'api/vip/status/' + this.deviceId,
+        method: 'GET',
+        responseType: 'json',
+        header: {
+          'Content-Type': 'application/json',
+        },
+        success: (response) => {
+          const ret = response.data || response
+          if (ret && ret.success) {
+            this.isVip = ret.is_vip
+            this.expireDateText =
+              ret.is_vip && ret.expire_date
+                ? this.formatDate(ret.expire_date)
+                : ''
+            // 保存到KV存储
+            global.storage.set({
+              key: 'vip_status',
+              value: JSON.stringify({
+                isVip: this.isVip,
+                expireDateText: this.expireDateText,
+                updatedAt: Date.now(),
+              }),
+            })
+          }
+        },
+      })
+    },
+
+    formatDate(dateStr) {
+      const date = new Date(dateStr)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      return `${year}-${month}-${day} ${hours}:${minutes}`
     },
 
     selectVip(type) {
       this.selectedVip = type
+      this.payUrl = ''
+    },
+
+    selectPayMethod(method) {
+      this.selectedPayMethod = method
       this.payUrl = ''
     },
 
@@ -112,37 +202,38 @@
         1: 'month',
         2: 'quarter',
         3: 'year',
-        4: 'permanent'
+        4: 'permanent',
       }
       return types[this.selectedVip]
     },
 
     createOrder() {
       if (this.loading) return
-      
+
       this.loading = true
       this.payUrl = ''
-      
+
       const packageType = this.getPackageType()
-      
+
       const postData = JSON.stringify({
         device_id: this.deviceId,
-        package_type: packageType
+        package_type: packageType,
+        pay_method: this.selectedPayMethod,
       })
-      
+
       global.fetch.fetch({
         url: this.serverUrl + 'api/vip/order',
         method: 'POST',
         responseType: 'json',
         header: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         data: postData,
         success: (response) => {
           this.loading = false
-          
+
           const ret = response.data || response
-          
+
           if (ret && ret.success && ret.pay_url) {
             console.log('支付链接:', ret.pay_url)
             this.payUrl = ret.pay_url
@@ -153,9 +244,9 @@
         fail: (data, code) => {
           this.loading = false
           console.log('请求失败:', code, data)
-        }
+        },
       })
-    }
+    },
   }
 </script>
 
@@ -191,6 +282,12 @@
       color: $gray;
     }
 
+    .vip-expire {
+      font-size: 5 * $size-factor;
+      color: $brand;
+      margin-top: 2 * $size-factor;
+    }
+
     .vip-card {
       width: 100%;
       background-color: rgba(255, 255, 255, 0.1);
@@ -200,112 +297,144 @@
       @include flex-box-mixins(column, flex-start, flex-start);
     }
 
-      .card-header {
-        width: 100%;
-        @include flex-box-mixins(row, space-between, center);
-        margin-bottom: 2 * $size-factor;
+    .card-header {
+      width: 100%;
+      @include flex-box-mixins(row, space-between, center);
+      margin-bottom: 2 * $size-factor;
 
-        .card-right {
-          @include flex-box-mixins(row, flex-end, center);
+      .card-right {
+        @include flex-box-mixins(row, flex-end, center);
 
-          .check-mark {
-            margin-left: 2 * $size-factor;
-            width: 8 * $size-factor;
-            height: 8 * $size-factor;
-            background-color: $brand;
-            border-radius: 10px;
-            text-align: center;
-            font-size: 5 * $size-factor;
-            font-weight: bold;
-          }
+        .check-mark {
+          margin-left: 2 * $size-factor;
+          width: 8 * $size-factor;
+          height: 8 * $size-factor;
+          background-color: $brand;
+          border-radius: 10px;
+          text-align: center;
+          font-size: 5 * $size-factor;
+          font-weight: bold;
         }
       }
-
-      .card-title {
-        font-size: 7 * $size-factor;
-        font-weight: 600;
-        color: $white;
-      }
-
-      .card-price {
-        font-size: 8 * $size-factor;
-        font-weight: bold;
-        color: $brand;
-      }
-
-      .card-desc {
-        font-size: 5 * $size-factor;
-        color: $gray;
-      }
     }
 
-    .pay-btn-wrapper {
-      width: 100%;
-      @include flex-box-mixins(row, center, center);
-      margin-top: 4 * $size-factor;
-      margin-bottom: 4 * $size-factor;
-    }
-
-    .pay-btn {
-      width: 100%;
-      padding: 4 * $size-factor 0;
-      background-color: $brand;
-      border-radius: 8 * $size-factor;
-      @include flex-box-mixins(row, center, center);
-    }
-
-    .pay-btn-text {
+    .card-title {
       font-size: 7 * $size-factor;
       font-weight: 600;
       color: $white;
     }
 
-    .qrcode-wrapper {
-      width: 100%;
-      @include flex-box-mixins(column, center, center);
+    .card-price {
+      font-size: 8 * $size-factor;
+      font-weight: bold;
+      color: $brand;
+    }
+
+    .card-desc {
+      font-size: 5 * $size-factor;
+      color: $gray;
+    }
+  }
+
+  .pay-method-wrapper {
+    width: 100%;
+    margin-top: 4 * $size-factor;
+    @include flex-box-mixins(column, flex-start, flex-start);
+  }
+
+  .pay-method-title {
+    font-size: 6 * $size-factor;
+    font-weight: 600;
+    color: $white;
+    margin-bottom: 3 * $size-factor;
+  }
+
+  .pay-method-options {
+    width: 100%;
+    @include flex-box-mixins(row, space-between, center);
+    gap: 2 * $size-factor;
+  }
+
+  .pay-method-item {
+    flex: 1;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8 * $size-factor;
+    padding: 4 * $size-factor 2 * $size-factor;
+    @include flex-box-mixins(column, center, center);
+  }
+
+  .pay-method-name {
+    font-size: 7 * $size-factor;
+    color: $white;
+  }
+
+  .pay-btn-wrapper {
+    width: 100%;
+    @include flex-box-mixins(row, center, center);
+    margin-top: 4 * $size-factor;
+    margin-bottom: 4 * $size-factor;
+  }
+
+  .pay-btn {
+    width: 100%;
+    padding: 4 * $size-factor 0;
+    background-color: $brand;
+    border-radius: 8 * $size-factor;
+    @include flex-box-mixins(row, center, center);
+  }
+
+  .pay-btn-text {
+    font-size: 7 * $size-factor;
+    font-weight: 600;
+    color: $white;
+  }
+
+  .qrcode-wrapper {
+    width: 100%;
+    @include flex-box-mixins(column, center, center);
+    margin-top: 4 * $size-factor;
+    padding: 4 * $size-factor;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8 * $size-factor;
+
+    .qrcode-title {
+      font-size: 6 * $size-factor;
+      font-weight: 600;
+      color: $white;
+      margin-bottom: 4 * $size-factor;
+    }
+
+    .qrcode-container {
+      width: 310px;
+      height: 310px;
+      background-color: $white;
+      border-radius: 6 * $size-factor;
+      @include flex-box-mixins(row, center, center);
+
+      .qrcode {
+        width: 290px;
+        height: 290px;
+      }
+    }
+
+    .qrcode-hint {
+      font-size: 5 * $size-factor;
+      color: $gray;
       margin-top: 4 * $size-factor;
-      padding: 4 * $size-factor;
-      background-color: rgba(255, 255, 255, 0.1);
-      border-radius: 8 * $size-factor;
-
-      .qrcode-title {
-        font-size: 6 * $size-factor;
-        font-weight: 600;
-        color: $white;
-        margin-bottom: 4 * $size-factor;
-      }
-
-      .qrcode-container {
-        width: 150 * $size-factor;
-        height: 150 * $size-factor;
-        background-color: $white;
-        border-radius: 8 * $size-factor;
-        @include flex-box-mixins(row, center, center);
-
-        .qrcode {
-          width: 140 * $size-factor;
-          height: 140 * $size-factor;
-        }
-      }
-
-      .qrcode-hint {
-        font-size: 5 * $size-factor;
-        color: $gray;
-        margin-top: 4 * $size-factor;
-      }
     }
+  }
 
-    .device-info {
-      width: 100%;
-      @include flex-box-mixins(column, center, center);
-      padding: 3 * $size-factor 0;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+  .device-info {
+    width: 100%;
+    @include flex-box-mixins(column, center, center);
+    padding: 3 * $size-factor 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 
-      text {
-        font-size: 5 * $size-factor;
-        color: $gray;
-        margin-bottom: 2 * $size-factor;
-        text-align: center;
-      }
+    text {
+      font-size: 5 * $size-factor;
+      color: $gray;
+      margin-bottom: 2 * $size-factor;
+      text-align: center;
     }
+  }
 </style>

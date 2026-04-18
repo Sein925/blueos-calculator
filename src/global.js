@@ -10,6 +10,8 @@ global.device = device
 
 global.calculatorHistory = []
 global.angleMode = 'deg'
+global.isVip = false
+global.vipExpireDateText = ''
 
 const HISTORY_STORAGE_KEY = 'calculator_history'
 const SETTINGS_STORAGE_KEY = 'calculator_settings'

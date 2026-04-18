@@ -21,6 +21,9 @@ export async function onRequestPost(context) {
     
     const deviceId = body.device_id || body['device_id'];
     const packageType = body.package_type || body['package_type'];
+    const payMethod = body.pay_method || body['pay_method'] || 'alipay';
+    
+    console.log('[Order] 支付方式:', payMethod);
     
     if (!deviceId || !packageType) {
       console.log('[Order] 参数不完整');
@@ -68,9 +71,11 @@ export async function onRequestPost(context) {
     const notifyUrl = `${new URL(context.request.url).origin}/api/vip/notify`;
     console.log('[Order] 回调地址:', notifyUrl);
     
+    const payType = payMethod === 'wechat' ? 'wxpay' : 'alipay';
+    
     const payParams = {
       pid: KUAIZHIFU_CONFIG.pid,
-      type: 'alipay',
+      type: payType,
       out_trade_no: outTradeNo,
       name: name,
       money: amount.toFixed(2),
@@ -78,14 +83,15 @@ export async function onRequestPost(context) {
       clientip: context.request.headers.get('x-forwarded-for') || '127.0.0.1',
       device: 'mobile',
       param: deviceId,
-      sign_type: 'MD5'
+      timestamp: Math.floor(Date.now() / 1000).toString(),
+      sign_type: 'RSA'
     };
     
-    console.log('[Order] 支付参数:', payParams);
+    console.log('[Order] V2支付参数:', payParams);
     
-    console.log('[Order] 生成签名...');
+    console.log('[Order] 生成RSA签名...');
     payParams.sign = await generateSign(payParams, KUAIZHIFU_CONFIG.key);
-    console.log('[Order] 签名生成完成');
+    console.log('[Order] RSA签名生成完成');
     
     console.log('[Order] ===== 创建订单成功 =====');
     

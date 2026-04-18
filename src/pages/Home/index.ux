@@ -2,10 +2,27 @@
   <div class="wrapper">
     <swiper class="swiper-container" index="1" indicator="true">
       <div class="swiper-slide advanced-panel">
-        <div class="panel-content" onclick="openVipPage">
-          <text class="panel-title">高级功能</text>
-          <text class="panel-desc">点击开通VIP</text>
-        </div>
+        <list class="content" title="true">
+          <list-item style="flex-direction: column">
+            <div class="panel-header">
+              <text class="section-title">高级功能</text>
+              <div class="vip-btn {{ isVip ? 'vip-active' : '' }}" onclick="openVipPage">
+                <text class="vip-btn-text">{{ isVip ? 'VIP' : '开通VIP' }}</text>
+              </div>
+            </div>
+            <text if="{{ isVip }}" class="vip-expire">VIP到期时间：{{ expireDateText }}</text>
+          </list-item>
+          <list-item type="card" style="margin-top: 3 * $size-factor">
+            <div class="feature-card {{ isVip ? '' : 'disabled' }}" onclick="handleFeatureClick">
+              <text class="feature-name">日期计算</text>
+            </div>
+          </list-item>
+          <list-item if="{{ !isVip }}">
+            <div class="vip-prompt">
+              <text class="vip-prompt-text">开通VIP解锁更多功能</text>
+            </div>
+          </list-item>
+        </list>
       </div>
 
       <div class="swiper-slide calculator-panel">
@@ -313,6 +330,105 @@
       error: false,
       pendingFunction: '',
       expression: [],
+      isVip: false,
+      expireDateText: '',
+      deviceId: '',
+      serverUrl: 'https://cal.666-114514.eu.org/'
+    },
+
+    onInit() {
+      this.getDeviceId()
+      // 优先从全局变量读取VIP状态
+      if (typeof global.isVip !== 'undefined') {
+        this.isVip = global.isVip
+        this.expireDateText = global.vipExpireDateText || ''
+        // 如果全局变量也没有数据，则从KV存储加载或请求网络
+        if (!this.isVip && !this.expireDateText) {
+          this.loadVipStatus()
+        }
+      } else {
+        this.loadVipStatus()
+      }
+    },
+
+    getDeviceId() {
+      global.device.getId({
+        type: ['device'],
+        success: (ret) => {
+          this.deviceId = ret.device || ''
+        },
+        fail: () => {
+          this.deviceId = ''
+        }
+      })
+    },
+
+    loadVipStatus() {
+      global.storage.get({
+        key: 'vip_status',
+        success: (data) => {
+          if (data) {
+            const vipData = JSON.parse(data)
+            this.isVip = vipData.isVip || false
+            this.expireDateText = vipData.expireDateText || ''
+          } else {
+            this.fetchVipStatusFromServer()
+          }
+        },
+        fail: () => {
+          this.fetchVipStatusFromServer()
+        }
+      })
+    },
+
+    fetchVipStatusFromServer() {
+      if (!this.deviceId) return
+      
+      global.fetch.fetch({
+        url: this.serverUrl + 'api/vip/status/' + this.deviceId,
+        method: 'GET',
+        responseType: 'json',
+        header: {
+          'Content-Type': 'application/json'
+        },
+        success: (response) => {
+          const ret = response.data || response
+          if (ret && ret.success) {
+            this.isVip = ret.is_vip
+            if (ret.is_vip && ret.expire_date) {
+              this.expireDateText = this.formatDate(ret.expire_date)
+            } else {
+              this.expireDateText = ''
+            }
+            this.saveVipStatusToStorage()
+          }
+        },
+        fail: (data, code) => {
+          console.log('请求VIP状态失败:', code, data)
+        }
+      })
+    },
+
+    saveVipStatusToStorage() {
+      const vipData = {
+        isVip: this.isVip,
+        expireDateText: this.expireDateText,
+        updatedAt: Date.now()
+      }
+      global.storage.set({
+        key: 'vip_status',
+        value: JSON.stringify(vipData)
+      })
+    },
+
+    formatDate(dateStr) {
+      const date = new Date(dateStr)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      return `${year}-${month}-${day} ${hours}:${minutes}`
     },
 
     inputNumber(num) {
@@ -651,6 +767,18 @@
         uri: 'pages/Vip',
       })
     },
+
+    handleFeatureClick() {
+      if (this.isVip) {
+        this.openDateCalculator()
+      }
+    },
+
+    openDateCalculator() {
+      global.router.push({
+        uri: 'pages/Advanced/Date',
+      })
+    },
   }
 </script>
 
@@ -675,20 +803,71 @@
   }
 
   .advanced-panel {
-    .panel-content {
+    .content {
       width: 100%;
-      padding-top: 60px;
-      @include flex-box-mixins(column, center, center);
+      padding: 4 * $size-factor 5 * $size-factor;
+    }
 
-      .panel-title {
-        font-size: 48px;
-        color: $gray;
-        margin-bottom: 20px;
+    .panel-header {
+      width: 100%;
+      @include flex-box-mixins(row, space-between, center);
+    }
+
+    .vip-expire {
+      font-size: 5 * $size-factor;
+      color: $brand;
+      margin-top: 1 * $size-factor;
+      margin-left: 4 * $size-factor;
+    }
+
+    .vip-btn {
+      padding: 2 * $size-factor 4 * $size-factor;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 8 * $size-factor;
+      margin-top: 20px;
+      margin-right: 10px;
+    }
+
+    .vip-btn.vip-active {
+      background-color: $brand;
+    }
+
+    .vip-btn-text {
+      font-size: 5 * $size-factor;
+      color: $white;
+    }
+
+    .vip-prompt {
+      width: 100%;
+      @include flex-box-mixins(column, center, center);
+      padding: 4 * $size-factor 0;
+    }
+
+    .vip-prompt-text {
+      font-size: 5 * $size-factor;
+      color: $gray;
+      text-align: center;
+    }
+
+    .feature-card {
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 8 * $size-factor;
+      padding: 5 * $size-factor 6 * $size-factor;
+      @include flex-box-mixins(row, flex-start, center);
+      margin-top: 10px;
+
+      &:active {
+        opacity: 0.4;
       }
 
-      .panel-desc {
-        font-size: 32px;
-        color: rgba(255, 255, 255, 0.4);
+      &.disabled {
+        opacity: 0.4;
+      }
+
+      .feature-name {
+        font-size: 7 * $size-factor;
+        color: $white;
       }
     }
   }
@@ -709,9 +888,9 @@
 
   .section-title {
     color: $light-gray;
-    font-size: 32px;
-    margin-top: 20px;
-    margin-left: 20px;
+    font-size: 8 * $size-factor;
+    margin-top: 4 * $size-factor;
+    margin-left: 4 * $size-factor;
   }
 
   .calculator-card {

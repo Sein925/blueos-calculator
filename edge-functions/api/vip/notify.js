@@ -3,22 +3,22 @@ import { KUAIZHIFU_CONFIG } from '../../_utils/kuaizhifu.js';
 import { supabaseGet, supabaseUpdate } from '../../_utils/supabase.js';
 
 export async function onRequestGet(context) {
-  console.log('[Notify] ===== 收到支付通知 =====');
+  console.log('[Notify] ===== 收到V2支付通知 =====');
   
   try {
     const url = new URL(context.request.url);
     const params = Object.fromEntries(url.searchParams);
     
-    console.log('[Notify] 通知参数:', params);
+    console.log('[Notify] V2通知参数:', params);
     
     const signValid = await verifySign(params, KUAIZHIFU_CONFIG.key, params.sign);
     
     if (!signValid) {
-      console.log('[Notify] 签名验证失败');
+      console.log('[Notify] RSA签名验证失败');
       return new Response('fail');
     }
     
-    console.log('[Notify] 签名验证成功');
+    console.log('[Notify] RSA签名验证成功');
     
     const { trade_no, out_trade_no, trade_status, money, param } = params;
     console.log('[Notify] 订单信息:', { trade_no, out_trade_no, trade_status, money, param });
@@ -59,10 +59,10 @@ export async function onRequestGet(context) {
     });
     
     console.log('[Notify] 订单状态更新成功');
-    console.log('[Notify] ===== 支付通知处理成功 =====');
+    console.log('[Notify] ===== V2支付通知处理成功 =====');
     return new Response('success');
   } catch (error) {
-    console.error('[Notify] ===== 支付通知处理失败 =====');
+    console.error('[Notify] ===== V2支付通知处理失败 =====');
     console.error('[Notify] 错误信息:', error);
     console.error('[Notify] 错误堆栈:', error.stack);
     return new Response('fail');

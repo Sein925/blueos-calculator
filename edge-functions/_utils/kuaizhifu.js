@@ -1,8 +1,8 @@
 export const KUAIZHIFU_CONFIG = {
   pid: '2134',
   key: 't6rrhSHssQohmRbsPsoPgS66GH60D60O',
-  submitUrl: 'https://www.kuaizhifu.cn/submit.php',
-  apiUrl: 'https://www.kuaizhifu.cn/mapi.php'
+  submitUrl: 'https://www.kuaizhifu.cn/v2/pay/create',
+  apiUrl: 'https://www.kuaizhifu.cn/v2/pay/create'
 };
 
 export const packageNames = {
@@ -20,7 +20,7 @@ export const packagePrices = {
 };
 
 export async function requestKuaizhifuApi(params) {
-  console.log('[KuaiZhiFu] 调用API，参数:', params);
+  console.log('[KuaiZhiFu] 调用V2 API，参数:', params);
   
   const formData = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
