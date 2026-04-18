@@ -20,10 +20,14 @@ export const packagePrices = {
 };
 
 export async function requestKuaizhifuApi(params) {
+  console.log('[KuaiZhiFu] 调用API，参数:', params);
+  
   const formData = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     formData.append(key, value);
   }
+  
+  console.log('[KuaiZhiFu] 请求URL:', KUAIZHIFU_CONFIG.apiUrl);
   
   const response = await fetch(KUAIZHIFU_CONFIG.apiUrl, {
     method: 'POST',
@@ -33,5 +37,10 @@ export async function requestKuaizhifuApi(params) {
     body: formData.toString()
   });
   
-  return response.json();
+  console.log('[KuaiZhiFu] 响应状态:', response.status);
+  
+  const result = await response.json();
+  console.log('[KuaiZhiFu] 响应数据:', result);
+  
+  return result;
 }

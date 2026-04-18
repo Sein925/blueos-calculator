@@ -3,51 +3,78 @@ import { generateOrderId, generateSign } from '../../_utils/crypto.js';
 import { KUAIZHIFU_CONFIG, packageNames, packagePrices, requestKuaizhifuApi } from '../../_utils/kuaizhifu.js';
 
 export async function onRequestPost(context) {
+  console.log('[Order] ===== 创建订单开始 =====');
+  
   try {
     const body = await context.request.json();
+    console.log('[Order] 请求参数:', body);
+    
     const { device_id, package_type } = body;
     
     if (!device_id || !package_type) {
+      console.log('[Order] 参数不完整');
       return jsonResponse({
         success: false,
-        message: '参数不完整'
+        message: '参数不完整',
+        error_code: 'PARAMS_MISSING'
       }, 400);
     }
     
     if (!packagePrices[package_type]) {
+      console.log('[Order] 套餐类型错误:', package_type);
       return jsonResponse({
         success: false,
-        message: '套餐类型错误'
+        message: '套餐类型错误',
+        error_code: 'PACKAGE_TYPE_INVALID'
       }, 400);
     }
     
+    console.log('[Order] 尝试获取数据库连接...');
     const pool = await getDBPool();
+    console.log('[Order] 数据库连接成功');
+    
     const out_trade_no = generateOrderId();
     const amount = packagePrices[package_type];
     const name = packageNames[package_type];
     
+    console.log('[Order] 订单信息:', { out_trade_no, package_type, amount, name });
+    
+    console.log('[Order] 获取数据库连接...');
     const connection = await pool.getConnection();
+    console.log('[Order] 数据库连接获取成功');
     
-    const [userResult] = await connection.query(
-      'SELECT * FROM users WHERE device_id = ?',
-      [device_id]
-    );
-    
-    if (userResult.length === 0) {
-      await connection.query(
-        'INSERT INTO users (device_id) VALUES (?)',
+    try {
+      console.log('[Order] 查询用户是否存在...');
+      const [userResult] = await connection.query(
+        'SELECT * FROM users WHERE device_id = ?',
         [device_id]
       );
+      
+      console.log('[Order] 用户查询结果:', userResult.length);
+      
+      if (userResult.length === 0) {
+        console.log('[Order] 创建新用户...');
+        await connection.query(
+          'INSERT INTO users (device_id) VALUES (?)',
+          [device_id]
+        );
+        console.log('[Order] 新用户创建成功');
+      }
+      
+      console.log('[Order] 创建订单...');
+      await connection.query(
+        'INSERT INTO vip_orders (device_id, out_trade_no, package_type, amount, status) VALUES (?, ?, ?, ?, ?)',
+        [device_id, out_trade_no, package_type, amount, 'pending']
+      );
+      console.log('[Order] 订单创建成功');
+      
+    } finally {
+      connection.release();
+      console.log('[Order] 数据库连接已释放');
     }
     
-    await connection.query(
-      'INSERT INTO vip_orders (device_id, out_trade_no, package_type, amount, status) VALUES (?, ?, ?, ?, ?)',
-      [device_id, out_trade_no, package_type, amount, 'pending']
-    );
-    
-    connection.release();
-    
     const notify_url = `${new URL(context.request.url).origin}/api/vip/notify`;
+    console.log('[Order] 回调地址:', notify_url);
     
     const payParams = {
       pid: KUAIZHIFU_CONFIG.pid,
@@ -62,15 +89,22 @@ export async function onRequestPost(context) {
       sign_type: 'MD5'
     };
     
+    console.log('[Order] 支付参数:', payParams);
+    
+    console.log('[Order] 生成签名...');
     payParams.sign = await generateSign(payParams, KUAIZHIFU_CONFIG.key);
+    console.log('[Order] 签名生成完成');
+    
+    console.log('[Order] ===== 创建订单成功 =====');
     
     try {
+      console.log('[Order] 调用快支付API...');
       const kuaizhifuResult = await requestKuaizhifuApi(payParams);
-      
-      console.log('快支付返回:', kuaizhifuResult);
+      console.log('[Order] 快支付返回:', kuaizhifuResult);
       
       if (kuaizhifuResult.code === 1) {
         let payUrl = kuaizhifuResult.payurl || kuaizhifuResult.qrcode || kuaizhifuResult.urlscheme;
+        console.log('[Order] 支付链接:', payUrl);
         
         return jsonResponse({
           success: true,
@@ -81,21 +115,32 @@ export async function onRequestPost(context) {
       } else {
         return jsonResponse({
           success: false,
-          message: kuaizhifuResult.msg || '创建支付失败'
+          message: kuaizhifuResult.msg || '创建支付失败',
+          error_code: 'PAY_API_ERROR',
+          kuaizhifu_error: kuaizhifuResult
         });
       }
     } catch (apiError) {
-      console.error('调用快支付API错误:', apiError);
+      console.error('[Order] 调用快支付API错误:', apiError);
+      console.error('[Order] 错误堆栈:', apiError.stack);
       return jsonResponse({
         success: false,
-        message: '调用支付接口失败'
+        message: '调用支付接口失败',
+        error_code: 'PAY_API_CALL_ERROR',
+        error_details: apiError.message
       }, 500);
     }
   } catch (error) {
-    console.error('创建订单错误:', error);
+    console.error('[Order] ===== 创建订单失败 =====');
+    console.error('[Order] 错误信息:', error);
+    console.error('[Order] 错误堆栈:', error.stack);
+    
     return jsonResponse({
       success: false,
-      message: '服务器错误'
+      message: '服务器错误',
+      error_code: 'SERVER_ERROR',
+      error_details: error.message,
+      error_stack: error.stack
     }, 500);
   }
 }

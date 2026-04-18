@@ -11,44 +11,48 @@
         <text class="intro-desc">开通VIP即可使用所有高级功能</text>
       </div>
       
-      <div type="card">
-        <div class="vip-card {{ selectedVip === 1 ? 'vip-selected' : '' }}" onclick="selectVip(1)">
-          <div class="card-header">
-            <text class="card-title">月卡</text>
+      <div class="vip-card" onclick="selectVip(1)">
+        <div class="card-header">
+          <text class="card-title">月卡</text>
+          <div class="card-right">
             <text class="card-price">¥1</text>
+            <text if="{{ selectedVip === 1 }}" class="check-mark">✔</text>
           </div>
-          <text class="card-desc">1元/月</text>
         </div>
+        <text class="card-desc">1元/月</text>
       </div>
 
-      <div type="card">
-        <div class="vip-card {{ selectedVip === 2 ? 'vip-selected' : '' }}" onclick="selectVip(2)">
-          <div class="card-header">
-            <text class="card-title">季卡</text>
+      <div class="vip-card" onclick="selectVip(2)">
+        <div class="card-header">
+          <text class="card-title">季卡</text>
+          <div class="card-right">
             <text class="card-price">¥2</text>
+            <text if="{{ selectedVip === 2 }}" class="check-mark">✔</text>
           </div>
-          <text class="card-desc">2元/季</text>
         </div>
+        <text class="card-desc">2元/季</text>
       </div>
 
-      <div type="card">
-        <div class="vip-card {{ selectedVip === 3 ? 'vip-selected' : '' }}" onclick="selectVip(3)">
-          <div class="card-header">
-            <text class="card-title">年卡</text>
+      <div class="vip-card" onclick="selectVip(3)">
+        <div class="card-header">
+          <text class="card-title">年卡</text>
+          <div class="card-right">
             <text class="card-price">¥6</text>
+            <text if="{{ selectedVip === 3 }}" class="check-mark">✔</text>
           </div>
-          <text class="card-desc">6元/年</text>
         </div>
+        <text class="card-desc">6元/年</text>
       </div>
 
-      <div type="card">
-        <div class="vip-card {{ selectedVip === 4 ? 'vip-selected' : '' }}" onclick="selectVip(4)">
-          <div class="card-header">
-            <text class="card-title">永久</text>
+      <div class="vip-card" onclick="selectVip(4)">
+        <div class="card-header">
+          <text class="card-title">永久</text>
+          <div class="card-right">
             <text class="card-price">¥9</text>
+            <text if="{{ selectedVip === 4 }}" class="check-mark">✔</text>
           </div>
-          <text class="card-desc">9元/永久</text>
         </div>
+        <text class="card-desc">9元/永久</text>
       </div>
 
       <div class="pay-btn-wrapper">
@@ -79,7 +83,7 @@
       deviceId: '获取中...',
       loading: false,
       payUrl: '',
-      serverUrl: 'https://developers-watch.vivo.com.cn/api/system/fetch/'
+      serverUrl: 'https://cal.666-114514.eu.org/'
     },
 
     onInit() {
@@ -189,16 +193,27 @@
       padding: 4 * $size-factor 5 * $size-factor;
       margin: 2 * $size-factor 0;
       @include flex-box-mixins(column, flex-start, flex-start);
-
-      &.vip-selected {
-        background-color: rgba(9, 186, 7, 0.15);
-        border: 2px solid $brand;
-      }
+    }
 
       .card-header {
         width: 100%;
         @include flex-box-mixins(row, space-between, center);
         margin-bottom: 2 * $size-factor;
+
+        .card-right {
+          @include flex-box-mixins(row, flex-end, center);
+
+          .check-mark {
+            margin-left: 2 * $size-factor;
+            width: 8 * $size-factor;
+            height: 8 * $size-factor;
+            background-color: $brand;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 5 * $size-factor;
+            font-weight: bold;
+          }
+        }
       }
 
       .card-title {
@@ -288,5 +303,4 @@
         text-align: center;
       }
     }
-  }
 </style>
