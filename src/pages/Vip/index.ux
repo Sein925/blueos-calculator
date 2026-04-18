@@ -1,0 +1,292 @@
+<import name="d-back" src="./../../components/d-back"></import>
+
+<template>
+  <list class="wrapper" title="true">
+    <list-item>
+      <d-back value="开通VIP"></d-back>
+    </list-item>
+    <list-item class="content">
+      <div class="vip-intro">
+        <text class="intro-title">解锁高级功能</text>
+        <text class="intro-desc">开通VIP即可使用所有高级功能</text>
+      </div>
+      
+      <div type="card">
+        <div class="vip-card {{ selectedVip === 1 ? 'vip-selected' : '' }}" onclick="selectVip(1)">
+          <div class="card-header">
+            <text class="card-title">月卡</text>
+            <text class="card-price">¥1</text>
+          </div>
+          <text class="card-desc">1元/月</text>
+        </div>
+      </div>
+
+      <div type="card">
+        <div class="vip-card {{ selectedVip === 2 ? 'vip-selected' : '' }}" onclick="selectVip(2)">
+          <div class="card-header">
+            <text class="card-title">季卡</text>
+            <text class="card-price">¥2</text>
+          </div>
+          <text class="card-desc">2元/季</text>
+        </div>
+      </div>
+
+      <div type="card">
+        <div class="vip-card {{ selectedVip === 3 ? 'vip-selected' : '' }}" onclick="selectVip(3)">
+          <div class="card-header">
+            <text class="card-title">年卡</text>
+            <text class="card-price">¥6</text>
+          </div>
+          <text class="card-desc">6元/年</text>
+        </div>
+      </div>
+
+      <div type="card">
+        <div class="vip-card {{ selectedVip === 4 ? 'vip-selected' : '' }}" onclick="selectVip(4)">
+          <div class="card-header">
+            <text class="card-title">永久</text>
+            <text class="card-price">¥9</text>
+          </div>
+          <text class="card-desc">9元/永久</text>
+        </div>
+      </div>
+
+      <div class="pay-btn-wrapper">
+        <div class="pay-btn" onclick="createOrder">
+          <text class="pay-btn-text">{{ loading ? '创建订单中...' : '创建订单' }}</text>
+        </div>
+      </div>
+
+      <div if="{{ payUrl }}" class="qrcode-wrapper">
+        <text class="qrcode-title">扫描二维码支付</text>
+        <div class="qrcode-container">
+          <qrcode value="{{ payUrl }}" class="qrcode" type="png"></qrcode>
+        </div>
+        <text class="qrcode-hint">支付成功后会自动开通</text>
+      </div>
+
+      <div class="device-info">
+        <text>设备ID: {{ deviceId }}</text>
+      </div>
+    </list-item>
+  </list>
+</template>
+
+<script>
+  export default {
+    data: {
+      selectedVip: 1,
+      deviceId: '获取中...',
+      loading: false,
+      payUrl: '',
+      serverUrl: 'https://developers-watch.vivo.com.cn/api/system/fetch/'
+    },
+
+    onInit() {
+      this.getDeviceId()
+    },
+
+    getDeviceId() {
+      global.device.getId({
+        type: ['device'],
+        success: (ret) => {
+          this.deviceId = ret.device || '获取失败'
+        },
+        fail: () => {
+          this.deviceId = '获取失败'
+        }
+      })
+    },
+
+    selectVip(type) {
+      this.selectedVip = type
+      this.payUrl = ''
+    },
+
+    getPackageType() {
+      const types = {
+        1: 'month',
+        2: 'quarter',
+        3: 'year',
+        4: 'permanent'
+      }
+      return types[this.selectedVip]
+    },
+
+    createOrder() {
+      if (this.loading) return
+      
+      this.loading = true
+      this.payUrl = ''
+      
+      const packageType = this.getPackageType()
+      
+      global.fetch.fetch({
+        url: this.serverUrl + 'api/vip/order',
+        method: 'POST',
+        responseType: 'json',
+        data: {
+          device_id: this.deviceId,
+          package_type: packageType
+        },
+        success: (response) => {
+          this.loading = false
+          
+          const ret = response.data || response
+          
+          if (ret && ret.success && ret.pay_url) {
+            console.log('支付链接:', ret.pay_url)
+            this.payUrl = ret.pay_url
+          } else {
+            console.log('订单创建失败:', ret)
+          }
+        },
+        fail: (data, code) => {
+          this.loading = false
+          console.log('请求失败:', code, data)
+        }
+      })
+    }
+  }
+</script>
+
+<style lang="scss">
+  @import './../../assets/styles/style.scss';
+
+  .wrapper {
+    width: 100%;
+    height: 100%;
+    @include flex-box-mixins(column, center, flex-start);
+
+    .content {
+      width: 100%;
+      padding: 0 5 * $size-factor;
+      @include flex-box-mixins(column, center, flex-start);
+    }
+
+    .vip-intro {
+      width: 100%;
+      @include flex-box-mixins(column, flex-start, flex-start);
+      margin: 10px 0 18px 14px;
+    }
+
+    .intro-title {
+      font-size: 8 * $size-factor;
+      font-weight: 600;
+      color: $white;
+      margin-bottom: 2 * $size-factor;
+    }
+
+    .intro-desc {
+      font-size: 5 * $size-factor;
+      color: $gray;
+    }
+
+    .vip-card {
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 8 * $size-factor;
+      padding: 4 * $size-factor 5 * $size-factor;
+      margin: 2 * $size-factor 0;
+      @include flex-box-mixins(column, flex-start, flex-start);
+
+      &.vip-selected {
+        background-color: rgba(9, 186, 7, 0.15);
+        border: 2px solid $brand;
+      }
+
+      .card-header {
+        width: 100%;
+        @include flex-box-mixins(row, space-between, center);
+        margin-bottom: 2 * $size-factor;
+      }
+
+      .card-title {
+        font-size: 7 * $size-factor;
+        font-weight: 600;
+        color: $white;
+      }
+
+      .card-price {
+        font-size: 8 * $size-factor;
+        font-weight: bold;
+        color: $brand;
+      }
+
+      .card-desc {
+        font-size: 5 * $size-factor;
+        color: $gray;
+      }
+    }
+
+    .pay-btn-wrapper {
+      width: 100%;
+      @include flex-box-mixins(row, center, center);
+      margin-top: 4 * $size-factor;
+      margin-bottom: 4 * $size-factor;
+    }
+
+    .pay-btn {
+      width: 100%;
+      padding: 4 * $size-factor 0;
+      background-color: $brand;
+      border-radius: 8 * $size-factor;
+      @include flex-box-mixins(row, center, center);
+    }
+
+    .pay-btn-text {
+      font-size: 7 * $size-factor;
+      font-weight: 600;
+      color: $white;
+    }
+
+    .qrcode-wrapper {
+      width: 100%;
+      @include flex-box-mixins(column, center, center);
+      margin-top: 4 * $size-factor;
+      padding: 4 * $size-factor;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 8 * $size-factor;
+
+      .qrcode-title {
+        font-size: 6 * $size-factor;
+        font-weight: 600;
+        color: $white;
+        margin-bottom: 4 * $size-factor;
+      }
+
+      .qrcode-container {
+        width: 150 * $size-factor;
+        height: 150 * $size-factor;
+        background-color: $white;
+        border-radius: 8 * $size-factor;
+        @include flex-box-mixins(row, center, center);
+
+        .qrcode {
+          width: 140 * $size-factor;
+          height: 140 * $size-factor;
+        }
+      }
+
+      .qrcode-hint {
+        font-size: 5 * $size-factor;
+        color: $gray;
+        margin-top: 4 * $size-factor;
+      }
+    }
+
+    .device-info {
+      width: 100%;
+      @include flex-box-mixins(column, center, center);
+      padding: 3 * $size-factor 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+      text {
+        font-size: 5 * $size-factor;
+        color: $gray;
+        margin-bottom: 2 * $size-factor;
+        text-align: center;
+      }
+    }
+  }
+</style>

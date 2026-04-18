@@ -30,7 +30,7 @@
 <script>
   export default {
     data: {
-      serverUrl: 'https://api.suyanw.cn/api/naowan.php',
+      serverUrl: 'https://qyqy.666-114514.eu.org/',
       connectionStatus: {
         text: '未测试',
         color: '#ccc',

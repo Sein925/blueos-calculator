@@ -2,9 +2,9 @@
   <div class="wrapper">
     <swiper class="swiper-container" index="1" indicator="true">
       <div class="swiper-slide advanced-panel">
-        <div class="panel-content">
+        <div class="panel-content" onclick="openVipPage">
           <text class="panel-title">高级功能</text>
-          <text class="panel-desc">敬请期待</text>
+          <text class="panel-desc">点击开通VIP</text>
         </div>
       </div>
 
@@ -645,6 +645,12 @@
         uri: 'pages/Settings',
       })
     },
+
+    openVipPage() {
+      global.router.push({
+        uri: 'pages/Vip',
+      })
+    },
   }
 </script>
 
@@ -697,7 +703,7 @@
   .nav-panel {
     .content {
       width: 100%;
-      padding: 4 * $size-factor 6 * $size-factor;
+      padding: 4 * $size-factor 5 * $size-factor;
     }
   }
 
@@ -705,7 +711,7 @@
     color: $light-gray;
     font-size: 32px;
     margin-top: 20px;
-    margin-left: 10px;
+    margin-left: 20px;
   }
 
   .calculator-card {

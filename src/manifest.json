@@ -16,6 +16,14 @@
     },
     {
       "name": "blueos.network.fetch"
+    },
+    {
+      "name": "blueos.hardware.deviceInfo"
+    }
+  ],
+  "permissions": [
+    {
+      "name": "watch.permission.DEVICE_INFO"
     }
   ],
   "deviceTypeList": [
@@ -54,6 +62,9 @@
         "component": "index"
       },
       "pages/Guide": {
+        "component": "index"
+      },
+      "pages/Vip": {
         "component": "index"
       }
     }
