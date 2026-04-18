@@ -1,5 +1,5 @@
 const SUPABASE_URL = 'https://cwptfdtgzdhcufulffgi.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3cHRmZHRnemRoY3VmdWxmZ2kiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc0NTAwNzk5OSwiZXhwIjoyMDYwNTgzOTk5fQ.3B2M21Uq6fF4pR0Y5eQ7wX8z9aB0cD1eF2gH3iJ4k';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3cHRmZHRnemRoY3VmdWxmZmdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTc4MTYsImV4cCI6MjA5MjA3MzgxNn0.CUCnzAULpgpYNDNtrAUfovR6_QkQQB_BaDaASAMWB1E';
 
 export async function supabaseGet(table, filters = {}, options = {}) {
   let url = `${SUPABASE_URL}/rest/v1/${table}?select=${options.columns || '*'}`;
