@@ -1,9 +1,7 @@
-import { generateOrderId, generateSign } from '../../_utils/crypto.js';
-import { KUAIZHIFU_CONFIG, packageNames, packagePrices, requestKuaizhifuApi } from '../../_utils/kuaizhifu.js';
-import { supabaseGet, supabaseInsert } from '../../_utils/supabase.js';
+import { supabaseGet, supabaseInsert, supabaseUpdate } from '../../_utils/supabase.js';
 
 export async function onRequestPost(context) {
-  console.log('[Order] ===== 创建订单开始 =====');
+  console.log('[Order] ===== 创建订单/更新VIP =====');
   
   try {
     const bodyText = await context.request.text();
@@ -21,9 +19,8 @@ export async function onRequestPost(context) {
     
     const deviceId = body.device_id || body['device_id'];
     const packageType = body.package_type || body['package_type'];
-    const payMethod = body.pay_method || body['pay_method'] || 'alipay';
     
-    console.log('[Order] 支付方式:', payMethod);
+    console.log('[Order] 设备ID:', deviceId, '套餐:', packageType);
     
     if (!deviceId || !packageType) {
       console.log('[Order] 参数不完整');
@@ -34,6 +31,13 @@ export async function onRequestPost(context) {
       }, 400);
     }
     
+    const packagePrices = {
+      'month': 1,
+      'quarter': 3,
+      'year': 12,
+      'permanent': 999
+    };
+    
     if (!packagePrices[packageType]) {
       console.log('[Order] 套餐类型错误:', packageType);
       return jsonResponse({
@@ -43,82 +47,66 @@ export async function onRequestPost(context) {
       }, 400);
     }
     
-    const outTradeNo = generateOrderId();
-    const amount = packagePrices[packageType];
-    const name = packageNames[packageType];
-    
-    console.log('[Order] 订单信息:', { out_trade_no: outTradeNo, package_type: packageType, amount, name, device_id: deviceId });
-    
     console.log('[Order] 查询用户是否存在...');
-    const users = await supabaseGet('users', { device_id: deviceId });
+    let users = await supabaseGet('users', { device_id: deviceId });
     
     if (!users || users.length === 0) {
       console.log('[Order] 创建新用户...');
       await supabaseInsert('users', { device_id: deviceId });
+      users = await supabaseGet('users', { device_id: deviceId });
     }
     
-    console.log('[Order] 创建订单...');
-    await supabaseInsert('vip_orders', {
-      device_id: deviceId,
-      out_trade_no: outTradeNo,
-      package_type: packageType,
-      amount: amount,
-      status: 'pending'
+    const user = users[0];
+    
+    // 计算VIP过期时间
+    let expireDate;
+    const now = new Date();
+    
+    if (packageType === 'permanent') {
+      // 永久会员，设置到2099年
+      expireDate = new Date(2099, 11, 31);
+    } else {
+      // 普通套餐
+      const addMonths = packagePrices[packageType];
+      expireDate = new Date(now);
+      expireDate.setMonth(expireDate.getMonth() + addMonths);
+    }
+    
+    // 如果用户已经是VIP，在现有基础上延长
+    if (user.is_vip && user.vip_expire_date) {
+      const currentExpire = new Date(user.vip_expire_date);
+      if (currentExpire > now) {
+        // 现有VIP还没过期，从过期时间延长
+        if (packageType === 'permanent') {
+          expireDate = new Date(2099, 11, 31);
+        } else {
+          expireDate = new Date(currentExpire);
+          expireDate.setMonth(expireDate.getMonth() + packagePrices[packageType]);
+        }
+      }
+    }
+    
+    console.log('[Order] 更新用户VIP状态...');
+    await supabaseUpdate('users', { device_id: deviceId }, {
+      is_vip: true,
+      vip_expire_date: expireDate.toISOString(),
+      vip_updated_at: now.toISOString()
     });
     
-    console.log('[Order] 订单创建成功');
+    console.log('[Order] ===== 更新成功 =====');
     
-    const notifyUrl = `${new URL(context.request.url).origin}/api/vip/notify`;
-    console.log('[Order] 回调地址:', notifyUrl);
+    return jsonResponse({
+      success: true,
+      message: 'VIP更新成功',
+      data: {
+        device_id: deviceId,
+        is_vip: true,
+        expire_date: expireDate.toISOString()
+      }
+    });
     
-    const payType = payMethod === 'wechat' ? 'wxpay' : 'alipay';
-    
-    const payParams = {
-      pid: KUAIZHIFU_CONFIG.pid,
-      type: payType,
-      out_trade_no: outTradeNo,
-      name: name,
-      money: amount.toFixed(2),
-      notify_url: notifyUrl,
-      clientip: context.request.headers.get('x-forwarded-for') || '127.0.0.1',
-      device: 'mobile',
-      param: deviceId,
-      timestamp: Math.floor(Date.now() / 1000).toString(),
-      sign_type: 'RSA'
-    };
-    
-    console.log('[Order] V2支付参数:', payParams);
-    
-    console.log('[Order] 生成RSA签名...');
-    payParams.sign = await generateSign(payParams, KUAIZHIFU_CONFIG.key);
-    console.log('[Order] RSA签名生成完成');
-    
-    console.log('[Order] ===== 创建订单成功 =====');
-    
-    console.log('[Order] 调用快支付API...');
-    const kuaizhifuResult = await requestKuaizhifuApi(payParams);
-    console.log('[Order] 快支付返回:', kuaizhifuResult);
-    
-    if (kuaizhifuResult.code === 1) {
-      let payUrl = kuaizhifuResult.payurl || kuaizhifuResult.qrcode || kuaizhifuResult.urlscheme;
-      console.log('[Order] 支付链接:', payUrl);
-      
-      return jsonResponse({
-        success: true,
-        order_id: outTradeNo,
-        pay_url: payUrl,
-        message: '订单创建成功'
-      });
-    } else {
-      return jsonResponse({
-        success: false,
-        message: kuaizhifuResult.msg || '创建支付失败',
-        error_code: 'PAY_API_ERROR',
-        kuaizhifu_error: kuaizhifuResult
-      });
-    }
   } catch (error) {
-    console.error('[Order] ===== 创建订单失败 =====');
+    console.error('[Order] ===== 更新失败 =====');
     console.error('[Order] 错误信息:', error);
     console.error('[Order] 错误堆栈:', error.stack);
     

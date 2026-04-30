@@ -22,7 +22,7 @@
             <text if="{{ selectedVip === 1 }}" class="check-mark">✔</text>
           </div>
         </div>
-        <text class="card-desc">1元/月</text>
+        <text class="card-desc">30天会员</text>
       </div>
 
       <div class="vip-card" onclick="selectVip(2)">
@@ -33,7 +33,7 @@
             <text if="{{ selectedVip === 2 }}" class="check-mark">✔</text>
           </div>
         </div>
-        <text class="card-desc">2元/季</text>
+        <text class="card-desc">90天会员</text>
       </div>
 
       <div class="vip-card" onclick="selectVip(3)">
@@ -44,7 +44,7 @@
             <text if="{{ selectedVip === 3 }}" class="check-mark">✔</text>
           </div>
         </div>
-        <text class="card-desc">6元/年</text>
+        <text class="card-desc">365天会员</text>
       </div>
 
       <div class="vip-card" onclick="selectVip(4)">
@@ -55,45 +55,33 @@
             <text if="{{ selectedVip === 4 }}" class="check-mark">✔</text>
           </div>
         </div>
-        <text class="card-desc">9元/永久</text>
-      </div>
-
-      <div class="pay-method-wrapper">
-        <text class="pay-method-title">选择支付方式</text>
-        <div class="pay-method-options">
-          <div
-            class="pay-method-item"
-            style="background-color: {{ selectedPayMethod === 'alipay' ? '#1677FF' : 'rgba(255, 255, 255, 0.1)' }}; margin-right: 16px"
-            onclick="selectPayMethod('alipay')">
-            <text class="pay-method-name">支付宝</text>
-          </div>
-          <div
-            class="pay-method-item"
-            style="background-color: {{ selectedPayMethod === 'wechat' ? '#07C160' : 'rgba(255, 255, 255, 0.1)' }}"
-            onclick="selectPayMethod('wechat')">
-            <text class="pay-method-name">微信</text>
-          </div>
-        </div>
+        <text class="card-desc">永久会员</text>
       </div>
 
       <div class="pay-btn-wrapper">
-        <div class="pay-btn" onclick="createOrder">
+        <div class="pay-btn" onclick="createQrCode">
           <text class="pay-btn-text">
-            {{ loading ? '创建订单中...' : '创建订单' }}
+            生成支付二维码
           </text>
         </div>
       </div>
 
       <div if="{{ payUrl }}" class="qrcode-wrapper">
-        <text class="qrcode-title">扫描二维码支付</text>
+        <text class="qrcode-title">使用手机扫码支付</text>
         <div class="qrcode-container">
           <qrcode value="{{ payUrl }}" class="qrcode"></qrcode>
         </div>
-        <text class="qrcode-hint">支付成功后会自动开通</text>
+        <text class="qrcode-hint">支付成功后点击下方刷新</text>
+      </div>
+
+      <div class="refresh-btn-wrapper" if="{{ payUrl }}">
+        <div class="refresh-btn" onclick="fetchFromServer">
+          <text class="refresh-btn-text">刷新VIP状态</text>
+        </div>
       </div>
 
       <div class="device-info">
-        <text>设备ID: {{ deviceId }}</text>
+        <text>设备ID：{{ deviceId }}</text>
       </div>
     </list-item>
   </list>
@@ -103,151 +91,174 @@
   export default {
     data: {
       selectedVip: 1,
-      selectedPayMethod: 'alipay',
-      deviceId: '获取中...',
-      loading: false,
+      deviceId: '获取中',
       payUrl: '',
-      serverUrl: 'https://cal.666-114514.eu.org/',
+      serverUrl: 'https://cal.666-114514.eu.org',
       isVip: false,
       expireDateText: '',
+      // 爱发电的商品链接（需要配置）
+      // 示例：https://afdian.net/item/xxxxxx
+      planLinks: {
+        1: 'https://ifdian.net/item/71c57764449711f1b8db5254001e7c00', // 月卡链接
+        2: 'https://ifdian.net/item/87d5beba449c11f1931852540025c377', // 季卡链接
+        3: 'https://ifdian.net/item/a997babc449c11f1984452540025c377', // 年卡链接
+        4: 'https://ifdian.net/item/d0bd3360449c11f1928c52540025c377'  // 永久链接
+      },
+      // 套餐配置
+      planTypes: {
+        1: 'month',
+        2: 'quarter',
+        3: 'year',
+        4: 'permanent'
+      }
     },
 
     onInit() {
-      // 获取设备ID
+      this.getDeviceId();
+      this.loadVipStatus();
+    },
+
+    getDeviceId() {
       global.device.getId({
         type: ['device'],
         success: (ret) => {
-          this.deviceId = ret.device || '获取失败'
-
-          // 从KV存储加载VIP状态，没有数据时请求网络
-          global.storage.get({
-            key: 'vip_status',
-            success: (data) => {
-              if (data) {
-                // KV里有数据，直接使用
-                const vipData = JSON.parse(data)
-                this.isVip = vipData.isVip
-                this.expireDateText = vipData.expireDateText || ''
-              } else if (this.deviceId !== '获取失败') {
-                // KV里没有数据，从网络获取
-                this.fetchFromServer()
-              }
-            },
-            fail: () => {
-              // KV加载失败，从网络获取
-              if (this.deviceId !== '获取失败') {
-                this.fetchFromServer()
-              }
-            },
-          })
+          this.deviceId = ret.device || '未知设备';
+          console.log('设备ID:', this.deviceId);
+          this.loadVipStatus();
         },
         fail: () => {
-          this.deviceId = '获取失败'
+          this.deviceId = '获取失败';
+        }
+      });
+    },
+
+    loadVipStatus() {
+      if (!this.deviceId || this.deviceId === '获取中' || this.deviceId === '获取失败') {
+        return;
+      }
+
+      global.storage.get({
+        key: 'vip_status',
+        success: (data) => {
+          if (data) {
+            const vipData = JSON.parse(data);
+            this.isVip = vipData.isVip;
+            this.expireDateText = vipData.expireDateText || '';
+            console.log('从存储加载VIP状态:', this.isVip);
+          } else {
+            this.fetchFromServer();
+          }
         },
-      })
+        fail: () => {
+          this.fetchFromServer();
+        }
+      });
     },
 
     fetchFromServer() {
+      if (!this.deviceId || this.deviceId === '获取中' || this.deviceId === '获取失败') {
+        console.log('没有设备ID，无法请求');
+        return;
+      }
+
+      console.log('从服务器获取VIP状态');
+
       global.fetch.fetch({
-        url: this.serverUrl + 'api/vip/status/' + this.deviceId,
+        url: this.serverUrl + '/api/vip/status/' + this.deviceId,
         method: 'GET',
         responseType: 'json',
         header: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         success: (response) => {
-          const ret = response.data || response
+          const ret = response.data || response;
+          console.log('服务器响应:', ret);
+
           if (ret && ret.success) {
-            this.isVip = ret.is_vip
-            this.expireDateText =
-              ret.is_vip && ret.expire_date
-                ? this.formatDate(ret.expire_date)
-                : ''
-            // 保存到KV存储
+            this.isVip = ret.is_vip;
+            this.expireDateText = ret.is_vip && ret.expire_date ? this.formatDate(ret.expire_date) : '';
+
+            // 保存到本地存储
             global.storage.set({
               key: 'vip_status',
               value: JSON.stringify({
                 isVip: this.isVip,
                 expireDateText: this.expireDateText,
-                updatedAt: Date.now(),
-              }),
-            })
-          }
-        },
-      })
-    },
+                updatedAt: Date.now()
+              })
+            });
 
-    formatDate(dateStr) {
-      const date = new Date(dateStr)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      const hours = String(date.getHours()).padStart(2, '0')
-      const minutes = String(date.getMinutes()).padStart(2, '0')
-      return `${year}-${month}-${day} ${hours}:${minutes}`
-    },
-
-    selectVip(type) {
-      this.selectedVip = type
-      this.payUrl = ''
-    },
-
-    selectPayMethod(method) {
-      this.selectedPayMethod = method
-      this.payUrl = ''
-    },
-
-    getPackageType() {
-      const types = {
-        1: 'month',
-        2: 'quarter',
-        3: 'year',
-        4: 'permanent',
-      }
-      return types[this.selectedVip]
-    },
-
-    createOrder() {
-      if (this.loading) return
-
-      this.loading = true
-      this.payUrl = ''
-
-      const packageType = this.getPackageType()
-
-      const postData = JSON.stringify({
-        device_id: this.deviceId,
-        package_type: packageType,
-        pay_method: this.selectedPayMethod,
-      })
-
-      global.fetch.fetch({
-        url: this.serverUrl + 'api/vip/order',
-        method: 'POST',
-        responseType: 'json',
-        header: {
-          'Content-Type': 'application/json',
-        },
-        data: postData,
-        success: (response) => {
-          this.loading = false
-
-          const ret = response.data || response
-
-          if (ret && ret.success && ret.pay_url) {
-            console.log('支付链接:', ret.pay_url)
-            this.payUrl = ret.pay_url
-          } else {
-            console.log('订单创建失败:', ret)
+            console.log('VIP状态更新:', this.isVip);
           }
         },
         fail: (data, code) => {
-          this.loading = false
-          console.log('请求失败:', code, data)
-        },
-      })
+          console.log('请求失败:', code, data);
+        }
+      });
     },
-  }
+
+    formatDate(dateStr) {
+      const date = new Date(dateStr);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    },
+
+    selectVip(type) {
+      this.selectedVip = type;
+      this.payUrl = '';
+    },
+
+    createQrCode() {
+      const baseLink = this.planLinks[this.selectedVip];
+
+      if (baseLink) {
+        // 有配置爱发电链接，使用爱发电
+        const finalLink = baseLink +
+          (baseLink.includes('?') ? '&' : '?') +
+          'remark=device_id=' + this.deviceId +
+          '&custom_order_id=' + this.deviceId;
+
+        console.log('生成爱发电链接:', finalLink);
+        this.payUrl = finalLink;
+      } else {
+        // 没有配置链接，使用测试方式
+        console.log('使用测试方式，直接调用后端');
+        this.simulatePayment();
+      }
+    },
+
+    simulatePayment() {
+      const postData = JSON.stringify({
+        device_id: this.deviceId,
+        package_type: this.planTypes[this.selectedVip]
+      });
+
+      global.fetch.fetch({
+        url: this.serverUrl + '/api/vip/order',
+        method: 'POST',
+        responseType: 'json',
+        header: {
+          'Content-Type': 'application/json'
+        },
+        data: postData,
+        success: (response) => {
+          const ret = response.data || response;
+          console.log('测试支付响应:', ret);
+
+          if (ret && ret.success) {
+            this.fetchFromServer();
+          }
+        },
+        fail: (data, code) => {
+          console.log('测试支付失败:', code, data);
+        }
+      });
+    }
+  };
 </script>
 
 <style lang="scss">
@@ -336,43 +347,11 @@
     }
   }
 
-  .pay-method-wrapper {
-    width: 100%;
-    margin-top: 4 * $size-factor;
-    @include flex-box-mixins(column, flex-start, flex-start);
-  }
-
-  .pay-method-title {
-    font-size: 6 * $size-factor;
-    font-weight: 600;
-    color: $white;
-    margin-bottom: 3 * $size-factor;
-  }
-
-  .pay-method-options {
-    width: 100%;
-    @include flex-box-mixins(row, space-between, center);
-    gap: 2 * $size-factor;
-  }
-
-  .pay-method-item {
-    flex: 1;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 8 * $size-factor;
-    padding: 4 * $size-factor 2 * $size-factor;
-    @include flex-box-mixins(column, center, center);
-  }
-
-  .pay-method-name {
-    font-size: 7 * $size-factor;
-    color: $white;
-  }
-
   .pay-btn-wrapper {
     width: 100%;
     @include flex-box-mixins(row, center, center);
     margin-top: 4 * $size-factor;
-    margin-bottom: 4 * $size-factor;
+    margin-bottom: 2 * $size-factor;
   }
 
   .pay-btn {
@@ -392,7 +371,7 @@
   .qrcode-wrapper {
     width: 100%;
     @include flex-box-mixins(column, center, center);
-    margin-top: 4 * $size-factor;
+    margin-top: 2 * $size-factor;
     padding: 4 * $size-factor;
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 8 * $size-factor;
@@ -421,7 +400,29 @@
       font-size: 5 * $size-factor;
       color: $gray;
       margin-top: 4 * $size-factor;
+      text-align: center;
     }
+  }
+
+  .refresh-btn-wrapper {
+    width: 100%;
+    @include flex-box-mixins(row, center, center);
+    margin-top: 3 * $size-factor;
+    margin-bottom: 4 * $size-factor;
+  }
+
+  .refresh-btn {
+    width: 100%;
+    padding: 4 * $size-factor 0;
+    background-color: rgba(7, 193, 96, 0.8);
+    border-radius: 8 * $size-factor;
+    @include flex-box-mixins(row, center, center);
+  }
+
+  .refresh-btn-text {
+    font-size: 7 * $size-factor;
+    font-weight: 600;
+    color: $white;
   }
 
   .device-info {
