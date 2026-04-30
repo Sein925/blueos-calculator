@@ -2,7 +2,7 @@
   "package": "com.dasein.calculator",
   "name": "科学计算器",
   "versionName": "1.1.1",
-  "versionCode": 260430,
+  "versionCode": 260501,
   "appCategory": [
     "education"
   ],
@@ -68,6 +68,9 @@
         "component": "index"
       },
       "pages/Advanced/Date": {
+        "component": "index"
+      },
+      "pages/Advanced/Formula": {
         "component": "index"
       }
     }

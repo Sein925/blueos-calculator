@@ -17,6 +17,11 @@
               <text class="feature-name">日期计算</text>
             </div>
           </list-item>
+          <list-item type="card" style="margin-top: 3 * $size-factor">
+            <div class="feature-card {{ isVip ? '' : 'disabled' }}" onclick="handleFormulaClick">
+              <text class="feature-name">公式大全</text>
+            </div>
+          </list-item>
           <list-item if="{{ !isVip }}">
             <div class="vip-prompt">
               <text class="vip-prompt-text">开通VIP解锁更多功能</text>
@@ -210,7 +215,7 @@
       <div class="swiper-slide nav-panel">
         <list class="content">
           <list-item>
-            <text class="section-title">其他</text>
+            <text class="section-title" style="font-size: 35px">其他</text>
           </list-item>
           <list-item type="card" style="margin-top: 14px">
             <div class="nav-card" onclick="openSettingsPage">
@@ -769,14 +774,26 @@
     },
 
     handleFeatureClick() {
-      if (this.isVip) {
+      // if (this.isVip) {
         this.openDateCalculator()
-      }
+      // }
     },
 
     openDateCalculator() {
       global.router.push({
         uri: 'pages/Advanced/Date',
+      })
+    },
+
+    handleFormulaClick() {
+      // if (this.isVip) {
+        this.openFormulaPage()
+      // }
+    },
+
+    openFormulaPage() {
+      global.router.push({
+        uri: 'pages/Advanced/Formula',
       })
     },
   }
@@ -866,7 +883,7 @@
       }
 
       .feature-name {
-        font-size: 7 * $size-factor;
+        font-size: 8 * $size-factor;
         color: $white;
       }
     }
@@ -888,7 +905,7 @@
 
   .section-title {
     color: $light-gray;
-    font-size: 7 * $size-factor;
+    font-size: 9 * $size-factor;
     margin-top: 4 * $size-factor;
     margin-left: 4 * $size-factor;
   }
