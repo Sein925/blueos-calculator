@@ -1,10 +1,22 @@
 import { supabaseGet, supabaseInsert, supabaseUpdate } from '../../_utils/supabase.js';
 
-// 爱发电的webhook密钥（可选，用于签名验证）
-const IFDIAN_WEBHOOK_SECRET = '';
-
-// 套餐配置：商品名 -> 类型和时长
+// 套餐配置：plan_id -> 类型和时长
+// 在爱发电后台可以看到每个商品的plan_id
 const PLAN_CONFIG = {
+  // 把爱发电的plan_id填在这里
+  // 例如：'xxxxxx': { type: 'month', months: 1 }
+  // 月卡plan_id:
+  '71c57764449711f1b8db5254001e7c00': { type: 'month', months: 1 },
+  // 季卡plan_id:
+  '87d5beba449c11f1931852540025c377': { type: 'quarter', months: 3 },
+  // 年卡plan_id:
+  'a997babc449c11f1984452540025c377': { type: 'year', months: 12 },
+  // 永久plan_id:
+  'd0bd3360449c11f1928c52540025c377': { type: 'permanent', months: 999 }
+};
+
+// 备用配置：通过商品名判断
+const FALLBACK_PLAN_CONFIG = {
   '月卡': { type: 'month', months: 1 },
   '季卡': { type: 'quarter', months: 3 },
   '年卡': { type: 'year', months: 12 },
@@ -53,6 +65,10 @@ export async function onRequestPost(context) {
     const productType = order.product_type;
     console.log('[Notify] 产品类型:', productType);
     
+    // 获取plan_id，这是最准确的
+    const planId = order.plan_id || '';
+    console.log('[Notify] 套餐ID:', planId);
+    
     // 从remark中提取设备ID
     let deviceId = '';
     const remark = order.remark || '';
@@ -79,44 +95,52 @@ export async function onRequestPost(context) {
       return jsonResponse({ ec: 200, em: 'No device ID' });
     }
     
-    // 识别套餐类型
+    // 识别套餐类型，优先用plan_id
     let selectedPlan = null;
     
-    // 从商品标题/sku中识别套餐
-    const orderTitle = order.title || '';
-    const skuDetail = order.sku_detail || [];
-    
-    console.log('[Notify] 订单标题:', orderTitle);
-    console.log('[Notify] SKU详情:', skuDetail);
-    
-    // 检查订单标题中有没有套餐关键词
-    for (const [planName, planInfo] of Object.entries(PLAN_CONFIG)) {
-      if (orderTitle.includes(planName)) {
-        selectedPlan = planInfo;
-        console.log('[Notify] 匹配到套餐:', planName);
-        break;
-      }
-    }
-    
-    // 如果标题里没有，检查SKU详情
-    if (!selectedPlan && skuDetail.length > 0) {
-      for (const sku of skuDetail) {
-        const skuName = sku.name || sku.title || '';
-        for (const [planName, planInfo] of Object.entries(PLAN_CONFIG)) {
-          if (skuName.includes(planName)) {
-            selectedPlan = planInfo;
-            console.log('[Notify] 从SKU匹配到套餐:', planName);
-            break;
-          }
+    // 1. 通过plan_id查找（最准确）
+    if (planId && PLAN_CONFIG[planId]) {
+      selectedPlan = PLAN_CONFIG[planId];
+      console.log('[Notify] 通过plan_id匹配到套餐:', planId);
+    } else {
+      console.log('[Notify] plan_id未配置或匹配失败，尝试通过商品名匹配');
+      
+      // 2. 通过商品标题/sku识别
+      const orderTitle = order.title || '';
+      const skuDetail = order.sku_detail || [];
+      
+      console.log('[Notify] 订单标题:', orderTitle);
+      console.log('[Notify] SKU详情:', skuDetail);
+      
+      // 检查订单标题中有没有套餐关键词
+      for (const [planName, planInfo] of Object.entries(FALLBACK_PLAN_CONFIG)) {
+        if (orderTitle.includes(planName)) {
+          selectedPlan = planInfo;
+          console.log('[Notify] 通过标题匹配到套餐:', planName);
+          break;
         }
-        if (selectedPlan) break;
+      }
+      
+      // 如果标题里没有，检查SKU详情
+      if (!selectedPlan && skuDetail.length > 0) {
+        for (const sku of skuDetail) {
+          const skuName = sku.name || sku.title || '';
+          for (const [planName, planInfo] of Object.entries(FALLBACK_PLAN_CONFIG)) {
+            if (skuName.includes(planName)) {
+              selectedPlan = planInfo;
+              console.log('[Notify] 通过SKU匹配到套餐:', planName);
+              break;
+            }
+          }
+          if (selectedPlan) break;
+        }
       }
     }
     
     // 如果还是没有，默认月卡
     if (!selectedPlan) {
       console.log('[Notify] 没有匹配到套餐，默认月卡');
-      selectedPlan = PLAN_CONFIG['月卡'];
+      selectedPlan = FALLBACK_PLAN_CONFIG['月卡'];
     }
     
     // 更新VIP
@@ -151,7 +175,7 @@ export async function onRequestGet(context) {
     
     // 找到对应的套餐配置
     let selectedPlan = null;
-    for (const [name, info] of Object.entries(PLAN_CONFIG)) {
+    for (const [name, info] of Object.entries(FALLBACK_PLAN_CONFIG)) {
       if (info.type === planType || name.includes(planType)) {
         selectedPlan = info;
         break;
@@ -159,7 +183,7 @@ export async function onRequestGet(context) {
     }
     
     if (!selectedPlan) {
-      selectedPlan = PLAN_CONFIG['月卡'];
+      selectedPlan = FALLBACK_PLAN_CONFIG['月卡'];
     }
     
     console.log('[Notify] 测试更新VIP:', deviceId, selectedPlan);
