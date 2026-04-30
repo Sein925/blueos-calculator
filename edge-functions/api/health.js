@@ -13,7 +13,7 @@ export async function onRequestGet(context) {
     dbMessage = 'KV storage is working';
   } catch (error) {
     dbStatus = 'error';
-    dbMessage = error.message;
+    dbMessage = 'KV not configured or error: ' + error.message;
   }
   
   const responseData = {

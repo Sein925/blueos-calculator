@@ -23,19 +23,31 @@ export async function onRequestPost(context) {
     const packageType = body.package_type || body['package_type'];
 
     if (!deviceId || !packageType) {
-      return jsonResponse({
+      return new Response(JSON.stringify({
         success: false,
         message: '参数不完整',
         error_code: 'PARAMS_MISSING'
-      }, 400);
+      }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
     }
 
     if (!PLAN_TYPES[packageType]) {
-      return jsonResponse({
+      return new Response(JSON.stringify({
         success: false,
         message: '套餐类型错误',
         error_code: 'PACKAGE_TYPE_INVALID'
-      }, 400);
+      }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
     }
 
     let user = await kvGetUser(context, deviceId);
@@ -55,9 +67,9 @@ export async function onRequestPost(context) {
       expireDate.setMonth(expireDate.getMonth() + selectedPlan.months);
     }
 
-    if (user.is_vip && user.vip_expire_date) {
+    if (user && user.is_vip && user.vip_expire_date) {
       const currentExpire = new Date(user.vip_expire_date);
-
+      
       if (currentExpire > now) {
         if (selectedPlan.type === 'permanent') {
           expireDate = new Date(2099, 11, 31);
@@ -68,13 +80,27 @@ export async function onRequestPost(context) {
       }
     }
 
-    await kvUpdateUser(context, deviceId, {
+    const updatedUser = await kvUpdateUser(context, deviceId, {
       is_vip: true,
       vip_expire_date: expireDate.toISOString(),
       vip_updated_at: now.toISOString()
     });
 
-    return jsonResponse({
+    if (!updatedUser) {
+      return new Response(JSON.stringify({
+        success: false,
+        message: '数据存储失败，请确保KV已配置',
+        error_code: 'STORAGE_ERROR'
+      }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
+
+    return new Response(JSON.stringify({
       success: true,
       message: 'VIP更新成功',
       data: {
@@ -82,26 +108,26 @@ export async function onRequestPost(context) {
         is_vip: true,
         expire_date: expireDate.toISOString()
       }
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
-
+    
   } catch (error) {
-    return jsonResponse({
+    return new Response(JSON.stringify({
       success: false,
       message: '服务器错误',
       error_code: 'SERVER_ERROR',
       error_details: error.message
-    }, 500);
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
   }
-}
-
-function jsonResponse(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    }
-  });
 }
