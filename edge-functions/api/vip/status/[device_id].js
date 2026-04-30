@@ -1,63 +1,47 @@
 import { supabaseGet } from '../../../_utils/supabase.js';
 
 export async function onRequestGet(context) {
-  console.log('[Status] ===== 查询VIP状态 =====');
+  console.log('========================================');
+  console.log('[Status] 查询VIP状态');
+  console.log('========================================');
   
   try {
     const { device_id } = context.params;
-    console.log('[Status] 查询设备:', device_id);
+    console.log('[Status] 查询设备ID:', device_id);
     
-    console.log('[Status] 查询VIP订单...');
-    const orders = await supabaseGet('vip_orders', 
-      { device_id, status: 'success' },
-      { 
-        orderBy: 'paid_at', 
-        ascending: false, 
-        limit: 1,
-        columns: 'package_type, paid_at'
-      }
-    );
-    
-    console.log('[Status] 查询结果:', orders);
+    console.log('[Status] 查询users表...');
+    const users = await supabaseGet('users', { device_id: device_id });
+    console.log('[Status] 查询结果:', users);
     
     let isVip = false;
     let expireDate = null;
     
-    if (orders && orders.length > 0) {
-      const order = orders[0];
-      const paidAt = new Date(order.paid_at);
-      let expireAt;
+    if (users && users.length > 0) {
+      const user = users[0];
+      console.log('[Status] 用户信息:', user);
       
-      switch (order.package_type) {
-        case 'permanent':
-          expireAt = new Date(paidAt);
-          expireAt.setFullYear(expireAt.getFullYear() + 100);
-          break;
-        case 'year':
-          expireAt = new Date(paidAt);
-          expireAt.setFullYear(expireAt.getFullYear() + 1);
-          break;
-        case 'quarter':
-          expireAt = new Date(paidAt);
-          expireAt.setMonth(expireAt.getMonth() + 3);
-          break;
-        case 'month':
-        default:
-          expireAt = new Date(paidAt);
-          expireAt.setMonth(expireAt.getMonth() + 1);
-          break;
-      }
+      isVip = user.is_vip === true;
       
-      isVip = new Date() < expireAt;
-      expireDate = isVip ? expireAt.toISOString() : null;
-      
-      console.log('[Status] VIP状态:', isVip);
-      if (isVip) {
-        console.log('[Status] 过期时间:', expireDate);
+      if (isVip && user.vip_expire_date) {
+        expireDate = user.vip_expire_date;
+        console.log('[Status] VIP过期时间:', expireDate);
+        
+        // 检查是否过期
+        const now = new Date();
+        const expireDateObj = new Date(expireDate);
+        if (now > expireDateObj) {
+          console.log('[Status] VIP已过期，设置为非VIP');
+          isVip = false;
+          expireDate = null;
+        }
       }
     }
     
-    console.log('[Status] ===== 查询VIP状态成功 =====');
+    console.log('[Status] 最终VIP状态:', isVip);
+    console.log('[Status] 最终过期时间:', expireDate);
+    console.log('========================================');
+    console.log('[Status] 查询VIP状态成功');
+    console.log('========================================');
     
     return jsonResponse({
       success: true,
@@ -65,8 +49,10 @@ export async function onRequestGet(context) {
       expire_date: expireDate
     });
   } catch (error) {
-    console.error('[Status] ===== 查询VIP状态失败 =====');
-    console.error('[Status] 错误信息:', error);
+    console.log('========================================');
+    console.log('[Status] 查询VIP状态失败');
+    console.log('========================================');
+    console.error('[Status] 错误信息:', error.message);
     console.error('[Status] 错误堆栈:', error.stack);
     
     return jsonResponse({

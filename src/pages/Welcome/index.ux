@@ -50,9 +50,7 @@
             let expireDateText = vipData.expireDateText || ''
             
             // 判断会员是否到期
-            if (isVip && expireDateText && vipData.updatedAt) {
-              const updatedAt = vipData.updatedAt
-              const now = Date.now()
+            if (isVip && expireDateText) {
               // 如果超过7天，说明数据可能过期了，但暂时不处理
               // 主要看 expire_date 是否已经过期
               if (expireDateText !== '永久') {

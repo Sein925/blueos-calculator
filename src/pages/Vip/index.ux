@@ -360,6 +360,10 @@
     background-color: $brand;
     border-radius: 8 * $size-factor;
     @include flex-box-mixins(row, center, center);
+    
+    &:active {
+      opacity: 0.4;
+    }
   }
 
   .pay-btn-text {
@@ -417,6 +421,10 @@
     background-color: rgba(7, 193, 96, 0.8);
     border-radius: 8 * $size-factor;
     @include flex-box-mixins(row, center, center);
+
+    &:active {
+      opacity: 0.4;
+    }
   }
 
   .refresh-btn-text {
