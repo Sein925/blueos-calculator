@@ -7,7 +7,6 @@ export async function onRequestGet(context) {
   const kvCheck = checkKVConfig(context);
   let dbStatus = kvCheck.ok ? 'connected' : 'error';
   let dbMessage = kvCheck.ok ? 'KV storage is working' : kvCheck.message;
-  let availableNamespaces = kvCheck.availableNamespaces || [];
   
   let testResult = 'not tested';
   
@@ -30,11 +29,14 @@ export async function onRequestGet(context) {
       status: dbStatus,
       message: dbMessage,
       testResult: testResult,
-      availableNamespaces: availableNamespaces
+      contextKeys: kvCheck.contextKeys,
+      envKeys: kvCheck.envKeys,
+      attempts: kvCheck.attempts,
+      error: kvCheck.error
     }
   };
   
-  return new Response(JSON.stringify(responseData), {
+  return new Response(JSON.stringify(responseData, null, 2), {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
