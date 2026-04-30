@@ -1,4 +1,4 @@
-const { supabaseGet, supabaseInsert, supabaseUpdate } = require('./utils/supabase');
+import { supabaseGet, supabaseInsert, supabaseUpdate } from '../../_utils/supabase.js';
 
 // 套餐配置：通过爱发电的 plan_id 匹配
 const PLAN_CONFIG = {
@@ -6,23 +6,18 @@ const PLAN_CONFIG = {
   // 'your_plan_id': { type: 'month', months: 1 }
 };
 
-exports.main = async (event, context) => {
+export const onRequestPost = async ({ request }) => {
   const requestStartTime = Date.now();
   console.log('========================================');
   console.log('[Notify] 收到爱发电Webhook请求');
   console.log('========================================');
   console.log('[Notify] 请求时间:', new Date().toISOString());
-  console.log('[Notify] 请求方法:', event.httpMethod);
-  console.log('[Notify] 请求路径:', event.path);
-  console.log('[Notify] 请求头:', JSON.stringify(event.headers, null, 2));
-  console.log('[Notify] 查询参数:', JSON.stringify(event.queryString, null, 2));
+  console.log('[Notify] 请求方法:', request.method);
+  console.log('[Notify] 请求路径:', request.url);
 
   try {
     // 读取请求体
-    let bodyText = '';
-    if (event.body) {
-      bodyText = Buffer.isBuffer(event.body) ? event.body.toString() : event.body;
-    }
+    const bodyText = await request.text();
     console.log('[Notify] 原始请求体 (body):');
     console.log(bodyText);
 
@@ -138,6 +133,61 @@ exports.main = async (event, context) => {
   }
 };
 
+export const onRequestGet = async ({ request }) => {
+  console.log('========================================');
+  console.log('[Notify] 收到GET测试请求');
+  console.log('========================================');
+  console.log('[Notify] 请求时间:', new Date().toISOString());
+  console.log('[Notify] 请求方法:', request.method);
+  console.log('[Notify] 请求路径:', request.url);
+
+  try {
+    const url = new URL(request.url);
+    const deviceId = url.searchParams.get('device_id');
+    const planType = url.searchParams.get('plan') || 'month';
+
+    console.log('[Notify] 查询参数 (query params):');
+    console.log('  device_id:', deviceId);
+    console.log('  plan:', planType);
+
+    if (!deviceId) {
+      console.log('[Notify] ❌ 缺少 device_id');
+      return jsonResponse({ ec: 400, em: 'Need device_id' }, 400);
+    }
+
+    // 测试时通过 plan_type 查找配置
+    let selectedPlan = null;
+    for (const plan of Object.values(PLAN_CONFIG)) {
+      if (plan.type === planType) {
+        selectedPlan = plan;
+        break;
+      }
+    }
+
+    if (!selectedPlan) {
+      console.log('[Notify] ❌ 未找到 plan_type 对应的配置:', planType);
+      return jsonResponse({ ec: 400, em: 'Plan type not found' }, 400);
+    }
+
+    console.log('[Notify] 开始测试更新VIP...');
+    await updateVip(deviceId, selectedPlan);
+
+    console.log('========================================');
+    console.log('[Notify] GET测试请求处理完成');
+    console.log('========================================');
+
+    return jsonResponse({ ec: 200, em: 'Test success' });
+  } catch (error) {
+    console.log('========================================');
+    console.log('[Notify] GET测试请求处理发生错误');
+    console.log('========================================');
+    console.error('[Notify] 错误信息 (message):', error.message);
+    console.error('[Notify] 错误堆栈 (stack):', error.stack);
+
+    return jsonResponse({ ec: 500, em: error.message }, 500);
+  }
+};
+
 async function updateVip(deviceId, plan) {
   console.log('  [UpdateVip] 开始更新VIP');
   console.log('  [UpdateVip] device_id:', deviceId);
@@ -231,14 +281,13 @@ async function updateVip(deviceId, plan) {
 
 function jsonResponse(data, status = 200) {
   console.log('[Notify] 返回响应:', JSON.stringify(data), '状态码:', status);
-  return {
-    statusCode: status,
+  return new Response(JSON.stringify(data), {
+    status,
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type'
-    },
-    body: JSON.stringify(data)
-  };
+    }
+  });
 }

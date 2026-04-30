@@ -1,35 +1,16 @@
-const { supabaseGet } = require('./utils/supabase');
+import { supabaseGet } from '../../../_utils/supabase.js';
 
-exports.main = async (event, context) => {
+export const onRequestGet = async ({ request, params }) => {
   console.log('========================================');
   console.log('[Status] 查询VIP状态');
   console.log('========================================');
   console.log('[Status] 请求时间:', new Date().toISOString());
-  console.log('[Status] 请求方法:', event.httpMethod);
-  console.log('[Status] 请求路径:', event.path);
-  console.log('[Status] 查询参数:', JSON.stringify(event.queryString, null, 2));
+  console.log('[Status] 请求方法:', request.method);
+  console.log('[Status] 请求路径:', request.url);
+  console.log('[Status] 路径参数:', params);
 
   try {
-    // 从路径参数或查询参数获取 device_id
-    let deviceId = '';
-    
-    // 尝试从路径获取（如 /vip-status/12345）
-    if (event.pathParameters && event.pathParameters.device_id) {
-      deviceId = event.pathParameters.device_id;
-    }
-    // 尝试从查询参数获取（如 /vip-status?device_id=12345）
-    else if (event.queryString && event.queryString.device_id) {
-      deviceId = event.queryString.device_id;
-    }
-    // 尝试从路径解析（Cloud Functions 可能将路径参数放在不同位置）
-    else {
-      const pathParts = event.path.split('/');
-      const lastPart = pathParts[pathParts.length - 1];
-      if (lastPart && lastPart !== 'vip-status') {
-        deviceId = lastPart;
-      }
-    }
-
+    const deviceId = params.device_id;
     console.log('[Status] 查询设备ID:', deviceId);
 
     if (!deviceId) {
@@ -101,12 +82,11 @@ exports.main = async (event, context) => {
 
 function jsonResponse(data, status = 200) {
   console.log('[Status] 返回响应:', JSON.stringify(data), '状态码:', status);
-  return {
-    statusCode: status,
+  return new Response(JSON.stringify(data), {
+    status,
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*'
-    },
-    body: JSON.stringify(data)
-  };
+    }
+  });
 }

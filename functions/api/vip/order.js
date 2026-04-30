@@ -1,4 +1,4 @@
-const { supabaseGet, supabaseInsert, supabaseUpdate } = require('./utils/supabase');
+import { supabaseGet, supabaseInsert, supabaseUpdate } from '../../_utils/supabase.js';
 
 const PLAN_TYPES = {
   'month': { type: 'month', months: 1 },
@@ -7,21 +7,17 @@ const PLAN_TYPES = {
   'permanent': { type: 'permanent', months: 999 }
 };
 
-exports.main = async (event, context) => {
+export const onRequestPost = async ({ request }) => {
   console.log('========================================');
   console.log('[Order] 创建订单/更新VIP');
   console.log('========================================');
   console.log('[Order] 请求时间:', new Date().toISOString());
-  console.log('[Order] 请求方法:', event.httpMethod);
-  console.log('[Order] 请求路径:', event.path);
-  console.log('[Order] 请求头:', JSON.stringify(event.headers, null, 2));
+  console.log('[Order] 请求方法:', request.method);
+  console.log('[Order] 请求路径:', request.url);
 
   try {
     // 读取请求体
-    let bodyText = '';
-    if (event.body) {
-      bodyText = Buffer.isBuffer(event.body) ? event.body.toString() : event.body;
-    }
+    const bodyText = await request.text();
     console.log('[Order] 原始请求体 (body):');
     console.log(bodyText);
 
@@ -145,14 +141,13 @@ exports.main = async (event, context) => {
 
 function jsonResponse(data, status = 200) {
   console.log('[Order] 返回响应:', JSON.stringify(data), '状态码:', status);
-  return {
-    statusCode: status,
+  return new Response(JSON.stringify(data), {
+    status,
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type'
-    },
-    body: JSON.stringify(data)
-  };
+    }
+  });
 }
