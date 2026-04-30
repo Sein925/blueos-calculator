@@ -805,7 +805,7 @@
   .advanced-panel {
     .content {
       width: 100%;
-      padding: 4 * $size-factor 5 * $size-factor;
+      padding: 4 * $size-factor 2 * $size-factor;
     }
 
     .panel-header {
@@ -882,13 +882,13 @@
   .nav-panel {
     .content {
       width: 100%;
-      padding: 4 * $size-factor 5 * $size-factor;
+      padding: 3 * $size-factor 2 * $size-factor;
     }
   }
 
   .section-title {
     color: $light-gray;
-    font-size: 8 * $size-factor;
+    font-size: 7 * $size-factor;
     margin-top: 4 * $size-factor;
     margin-left: 4 * $size-factor;
   }

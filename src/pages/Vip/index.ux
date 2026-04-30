@@ -260,7 +260,7 @@
 
     .content {
       width: 100%;
-      padding: 0 5 * $size-factor;
+      padding: 0 2 * $size-factor;
       @include flex-box-mixins(column, center, flex-start);
     }
 

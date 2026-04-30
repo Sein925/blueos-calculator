@@ -37,7 +37,7 @@
   export default {
     data: {
       appName: '科学计算器',
-      appVersion: '1.1.0',
+      appVersion: '1.1.1',
       pressTimer: null,
     },
 
@@ -91,7 +91,7 @@
 
     .content {
       width: 100%;
-      padding: 0 5 * $size-factor;
+      padding: 0 2 * $size-factor;
       @include flex-box-mixins(column, center, flex-start);
     }
 
