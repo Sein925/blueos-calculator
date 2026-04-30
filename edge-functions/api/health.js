@@ -1,19 +1,23 @@
-import { kvGetUser } from '../_utils/kv.js';
+import { kvGetUser, checkKVConfig } from '../_utils/kv.js';
 
 export async function onRequestGet(context) {
   const now = new Date();
   const timestamp = now.toISOString();
   
-  let dbStatus = 'unknown';
-  let dbMessage = '';
+  const kvCheck = checkKVConfig(context);
+  let dbStatus = kvCheck.ok ? 'connected' : 'error';
+  let dbMessage = kvCheck.ok ? 'KV storage is working' : kvCheck.message;
+  let availableNamespaces = kvCheck.availableNamespaces || [];
   
-  try {
-    await kvGetUser(context, 'test_health_check');
-    dbStatus = 'connected';
-    dbMessage = 'KV storage is working';
-  } catch (error) {
-    dbStatus = 'error';
-    dbMessage = 'KV not configured or error: ' + error.message;
+  let testResult = 'not tested';
+  
+  if (kvCheck.ok) {
+    try {
+      await kvGetUser(context, 'test_health_check');
+      testResult = 'ok';
+    } catch (error) {
+      testResult = 'error: ' + error.message;
+    }
   }
   
   const responseData = {
@@ -24,7 +28,9 @@ export async function onRequestGet(context) {
     db: {
       type: 'KV',
       status: dbStatus,
-      message: dbMessage
+      message: dbMessage,
+      testResult: testResult,
+      availableNamespaces: availableNamespaces
     }
   };
   

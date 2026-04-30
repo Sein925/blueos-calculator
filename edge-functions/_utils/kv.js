@@ -4,26 +4,41 @@
 const KV_NAMESPACE_NAME = 'KV_CALCULATOR';
 
 /**
- * 获取 KV 命名空间实例
+ * 检查 KV 是否配置
  */
-function getKV(context) {
+export function checkKVConfig(context) {
   try {
     if (!context.env) {
-      console.error('context.env is not available');
-      return null;
+      return { ok: false, message: 'context.env not available' };
     }
     
     if (!context.env[KV_NAMESPACE_NAME]) {
-      console.error(`${KV_NAMESPACE_NAME} KV namespace is not configured`);
-      console.error('Available namespaces in env:', Object.keys(context.env));
-      return null;
+      return { 
+        ok: false, 
+        message: `${KV_NAMESPACE_NAME} KV not configured`,
+        availableNamespaces: Object.keys(context.env)
+      };
     }
     
-    return context.env[KV_NAMESPACE_NAME];
+    return { ok: true, namespace: context.env[KV_NAMESPACE_NAME] };
   } catch (error) {
-    console.error('Error accessing KV:', error);
+    return { ok: false, message: 'Error checking KV: ' + error.message };
+  }
+}
+
+/**
+ * 获取 KV 命名空间实例
+ */
+function getKV(context) {
+  const check = checkKVConfig(context);
+  if (!check.ok) {
+    console.error(check.message);
+    if (check.availableNamespaces) {
+      console.error('Available namespaces:', check.availableNamespaces);
+    }
     return null;
   }
+  return check.namespace;
 }
 
 /**

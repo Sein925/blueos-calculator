@@ -9,11 +9,11 @@ const PLAN_CONFIG = {
 
 async function updateVip(context, deviceId, plan) {
   if (!deviceId) {
-    throw new Error('deviceId is required');
+    return { success: false, message: 'deviceId is required' };
   }
 
   if (!plan || !plan.type) {
-    throw new Error('plan is required');
+    return { success: false, message: 'plan is required' };
   }
 
   let user = await kvGetUser(context, deviceId);
@@ -23,7 +23,7 @@ async function updateVip(context, deviceId, plan) {
   }
 
   if (!user) {
-    throw new Error('Failed to create user, KV not configured');
+    return { success: false, message: 'KV operation failed' };
   }
 
   const now = new Date();
@@ -54,6 +54,8 @@ async function updateVip(context, deviceId, plan) {
     vip_expire_date: expireDate.toISOString(),
     vip_updated_at: now.toISOString()
   });
+
+  return { success: true, message: 'ok' };
 }
 
 export async function onRequestPost(context) {
@@ -64,8 +66,8 @@ export async function onRequestPost(context) {
     try {
       data = JSON.parse(bodyText);
     } catch (e) {
-      return new Response(JSON.stringify({ ec: 400, em: 'Invalid JSON' }), {
-        status: 400,
+      return new Response(JSON.stringify({ ec: 200, em: 'Invalid JSON but received' }), {
+        status: 200,
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
@@ -220,7 +222,17 @@ export async function onRequestGet(context) {
       });
     }
 
-    await updateVip(context, deviceId, selectedPlan);
+    const result = await updateVip(context, deviceId, selectedPlan);
+
+    if (!result.success) {
+      return new Response(JSON.stringify({ ec: 500, em: result.message }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
 
     return new Response(JSON.stringify({ ec: 200, em: 'Test success' }), {
       status: 200,
