@@ -24,11 +24,11 @@
               <text class="feature-name">公式大全</text>
             </div>
           </list-item> -->
-          <list-item if="{{ !isVip }}">
+          <!-- <list-item if="{{ !isVip }}">
             <div class="vip-prompt">
               <text class="vip-prompt-text">开通VIP解锁更多功能</text>
             </div>
-          </list-item>
+          </list-item> -->
           <list-item>
             <div class="vip-prompt">
               <text style="font-size: 60px; color: white;margin-top: 60px">敬请期待</text>
@@ -938,6 +938,12 @@
     border-radius: 8 * $size-factor;
     padding: 16px 24px 18px 24px;
     @include flex-box-mixins(column, flex-start, center);
+
+    @media (device: watch-round) {
+      background-color: transparent;
+      border-radius: 0;
+      padding: 8px 30px 10px 30px;
+    }
   }
 
   .display-card {
@@ -947,6 +953,12 @@
     padding: 16px 20px;
     margin-bottom: 16px;
     @include flex-box-mixins(column, flex-start, center);
+
+    @media (device: watch-round) {
+      border-radius: 16px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+    }
   }
 
   .scroll-display {
@@ -954,6 +966,7 @@
     height: 36px;
 
     @media (device: watch-round) {
+      height: 30px;
       justify-content: center;
     }
   }
@@ -964,6 +977,11 @@
     font-weight: 400;
     text-align: right;
     line-height: 36px;
+
+    @media (device: watch-round) {
+      font-size: 20px;
+      line-height: 30px;
+    }
   }
 
   .main-display {
@@ -972,11 +990,20 @@
     font-weight: 600;
     text-align: right;
     line-height: 48px;
+
+    @media (device: watch-round) {
+      font-size: 30px;
+      line-height: 40px;
+    }
   }
 
   .buttons-container {
     width: 100%;
     @include flex-box-mixins(column, space-between, space-between);
+
+    @media (device: watch-round) {
+      justify-content: flex-start;
+    }
   }
 
   .button-row {
@@ -993,12 +1020,20 @@
 
     text {
       font-size: 7 * $size-factor;
-      font-weight: 500;
       color: $white;
     }
 
     &:active {
       opacity: 0.4;
+    }
+
+    @media (device: watch-round) {
+      height: 60px;
+      border-radius: 30px;
+
+      text {
+        font-size: 32px;
+      }
     }
   }
 
