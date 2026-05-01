@@ -5,14 +5,16 @@
         <list class="content" title="true">
           <list-item style="flex-direction: column">
             <div class="panel-header">
-              <text class="section-title">高级功能</text>
-              <div class="vip-btn {{ isVip ? 'vip-active' : '' }}" onclick="openVipPage">
+              <text class="section-title" style="font-size: 45px">高级功能</text>
+              <!-- <div class="vip-btn {{ isVip ? 'vip-active' : '' }}" onclick="openVipPage">
                 <text class="vip-btn-text">{{ isVip ? 'VIP' : '开通VIP' }}</text>
-              </div>
+              </div> -->
             </div>
-            <text if="{{ isVip }}" class="vip-expire">VIP到期时间：{{ expireDateText }}</text>
+            <text if="{{ isVip }}" class="vip-expire">
+              VIP到期时间：{{ expireDateText }}
+            </text>
           </list-item>
-          <list-item type="card" style="margin-top: 3 * $size-factor">
+          <!-- <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card {{ isVip ? '' : 'disabled' }}" onclick="handleFeatureClick">
               <text class="feature-name">日期计算</text>
             </div>
@@ -21,10 +23,15 @@
             <div class="feature-card {{ isVip ? '' : 'disabled' }}" onclick="handleFormulaClick">
               <text class="feature-name">公式大全</text>
             </div>
-          </list-item>
+          </list-item> -->
           <list-item if="{{ !isVip }}">
             <div class="vip-prompt">
               <text class="vip-prompt-text">开通VIP解锁更多功能</text>
+            </div>
+          </list-item>
+          <list-item>
+            <div class="vip-prompt">
+              <text style="font-size: 60px; color: white;margin-top: 60px">敬请期待</text>
             </div>
           </list-item>
         </list>
@@ -215,14 +222,22 @@
       <div class="swiper-slide nav-panel">
         <list class="content">
           <list-item>
-            <text class="section-title" style="font-size: 35px">其他</text>
+            <text class="section-title">计算</text>
+          </list-item>
+          <list-item type="card" style="margin-top: 14px">
+            <div class="nav-card" onclick="openHistoryPage">
+              <text class="nav-label">历史记录</text>
+            </div>
+          </list-item>
+          <list-item>
+            <text class="section-title">其他</text>
           </list-item>
           <list-item type="card" style="margin-top: 14px">
             <div class="nav-card" onclick="openSettingsPage">
               <text class="nav-label">设置</text>
             </div>
           </list-item>
-          <list-item type="card" style="margin-top: 14px">
+          <list-item type="card" style="margin: 14px 0 88px 0">
             <div class="nav-card" onclick="openAboutPage">
               <text class="nav-label">关于</text>
             </div>
@@ -338,7 +353,7 @@
       isVip: false,
       expireDateText: '',
       deviceId: '',
-      serverUrl: 'https://cal.666-114514.eu.org/'
+      serverUrl: 'https://cal.666-114514.eu.org/',
     },
 
     onInit() {
@@ -364,7 +379,7 @@
         },
         fail: () => {
           this.deviceId = ''
-        }
+        },
       })
     },
 
@@ -382,19 +397,19 @@
         },
         fail: () => {
           this.fetchVipStatusFromServer()
-        }
+        },
       })
     },
 
     fetchVipStatusFromServer() {
       if (!this.deviceId) return
-      
+
       global.fetch.fetch({
         url: this.serverUrl + 'api/vip/status/' + this.deviceId,
         method: 'GET',
         responseType: 'json',
         header: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         success: (response) => {
           const ret = response.data || response
@@ -410,7 +425,7 @@
         },
         fail: (data, code) => {
           console.log('请求VIP状态失败:', code, data)
-        }
+        },
       })
     },
 
@@ -418,11 +433,11 @@
       const vipData = {
         isVip: this.isVip,
         expireDateText: this.expireDateText,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       }
       global.storage.set({
         key: 'vip_status',
-        value: JSON.stringify(vipData)
+        value: JSON.stringify(vipData),
       })
     },
 
@@ -775,7 +790,7 @@
 
     handleFeatureClick() {
       // if (this.isVip) {
-        this.openDateCalculator()
+      this.openDateCalculator()
       // }
     },
 
@@ -787,7 +802,7 @@
 
     handleFormulaClick() {
       // if (this.isVip) {
-        this.openFormulaPage()
+      this.openFormulaPage()
       // }
     },
 
@@ -905,9 +920,16 @@
 
   .section-title {
     color: $light-gray;
-    font-size: 9 * $size-factor;
+    font-size: 7 * $size-factor;
     margin-top: 4 * $size-factor;
     margin-left: 4 * $size-factor;
+
+    @media (device: watch-round) {
+      width: 100%;
+      margin-left: 0;
+      text-align: center;
+      font-size: 40px;
+    }
   }
 
   .calculator-card {
@@ -930,6 +952,10 @@
   .scroll-display {
     width: 100%;
     height: 36px;
+
+    @media (device: watch-round) {
+      justify-content: center;
+    }
   }
 
   .history-display {
