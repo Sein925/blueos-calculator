@@ -55,16 +55,10 @@
       "pages/Settings": {
         "component": "index"
       },
-      "pages/Debug": {
-        "component": "index"
-      },
       "pages/Welcome": {
         "component": "index"
       },
       "pages/Guide": {
-        "component": "index"
-      },
-      "pages/Vip": {
         "component": "index"
       },
       "pages/Advanced/Date": {

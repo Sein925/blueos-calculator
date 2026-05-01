@@ -6,32 +6,16 @@
           <list-item style="flex-direction: column">
             <div class="panel-header">
               <text class="section-title" style="font-size: 45px">高级功能</text>
-              <!-- <div class="vip-btn {{ isVip ? 'vip-active' : '' }}" onclick="openVipPage">
-                <text class="vip-btn-text">{{ isVip ? 'VIP' : '开通VIP' }}</text>
-              </div> -->
             </div>
-            <text if="{{ isVip }}" class="vip-expire">
-              VIP到期时间：{{ expireDateText }}
-            </text>
           </list-item>
-          <!-- <list-item type="card" style="margin-top: 3 * $size-factor">
-            <div class="feature-card {{ isVip ? '' : 'disabled' }}" onclick="handleFeatureClick">
+          <list-item type="card" style="margin-top: 3 * $size-factor">
+            <div class="feature-card" onclick="openDateCalculator">
               <text class="feature-name">日期计算</text>
             </div>
           </list-item>
           <list-item type="card" style="margin-top: 3 * $size-factor">
-            <div class="feature-card {{ isVip ? '' : 'disabled' }}" onclick="handleFormulaClick">
+            <div class="feature-card" onclick="openFormulaPage">
               <text class="feature-name">公式大全</text>
-            </div>
-          </list-item> -->
-          <!-- <list-item if="{{ !isVip }}">
-            <div class="vip-prompt">
-              <text class="vip-prompt-text">开通VIP解锁更多功能</text>
-            </div>
-          </list-item> -->
-          <list-item>
-            <div class="vip-prompt">
-              <text style="font-size: 60px; color: white;margin-top: 60px">敬请期待</text>
             </div>
           </list-item>
         </list>
@@ -350,105 +334,9 @@
       error: false,
       pendingFunction: '',
       expression: [],
-      isVip: false,
-      expireDateText: '',
-      deviceId: '',
-      serverUrl: 'https://cal.666-114514.eu.org/',
     },
 
     onInit() {
-      this.getDeviceId()
-      // 优先从全局变量读取VIP状态
-      if (typeof global.isVip !== 'undefined') {
-        this.isVip = global.isVip
-        this.expireDateText = global.vipExpireDateText || ''
-        // 如果全局变量也没有数据，则从KV存储加载或请求网络
-        if (!this.isVip && !this.expireDateText) {
-          this.loadVipStatus()
-        }
-      } else {
-        this.loadVipStatus()
-      }
-    },
-
-    getDeviceId() {
-      global.device.getId({
-        type: ['device'],
-        success: (ret) => {
-          this.deviceId = ret.device || ''
-        },
-        fail: () => {
-          this.deviceId = ''
-        },
-      })
-    },
-
-    loadVipStatus() {
-      global.storage.get({
-        key: 'vip_status',
-        success: (data) => {
-          if (data) {
-            const vipData = JSON.parse(data)
-            this.isVip = vipData.isVip || false
-            this.expireDateText = vipData.expireDateText || ''
-          } else {
-            this.fetchVipStatusFromServer()
-          }
-        },
-        fail: () => {
-          this.fetchVipStatusFromServer()
-        },
-      })
-    },
-
-    fetchVipStatusFromServer() {
-      if (!this.deviceId) return
-
-      global.fetch.fetch({
-        url: this.serverUrl + 'api/vip/status/' + this.deviceId,
-        method: 'GET',
-        responseType: 'json',
-        header: {
-          'Content-Type': 'application/json',
-        },
-        success: (response) => {
-          const ret = response.data || response
-          if (ret && ret.success) {
-            this.isVip = ret.is_vip
-            if (ret.is_vip && ret.expire_date) {
-              this.expireDateText = this.formatDate(ret.expire_date)
-            } else {
-              this.expireDateText = ''
-            }
-            this.saveVipStatusToStorage()
-          }
-        },
-        fail: (data, code) => {
-          console.log('请求VIP状态失败:', code, data)
-        },
-      })
-    },
-
-    saveVipStatusToStorage() {
-      const vipData = {
-        isVip: this.isVip,
-        expireDateText: this.expireDateText,
-        updatedAt: Date.now(),
-      }
-      global.storage.set({
-        key: 'vip_status',
-        value: JSON.stringify(vipData),
-      })
-    },
-
-    formatDate(dateStr) {
-      const date = new Date(dateStr)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      const hours = String(date.getHours()).padStart(2, '0')
-      const minutes = String(date.getMinutes()).padStart(2, '0')
-      return `${year}-${month}-${day} ${hours}:${minutes}`
     },
 
     inputNumber(num) {
@@ -782,28 +670,10 @@
       })
     },
 
-    openVipPage() {
-      global.router.push({
-        uri: 'pages/Vip',
-      })
-    },
-
-    handleFeatureClick() {
-      // if (this.isVip) {
-      this.openDateCalculator()
-      // }
-    },
-
     openDateCalculator() {
       global.router.push({
         uri: 'pages/Advanced/Date',
       })
-    },
-
-    handleFormulaClick() {
-      // if (this.isVip) {
-      this.openFormulaPage()
-      // }
     },
 
     openFormulaPage() {
@@ -845,42 +715,6 @@
       @include flex-box-mixins(row, space-between, center);
     }
 
-    .vip-expire {
-      font-size: 5 * $size-factor;
-      color: $brand;
-      margin-top: 1 * $size-factor;
-      margin-left: 4 * $size-factor;
-    }
-
-    .vip-btn {
-      padding: 2 * $size-factor 4 * $size-factor;
-      background-color: rgba(255, 255, 255, 0.1);
-      border-radius: 8 * $size-factor;
-      margin-top: 20px;
-      margin-right: 10px;
-    }
-
-    .vip-btn.vip-active {
-      background-color: $brand;
-    }
-
-    .vip-btn-text {
-      font-size: 5 * $size-factor;
-      color: $white;
-    }
-
-    .vip-prompt {
-      width: 100%;
-      @include flex-box-mixins(column, center, center);
-      padding: 4 * $size-factor 0;
-    }
-
-    .vip-prompt-text {
-      font-size: 5 * $size-factor;
-      color: $gray;
-      text-align: center;
-    }
-
     .feature-card {
       width: 100%;
       background-color: rgba(255, 255, 255, 0.1);
@@ -890,10 +724,6 @@
       margin-top: 10px;
 
       &:active {
-        opacity: 0.4;
-      }
-
-      &.disabled {
         opacity: 0.4;
       }
 

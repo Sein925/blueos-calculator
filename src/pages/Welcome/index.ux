@@ -40,74 +40,22 @@
     },
 
     checkAndNavigate() {
-      // 先加载VIP状态（离线）
       global.storage.get({
-        key: 'vip_status',
+        key: 'hasSeenGuide',
         success: (data) => {
-          if (data) {
-            const vipData = JSON.parse(data)
-            let isVip = vipData.isVip || false
-            let expireDateText = vipData.expireDateText || ''
-            
-            // 判断会员是否到期
-            if (isVip && expireDateText) {
-              // 如果超过7天，说明数据可能过期了，但暂时不处理
-              // 主要看 expire_date 是否已经过期
-              if (expireDateText !== '永久') {
-                // 解析到期时间
-                try {
-                  // 格式：YYYY-MM-DD HH:MM
-                  const [datePart, timePart] = expireDateText.split(' ')
-                  const [year, month, day] = datePart.split('-').map(Number)
-                  const [hours, minutes] = timePart.split(':').map(Number)
-                  const expireDate = new Date(year, month - 1, day, hours, minutes)
-                  const nowDate = new Date()
-                  
-                  // 比较是否到期
-                  if (nowDate > expireDate) {
-                    isVip = false
-                    expireDateText = ''
-                    // 保存更新后的状态到KV存储
-                    global.storage.set({
-                      key: 'vip_status',
-                      value: JSON.stringify({
-                        isVip: false,
-                        expireDateText: '',
-                        updatedAt: Date.now()
-                      })
-                    })
-                  }
-                } catch (e) {
-                  // 解析失败，保持原样
-                }
-              }
-            }
-            
-            // 更新全局状态
-            global.isVip = isVip
-            global.vipExpireDateText = expireDateText
+          if (data && data === 'true') {
+            global.router.replace({
+              uri: '/pages/Home',
+            })
+          } else {
+            global.router.replace({
+              uri: '/pages/Guide',
+            })
           }
         },
-        complete: () => {
-          // 再检查是否看过引导页
-          global.storage.get({
-            key: 'hasSeenGuide',
-            success: (data) => {
-              if (data && data === 'true') {
-                global.router.replace({
-                  uri: '/pages/Home',
-                })
-              } else {
-                global.router.replace({
-                  uri: '/pages/Guide',
-                })
-              }
-            },
-            fail: () => {
-              global.router.replace({
-                uri: '/pages/Guide',
-              })
-            }
+        fail: () => {
+          global.router.replace({
+            uri: '/pages/Guide',
           })
         }
       })

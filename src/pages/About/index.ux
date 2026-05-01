@@ -10,7 +10,7 @@
         <div class="about-content">
           <text class="app-name">{{ appName }}</text>
           <text class="app-version">版本: {{ appVersion }}</text>
-          <image class="app-logo" src="/assets/images/logo.png" @touchstart="startPress" @touchend="endPress"></image>
+          <image class="app-logo" src="/assets/images/logo.png"></image>
           <text class="app-desc">一款强大的手表端科学计算器</text>
         </div>
       </div>
@@ -38,7 +38,6 @@
     data: {
       appName: '科学计算器',
       appVersion: '1.1.1',
-      pressTimer: null,
     },
 
     feedback() {
@@ -51,32 +50,6 @@
       global.router.push({
         uri: '/pages/About/Donate',
       })
-    },
-
-    startPress() {
-      this.pressTimer = setTimeout(() => {
-        this.debug()
-      }, 10000)
-    },
-
-    endPress() {
-      if (this.pressTimer) {
-        clearTimeout(this.pressTimer)
-        this.pressTimer = null
-      }
-    },
-
-    debug() {
-      global.router.push({
-        uri: '/pages/Debug',
-      })
-    },
-
-    onDestroy() {
-      if (this.pressTimer) {
-        clearTimeout(this.pressTimer)
-        this.pressTimer = null
-      }
     },
   }
 </script>
