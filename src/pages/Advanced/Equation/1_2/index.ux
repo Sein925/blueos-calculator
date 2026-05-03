@@ -53,9 +53,9 @@
 <script>
   export default {
     data: {
-      a: '1',
-      b: '0',
-      c: '0',
+      a: '',
+      b: '',
+      c: '',
       result: '',
     },
 
@@ -139,7 +139,7 @@
   .equation-form {
     width: 100%;
     text-align: center;
-    font-size: 10 * $size-factor;
+    font-size: 8 * $size-factor;
     color: #00ff99;
     font-family: monospace;
   }
@@ -154,7 +154,7 @@
     font-size: 6 * $size-factor;
     color: white;
     width: 60px;
-    margin-right: 2 * $size-factor;
+    margin: 0 2 * $size-factor;
   }
 
   .solve-btn {

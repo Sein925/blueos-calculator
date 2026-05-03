@@ -3,7 +3,7 @@
 <template>
   <list class="wrapper" title="true">
     <list-item>
-      <d-back value="解方程"></d-back>
+      <d-back value="方程求解"></d-back>
     </list-item>
     <list-item type="card" class="content">
       <div class="nav-card" onclick="openLinear">

@@ -2,23 +2,20 @@
   <div class="number-input-wrapper">
     <div class="input-display" onclick="focusInput">
       <div class="input-value">
-        <text
+        <marquee
           class="input-text {{ (value === '0' || value === '' || !value) && placeholder ? 'placeholder' : '' }}"
           lines="1">
           {{ displayValue }}
-        </text>
+        </marquee>
       </div>
     </div>
     <div if="{{ showKeypad }}" class="keypad-overlay" onclick="closeKeypad">
       <div class="keypad-panel" onclick="stopPropagation">
         <div class="keypad-header">
           <text class="keypad-title">{{ label }}</text>
-          <div class="keypad-close" onclick="closeKeypad">
-            <text>完成</text>
-          </div>
         </div>
         <div class="keypad-display">
-          <text class="keypad-value" lines="1">{{ inputValue }}</text>
+          <marquee class="keypad-value" lines="1">{{ inputValue }}</marquee>
         </div>
         <div class="keypad-grid">
           <div class="keypad-btn" onclick="inputDigit('7')">
@@ -113,10 +110,6 @@
       this.showKeypad = true
     },
 
-    closeKeypad() {
-      this.showKeypad = false
-    },
-
     stopPropagation() {},
 
     inputDigit(digit) {
@@ -188,16 +181,16 @@
   }
 
   .input-display {
-    width: 95%;
+    width: 94%;
     background-color: rgba(255, 255, 255, 0.15);
     border-radius: 8 * $size-factor;
     padding: 2 * $size-factor;
     display: flex;
     flex-direction: column;
-  }
 
-  .input-display:active {
-    opacity: 0.4;
+    &:active {
+      opacity: 0.4;
+    }
   }
 
   .input-label {
@@ -219,12 +212,11 @@
   .input-text {
     font-size: 8 * $size-factor;
     color: white;
-    lines: 1;
-    text-overflow: ellipsis;
   }
 
   .input-text.placeholder {
     color: rgba(255, 255, 255, 0.4);
+    margin-right: 8px;
   }
 
   .keypad-overlay {
@@ -245,6 +237,7 @@
     background-color: #1a1a1a;
     border-radius: 12 * $size-factor 12 * $size-factor 0 0;
     padding: 4 * $size-factor;
+    flex-direction: column;
   }
 
   .keypad-header {
@@ -261,18 +254,9 @@
     color: $light-gray;
   }
 
-  .keypad-close {
-    padding: 2 * $size-factor 4 * $size-factor;
-  }
-
-  .keypad-close text {
-    font-size: 8 * $size-factor;
-    color: $brand;
-  }
-
   .keypad-display {
     width: 100%;
-    height: 48px;
+    height: 72px;
     padding: 0 4 * $size-factor;
     background-color: rgba(0, 0, 0, 0.3);
     border-radius: 6 * $size-factor;
@@ -283,11 +267,8 @@
   }
 
   .keypad-value {
-    font-size: 12 * $size-factor;
+    font-size: 8 * $size-factor;
     color: white;
-    font-family: monospace;
-    lines: 1;
-    text-overflow: ellipsis;
   }
 
   .keypad-grid {
@@ -306,14 +287,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-  }
 
-  .keypad-btn:active {
-    opacity: 0.5;
+    &:active {
+      opacity: 0.4;
+    }
   }
 
   .keypad-btn text {
-    font-size: 10 * $size-factor;
+    font-size: 8 * $size-factor;
     color: white;
   }
 
@@ -331,7 +312,7 @@
   }
 
   .keypad-btn-confirm text {
-    font-size: 9 * $size-factor;
+    font-size: 8 * $size-factor;
     font-weight: 600;
   }
 </style>
