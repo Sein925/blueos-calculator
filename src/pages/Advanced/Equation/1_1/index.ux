@@ -1,0 +1,176 @@
+<import name="d-back" src="./../../../../components/d-back"></import>
+<import
+  name="d-number-input"
+  src="./../../../../components/d-number-input"></import>
+
+<template>
+  <list class="wrapper" title="true">
+    <list-item>
+      <d-back value="一元一次方程"></d-back>
+    </list-item>
+
+    <list-item class="content">
+      <text class="equation-form">ax + b = c</text>
+
+      <div class="input-row">
+        <text class="input-label">a =</text>
+        <d-number-input
+          value="{{ a }}"
+          label="输入 a"
+          placeholder="点击输入"
+          @change="handleChangeA"></d-number-input>
+      </div>
+
+      <div class="input-row">
+        <text class="input-label">b =</text>
+        <d-number-input
+          value="{{ b }}"
+          label="输入 b"
+          placeholder="点击输入"
+          @change="handleChangeB"></d-number-input>
+      </div>
+
+      <div class="input-row">
+        <text class="input-label">c =</text>
+        <d-number-input
+          value="{{ c }}"
+          label="输入 c"
+          placeholder="点击输入"
+          @change="handleChangeC"></d-number-input>
+      </div>
+
+      <div class="solve-btn" onclick="solve">
+        <text class="solve-btn-text">求解</text>
+      </div>
+
+      <div if="{{ result !== '' }}" class="result-box">
+        <text class="result-text">{{ result }}</text>
+      </div>
+    </list-item>
+  </list>
+</template>
+
+<script>
+  export default {
+    data: {
+      a: '1',
+      b: '0',
+      c: '0',
+      result: '',
+    },
+
+    onInit() {},
+
+    handleChangeA(evt) {
+      this.a = evt.value
+    },
+    handleChangeB(evt) {
+      this.b = evt.value
+    },
+    handleChangeC(evt) {
+      this.c = evt.value
+    },
+
+    solve() {
+      const a = parseFloat(this.a)
+      const b = parseFloat(this.b)
+      const c = parseFloat(this.c)
+
+      if (isNaN(a) || isNaN(b) || isNaN(c)) {
+        this.result = '请输入有效的数字'
+        return
+      }
+
+      if (a === 0) {
+        if (b === c) {
+          this.result = '方程有无穷多解'
+        } else {
+          this.result = '方程无解'
+        }
+        return
+      }
+
+      const x = (c - b) / a
+      this.result = `x = ${this.formatNumber(x)}`
+    },
+
+    formatNumber(num) {
+      if (!isFinite(num)) return 'Error'
+      if (Math.abs(num) < 1e-10) return '0'
+      if (Math.abs(num - Math.round(num)) < 1e-10) {
+        return Math.round(num).toString()
+      }
+      const str = num.toPrecision(10)
+      return parseFloat(str).toString()
+    },
+  }
+</script>
+
+<style lang="scss">
+  @import './../../../../assets/styles/style.scss';
+
+  .wrapper {
+    width: 100%;
+  }
+
+  .content {
+    width: 100%;
+    flex-direction: column;
+    padding: 0 2 * $size-factor 4 * $size-factor 2 * $size-factor;
+  }
+
+  .equation-form {
+    width: 100%;
+    text-align: center;
+    font-size: 10 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+  }
+
+  .input-row {
+    width: 100%;
+    @include flex-box-mixins(row, space-between, center);
+    margin-top: 20px;
+  }
+
+  .input-label {
+    font-size: 6 * $size-factor;
+    color: white;
+    width: 60px;
+    margin-right: 2 * $size-factor;
+  }
+
+  .solve-btn {
+    width: 100%;
+    padding: 3 * $size-factor 0;
+    background-color: $brand;
+    border-radius: 8 * $size-factor;
+    margin: 28px 0 20px 0;
+    @include flex-box-mixins(row, center, center);
+
+    &:active {
+      opacity: 0.4;
+    }
+  }
+
+  .solve-btn-text {
+    font-size: 8 * $size-factor;
+    color: white;
+  }
+
+  .result-box {
+    width: 100%;
+    padding: 4 * $size-factor;
+    background-color: rgba(0, 255, 153, 0.15);
+    border-radius: 8 * $size-factor;
+    border-left-width: 3px;
+    border-left-color: #00ff99;
+  }
+
+  .result-text {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+    line-height: 12 * $size-factor;
+  }
+</style>

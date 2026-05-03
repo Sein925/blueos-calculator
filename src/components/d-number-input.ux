@@ -1,0 +1,337 @@
+<template>
+  <div class="number-input-wrapper">
+    <div class="input-display" onclick="focusInput">
+      <div class="input-value">
+        <text
+          class="input-text {{ (value === '0' || value === '' || !value) && placeholder ? 'placeholder' : '' }}"
+          lines="1">
+          {{ displayValue }}
+        </text>
+      </div>
+    </div>
+    <div if="{{ showKeypad }}" class="keypad-overlay" onclick="closeKeypad">
+      <div class="keypad-panel" onclick="stopPropagation">
+        <div class="keypad-header">
+          <text class="keypad-title">{{ label }}</text>
+          <div class="keypad-close" onclick="closeKeypad">
+            <text>完成</text>
+          </div>
+        </div>
+        <div class="keypad-display">
+          <text class="keypad-value" lines="1">{{ inputValue }}</text>
+        </div>
+        <div class="keypad-grid">
+          <div class="keypad-btn" onclick="inputDigit('7')">
+            <text>7</text>
+          </div>
+          <div class="keypad-btn" onclick="inputDigit('8')">
+            <text>8</text>
+          </div>
+          <div class="keypad-btn" onclick="inputDigit('9')">
+            <text>9</text>
+          </div>
+          <div class="keypad-btn keypad-btn-fn" onclick="toggleSign">
+            <text>±</text>
+          </div>
+          <div class="keypad-btn" onclick="inputDigit('4')">
+            <text>4</text>
+          </div>
+          <div class="keypad-btn" onclick="inputDigit('5')">
+            <text>5</text>
+          </div>
+          <div class="keypad-btn" onclick="inputDigit('6')">
+            <text>6</text>
+          </div>
+          <div class="keypad-btn keypad-btn-fn" onclick="backspace">
+            <image
+              src="./../../assets/images/backspace.svg"
+              width="46px"></image>
+          </div>
+          <div class="keypad-btn" onclick="inputDigit('1')">
+            <text>1</text>
+          </div>
+          <div class="keypad-btn" onclick="inputDigit('2')">
+            <text>2</text>
+          </div>
+          <div class="keypad-btn" onclick="inputDigit('3')">
+            <text>3</text>
+          </div>
+          <div class="keypad-btn keypad-btn-fn" onclick="clearAll">
+            <text>C</text>
+          </div>
+          <div class="keypad-btn" onclick="inputDigit('0')">
+            <text>0</text>
+          </div>
+          <div class="keypad-btn" onclick="inputDecimal">
+            <text>.</text>
+          </div>
+          <div class="keypad-btn keypad-btn-confirm" onclick="confirmInput">
+            <text>确定</text>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  export default {
+    props: {
+      value: '0',
+      label: '',
+      placeholder: '',
+    },
+
+    data: {
+      showKeypad: false,
+      inputValue: '0',
+      hasDecimal: false,
+      isNegative: false,
+      displayValue: '0',
+    },
+
+    onInit() {
+      this.inputValue = this.value || '0'
+      this.hasDecimal = this.inputValue.indexOf('.') !== -1
+      this.isNegative = this.inputValue.indexOf('-') !== -1
+      this.updateDisplayValue()
+    },
+
+    updateDisplayValue() {
+      if ((this.value === '0' || this.value === '' || !this.value) && this.placeholder) {
+        this.displayValue = this.placeholder
+      } else {
+        this.displayValue = this.value
+      }
+    },
+
+    focusInput() {
+      this.inputValue = this.value || '0'
+      this.hasDecimal = this.inputValue.indexOf('.') !== -1
+      this.isNegative = this.inputValue.indexOf('-') !== -1
+      this.displayValue = this.inputValue
+      this.showKeypad = true
+    },
+
+    closeKeypad() {
+      this.showKeypad = false
+    },
+
+    stopPropagation() {},
+
+    inputDigit(digit) {
+      if (this.inputValue === '0') {
+        this.inputValue = digit
+      } else {
+        this.inputValue += digit
+      }
+    },
+
+    inputDecimal() {
+      if (!this.hasDecimal) {
+        this.inputValue += '.'
+        this.hasDecimal = true
+      }
+    },
+
+    toggleSign() {
+      if (this.inputValue === '0') return
+      if (this.isNegative) {
+        this.inputValue = this.inputValue.substring(1)
+        this.isNegative = false
+      } else {
+        this.inputValue = '-' + this.inputValue
+        this.isNegative = true
+      }
+    },
+
+    backspace() {
+      if (this.inputValue.length === 1) {
+        this.inputValue = '0'
+        this.hasDecimal = false
+        this.isNegative = false
+        return
+      }
+      if (this.inputValue.length === 2 && this.isNegative) {
+        this.inputValue = '0'
+        this.hasDecimal = false
+        this.isNegative = false
+        return
+      }
+      const lastChar = this.inputValue.charAt(this.inputValue.length - 1)
+      if (lastChar === '.') {
+        this.hasDecimal = false
+      }
+      this.inputValue = this.inputValue.slice(0, -1)
+    },
+
+    clearAll() {
+      this.inputValue = '0'
+      this.hasDecimal = false
+      this.isNegative = false
+    },
+
+    confirmInput() {
+      this.$emit('change', { value: this.inputValue })
+      this.displayValue = this.inputValue
+      this.showKeypad = false
+    },
+  }
+</script>
+
+<style lang="scss">
+  @import './../assets/styles/style.scss';
+
+  .number-input-wrapper {
+    width: 100%;
+    flex: 1;
+  }
+
+  .input-display {
+    width: 95%;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 8 * $size-factor;
+    padding: 2 * $size-factor;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .input-display:active {
+    opacity: 0.4;
+  }
+
+  .input-label {
+    width: 100%;
+    margin-bottom: 1 * $size-factor;
+  }
+
+  .input-label text {
+    font-size: 6 * $size-factor;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .input-value {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .input-text {
+    font-size: 8 * $size-factor;
+    color: white;
+    lines: 1;
+    text-overflow: ellipsis;
+  }
+
+  .input-text.placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .keypad-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .keypad-panel {
+    width: 100%;
+    background-color: #1a1a1a;
+    border-radius: 12 * $size-factor 12 * $size-factor 0 0;
+    padding: 4 * $size-factor;
+  }
+
+  .keypad-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2 * $size-factor 4 * $size-factor;
+    margin-bottom: 2 * $size-factor;
+  }
+
+  .keypad-title {
+    font-size: 8 * $size-factor;
+    color: $light-gray;
+  }
+
+  .keypad-close {
+    padding: 2 * $size-factor 4 * $size-factor;
+  }
+
+  .keypad-close text {
+    font-size: 8 * $size-factor;
+    color: $brand;
+  }
+
+  .keypad-display {
+    width: 100%;
+    height: 48px;
+    padding: 0 4 * $size-factor;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 6 * $size-factor;
+    margin-bottom: 3 * $size-factor;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .keypad-value {
+    font-size: 12 * $size-factor;
+    color: white;
+    font-family: monospace;
+    lines: 1;
+    text-overflow: ellipsis;
+  }
+
+  .keypad-grid {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .keypad-btn {
+    width: 23%;
+    height: 52px;
+    margin-bottom: 2 * $size-factor;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 6 * $size-factor;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .keypad-btn:active {
+    opacity: 0.5;
+  }
+
+  .keypad-btn text {
+    font-size: 10 * $size-factor;
+    color: white;
+  }
+
+  .keypad-btn-fn {
+    background-color: rgba(9, 186, 7, 0.2);
+  }
+
+  .keypad-btn-fn text {
+    color: $brand;
+  }
+
+  .keypad-btn-confirm {
+    width: 48%;
+    background-color: $brand;
+  }
+
+  .keypad-btn-confirm text {
+    font-size: 9 * $size-factor;
+    font-weight: 600;
+  }
+</style>

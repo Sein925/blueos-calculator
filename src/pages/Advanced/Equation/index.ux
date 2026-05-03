@@ -1,0 +1,72 @@
+<import name="d-back" src="./../../../components/d-back"></import>
+
+<template>
+  <list class="wrapper" title="true">
+    <list-item>
+      <d-back value="解方程"></d-back>
+    </list-item>
+    <list-item type="card" class="content">
+      <div class="nav-card" onclick="openLinear">
+        <text class="nav-label">一元一次方程</text>
+      </div>
+      <div class="nav-card" style="margin-top: 14px" onclick="openQuadratic">
+        <text class="nav-label">一元二次方程</text>
+      </div>
+      <div class="nav-card" style="margin-top: 14px" onclick="openSystem2">
+        <text class="nav-label">二元一次方程组</text>
+      </div>
+    </list-item>
+  </list>
+</template>
+
+<script>
+  export default {
+    openLinear() {
+      global.router.push({
+        uri: 'pages/Advanced/Equation/1_1',
+      })
+    },
+
+    openQuadratic() {
+      global.router.push({
+        uri: 'pages/Advanced/Equation/1_2',
+      })
+    },
+
+    openSystem2() {
+      global.router.push({
+        uri: 'pages/Advanced/Equation/2_1',
+      })
+    },
+  }
+</script>
+
+<style lang="scss">
+  @import './../../../assets/styles/style.scss';
+
+  .wrapper {
+    width: 100%;
+  }
+
+  .content {
+    width: 100%;
+    padding: 2 * $size-factor;
+    flex-direction: column;
+  }
+
+  .nav-card {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8 * $size-factor;
+    padding: 24px 30px;
+
+    .nav-label {
+      font-size: 8 * $size-factor;
+      color: $white;
+    }
+
+    &:active {
+      opacity: 0.4;
+    }
+  }
+</style>

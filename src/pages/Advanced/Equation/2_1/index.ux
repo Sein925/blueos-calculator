@@ -1,0 +1,233 @@
+<import name="d-back" src="./../../../../components/d-back"></import>
+<import
+  name="d-number-input"
+  src="./../../../../components/d-number-input"></import>
+
+<template>
+  <list class="wrapper" title="true">
+    <list-item>
+      <d-back value="二元一次方程组"></d-back>
+    </list-item>
+    
+    <list-item class="content">
+      <text class="equation-form">a₁x + b₁y = c₁</text>
+      <text class="equation-form">a₂x + b₂y = c₂</text>
+      
+      <div class="input-row">
+        <text class="input-label">a₁ =</text>
+        <d-number-input
+          value="{{ a1 }}"
+          label="输入 a₁"
+          placeholder="点击输入"
+          @change="handleChangeA1"></d-number-input>
+      </div>
+      
+      <div class="input-row">
+        <text class="input-label">b₁ =</text>
+        <d-number-input
+          value="{{ b1 }}"
+          label="输入 b₁"
+          placeholder="点击输入"
+          @change="handleChangeB1"></d-number-input>
+      </div>
+      
+      <div class="input-row">
+        <text class="input-label">c₁ =</text>
+        <d-number-input
+          value="{{ c1 }}"
+          label="输入 c₁"
+          placeholder="点击输入"
+          @change="handleChangeC1"></d-number-input>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <div class="input-row">
+        <text class="input-label">a₂ =</text>
+        <d-number-input
+          value="{{ a2 }}"
+          label="输入 a₂"
+          placeholder="点击输入"
+          @change="handleChangeA2"></d-number-input>
+      </div>
+      
+      <div class="input-row">
+        <text class="input-label">b₂ =</text>
+        <d-number-input
+          value="{{ b2 }}"
+          label="输入 b₂"
+          placeholder="点击输入"
+          @change="handleChangeB2"></d-number-input>
+      </div>
+      
+      <div class="input-row">
+        <text class="input-label">c₂ =</text>
+        <d-number-input
+          value="{{ c2 }}"
+          label="输入 c₂"
+          placeholder="点击输入"
+          @change="handleChangeC2"></d-number-input>
+      </div>
+      
+      <div class="solve-btn" onclick="solve">
+        <text class="solve-btn-text">求解</text>
+      </div>
+      
+      <div if="{{ result !== '' }}" class="result-box">
+        <text class="result-text">{{ result }}</text>
+      </div>
+    </list-item>
+  </list>
+</template>
+
+<script>
+  export default {
+    data: {
+      a1: '1',
+      b1: '0',
+      c1: '0',
+      a2: '0',
+      b2: '1',
+      c2: '0',
+      result: '',
+    },
+
+    onInit() {},
+
+    handleChangeA1(evt) {
+      this.a1 = evt.value
+    },
+    handleChangeB1(evt) {
+      this.b1 = evt.value
+    },
+    handleChangeC1(evt) {
+      this.c1 = evt.value
+    },
+    handleChangeA2(evt) {
+      this.a2 = evt.value
+    },
+    handleChangeB2(evt) {
+      this.b2 = evt.value
+    },
+    handleChangeC2(evt) {
+      this.c2 = evt.value
+    },
+
+    solve() {
+      const a1 = parseFloat(this.a1)
+      const b1 = parseFloat(this.b1)
+      const c1 = parseFloat(this.c1)
+      const a2 = parseFloat(this.a2)
+      const b2 = parseFloat(this.b2)
+      const c2 = parseFloat(this.c2)
+
+      if (isNaN(a1) || isNaN(b1) || isNaN(c1) || isNaN(a2) || isNaN(b2) || isNaN(c2)) {
+        this.result = '请输入有效的数字'
+        return
+      }
+
+      const D = a1 * b2 - a2 * b1
+      const Dx = c1 * b2 - c2 * b1
+      const Dy = a1 * c2 - a2 * c1
+
+      if (D === 0) {
+        if (Dx === 0 && Dy === 0) {
+          this.result = '方程组有无穷多解'
+        } else {
+          this.result = '方程组无解'
+        }
+        return
+      }
+
+      const x = Dx / D
+      const y = Dy / D
+      this.result = `D = ${this.formatNumber(D)}\nx = ${this.formatNumber(x)}\ny = ${this.formatNumber(y)}`
+    },
+
+    formatNumber(num) {
+      if (!isFinite(num)) return 'Error'
+      if (Math.abs(num) < 1e-10) return '0'
+      if (Math.abs(num - Math.round(num)) < 1e-10) {
+        return Math.round(num).toString()
+      }
+      const str = num.toPrecision(10)
+      return parseFloat(str).toString()
+    },
+  }
+</script>
+
+<style lang="scss">
+  @import './../../../../assets/styles/style.scss';
+
+  .wrapper {
+    width: 100%;
+  }
+
+  .content {
+    width: 100%;
+    flex-direction: column;
+    padding: 0 2 * $size-factor 4 * $size-factor 2 * $size-factor;
+  }
+
+  .equation-form {
+    width: 100%;
+    text-align: center;
+    font-size: 8 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+  }
+
+  .input-row {
+    width: 100%;
+    @include flex-box-mixins(row, space-between, center);
+    margin-top: 20px;
+  }
+
+  .input-label {
+    font-size: 6 * $size-factor;
+    color: white;
+    width: 60px;
+    margin-right: 2 * $size-factor;
+  }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.2);
+    margin-top: 20px;
+  }
+
+  .solve-btn {
+    width: 100%;
+    padding: 3 * $size-factor 0;
+    background-color: $brand;
+    border-radius: 8 * $size-factor;
+    margin: 28px 0 20px 0;
+    @include flex-box-mixins(row, center, center);
+
+    &:active {
+      opacity: 0.4;
+    }
+  }
+
+  .solve-btn-text {
+    font-size: 8 * $size-factor;
+    color: white;
+  }
+
+  .result-box {
+    width: 100%;
+    padding: 4 * $size-factor;
+    background-color: rgba(0, 255, 153, 0.15);
+    border-radius: 8 * $size-factor;
+    border-left-width: 3px;
+    border-left-color: #00ff99;
+  }
+
+  .result-text {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+    line-height: 12 * $size-factor;
+  }
+</style>

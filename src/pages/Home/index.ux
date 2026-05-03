@@ -5,17 +5,19 @@
         <list class="content" title="true">
           <list-item style="flex-direction: column">
             <div class="panel-header">
-              <text class="section-title" style="font-size: 45px">高级功能</text>
+              <text class="section-title" style="font-size: 45px; margin-top: 10px">
+                高级功能
+              </text>
             </div>
           </list-item>
-          <list-item type="card" style="margin-top: 3 * $size-factor">
+          <!-- <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="openDateCalculator">
               <text class="feature-name">日期计算</text>
             </div>
-          </list-item>
+          </list-item> -->
           <list-item type="card" style="margin-top: 3 * $size-factor">
-            <div class="feature-card" onclick="openFormulaPage">
-              <text class="feature-name">公式大全</text>
+            <div class="feature-card" onclick="openEquationPage">
+              <text class="feature-name">解方程</text>
             </div>
           </list-item>
         </list>
@@ -336,8 +338,7 @@
       expression: [],
     },
 
-    onInit() {
-    },
+    onInit() {},
 
     inputNumber(num) {
       if (this.error) {
@@ -676,9 +677,9 @@
       })
     },
 
-    openFormulaPage() {
+    openEquationPage() {
       global.router.push({
-        uri: 'pages/Advanced/Formula',
+        uri: 'pages/Advanced/Equation',
       })
     },
   }
@@ -756,7 +757,7 @@
 
     @media (device: watch-round) {
       width: 100%;
-      margin-left: 0;
+      margin-left: 10px;
       text-align: center;
       font-size: 40px;
     }
