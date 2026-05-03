@@ -1,0 +1,504 @@
+<import name="d-back" src="./../../../components/d-back"></import>
+
+<template>
+  <list class="wrapper" title="true">
+    <list-item>
+      <d-back value="函数图像"></d-back>
+    </list-item>
+
+    <list-item class="content">
+      <text class="form-title">选择函数类型</text>
+      <div class="func-selector">
+        <div class="func-btn {{ currentFunc === 'linear' ? 'active' : '' }}" onclick="selectFunction('linear')">
+          <text>一次函数</text>
+        </div>
+        <div class="func-btn {{ currentFunc === 'quadratic' ? 'active' : '' }}" onclick="selectFunction('quadratic')">
+          <text>二次函数</text>
+        </div>
+        <div class="func-btn {{ currentFunc === 'cubic' ? 'active' : '' }}" onclick="selectFunction('cubic')">
+          <text>三次函数</text>
+        </div>
+        <div class="func-btn {{ currentFunc === 'inverse' ? 'active' : '' }}" onclick="selectFunction('inverse')">
+          <text>反比例</text>
+        </div>
+        <div class="func-btn {{ currentFunc === 'power' ? 'active' : '' }}" onclick="selectFunction('power')">
+          <text>幂函数</text>
+        </div>
+        <div class="func-btn {{ currentFunc === 'exp' ? 'active' : '' }}" onclick="selectFunction('exp')">
+          <text>指数函数</text>
+        </div>
+        <div class="func-btn {{ currentFunc === 'log' ? 'active' : '' }}" onclick="selectFunction('log')">
+          <text>对数函数</text>
+        </div>
+        <div class="func-btn {{ currentFunc === 'sin' ? 'active' : '' }}" onclick="selectFunction('sin')">
+          <text>正弦</text>
+        </div>
+        <div class="func-btn {{ currentFunc === 'cos' ? 'active' : '' }}" onclick="selectFunction('cos')">
+          <text>余弦</text>
+        </div>
+        <div class="func-btn {{ currentFunc === 'tan' ? 'active' : '' }}" onclick="selectFunction('tan')">
+          <text>正切</text>
+        </div>
+        <div class="func-btn {{ currentFunc === 'abs' ? 'active' : '' }}" onclick="selectFunction('abs')">
+          <text>绝对值</text>
+        </div>
+        <div class="func-btn {{ currentFunc === 'sqrt' ? 'active' : '' }}" onclick="selectFunction('sqrt')">
+          <text>平方根</text>
+        </div>
+      </div>
+
+      <div class="params-form show="{{ currentFunc === 'linear' }}">
+        <text class="formula">y = kx + b</text>
+        <div class="param-row">
+          <text class="param-label">k =</text>
+          <input type="number" class="param-input" value="{{ params.linear.k }}" onchange="updateParam('linear', 'k', $element.value)"></input>
+        </div>
+        <div class="param-row">
+          <text class="param-label">b =</text>
+          <input type="number" class="param-input" value="{{ params.linear.b }}" onchange="updateParam('linear', 'b', $element.value)"></input>
+        </div>
+      </div>
+
+      <div class="params-form show="{{ currentFunc === 'quadratic' }}">
+        <text class="formula">y = ax² + bx + c</text>
+        <div class="param-row">
+          <text class="param-label">a =</text>
+          <input type="number" class="param-input" value="{{ params.quadratic.a }}" onchange="updateParam('quadratic', 'a', $element.value)"></input>
+        </div>
+        <div class="param-row">
+          <text class="param-label">b =</text>
+          <input type="number" class="param-input" value="{{ params.quadratic.b }}" onchange="updateParam('quadratic', 'b', $element.value)"></input>
+        </div>
+        <div class="param-row">
+          <text class="param-label">c =</text>
+          <input type="number" class="param-input" value="{{ params.quadratic.c }}" onchange="updateParam('quadratic', 'c', $element.value)"></input>
+        </div>
+      </div>
+
+      <div class="params-form show="{{ currentFunc === 'cubic' }}">
+        <text class="formula">y = ax³ + bx² + cx + d</text>
+        <div class="param-row">
+          <text class="param-label">a =</text>
+          <input type="number" class="param-input" value="{{ params.cubic.a }}" onchange="updateParam('cubic', 'a', $element.value)"></input>
+        </div>
+        <div class="param-row">
+          <text class="param-label">b =</text>
+          <input type="number" class="param-input" value="{{ params.cubic.b }}" onchange="updateParam('cubic', 'b', $element.value)"></input>
+        </div>
+        <div class="param-row">
+          <text class="param-label">c =</text>
+          <input type="number" class="param-input" value="{{ params.cubic.c }}" onchange="updateParam('cubic', 'c', $element.value)"></input>
+        </div>
+        <div class="param-row">
+          <text class="param-label">d =</text>
+          <input type="number" class="param-input" value="{{ params.cubic.d }}" onchange="updateParam('cubic', 'd', $element.value)"></input>
+        </div>
+      </div>
+
+      <div class="params-form show="{{ currentFunc === 'inverse' }}">
+        <text class="formula">y = k / x</text>
+        <div class="param-row">
+          <text class="param-label">k =</text>
+          <input type="number" class="param-input" value="{{ params.inverse.k }}" onchange="updateParam('inverse', 'k', $element.value)"></input>
+        </div>
+      </div>
+
+      <div class="params-form show="{{ currentFunc === 'power' }}">
+        <text class="formula">y = x^n</text>
+        <div class="param-row">
+          <text class="param-label">n =</text>
+          <input type="number" class="param-input" value="{{ params.power.n }}" onchange="updateParam('power', 'n', $element.value)"></input>
+        </div>
+      </div>
+
+      <div class="params-form show="{{ currentFunc === 'exp' }}">
+        <text class="formula">y = a^x</text>
+        <div class="param-row">
+          <text class="param-label">a =</text>
+          <input type="number" class="param-input" value="{{ params.exp.a }}" onchange="updateParam('exp', 'a', $element.value)"></input>
+        </div>
+      </div>
+
+      <div class="params-form show="{{ currentFunc === 'log' }}">
+        <text class="formula">y = log_a(x)</text>
+        <div class="param-row">
+          <text class="param-label">a =</text>
+          <input type="number" class="param-input" value="{{ params.log.a }}" onchange="updateParam('log', 'a', $element.value)"></input>
+        </div>
+      </div>
+
+      <div class="params-form show="{{ currentFunc === 'sin' || currentFunc === 'cos' || currentFunc === 'tan' }}">
+        <text class="formula">y = {{ currentFunc }}(x)</text>
+        <text class="hint">标准三角函数</text>
+      </div>
+
+      <div class="params-form show="{{ currentFunc === 'abs' || currentFunc === 'sqrt' }}">
+        <text class="formula">y = {{ currentFunc === 'abs' ? '|x|' : '√x' }}</text>
+        <text class="hint">无需参数</text>
+      </div>
+
+      <div class="draw-btn" onclick="drawGraph">
+        <text class="draw-btn-text">绘制图像</text>
+      </div>
+
+      <div class="canvas-container">
+        <canvas id="canvas" class="graph-canvas"></canvas>
+      </div>
+    </list-item>
+  </list>
+</template>
+
+<script>
+  export default {
+    data: {
+      currentFunc: 'linear',
+      params: {
+        linear: { k: 1, b: 0 },
+        quadratic: { a: 1, b: 0, c: 0 },
+        cubic: { a: 1, b: 0, c: 0, d: 0 },
+        inverse: { k: 1 },
+        power: { n: 2 },
+        exp: { a: 2 },
+        log: { a: 10 },
+      },
+      canvasWidth: 400,
+      canvasHeight: 400,
+    },
+
+    onInit() {
+      this.$app.$setTimeout(() => {
+        this.initCanvas()
+      }, 100)
+    },
+
+    selectFunction(func) {
+      this.currentFunc = func
+    },
+
+    updateParam(type, param, value) {
+      this.params[type][param] = parseFloat(value) || 0
+    },
+
+    initCanvas() {
+      const canvas = this.$element('canvas')
+      if (!canvas) return
+
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      this.drawGrid(ctx)
+      this.drawAxis(ctx)
+    },
+
+    drawGrid(ctx) {
+      const width = this.canvasWidth
+      const height = this.canvasHeight
+      const step = 20
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'
+      ctx.lineWidth = 1
+
+      for (let x = 0; x <= width; x += step) {
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, height)
+        ctx.stroke()
+      }
+
+      for (let y = 0; y <= height; y += step) {
+        ctx.beginPath()
+        ctx.moveTo(0, y)
+        ctx.lineTo(width, y)
+        ctx.stroke()
+      }
+    },
+
+    drawAxis(ctx) {
+      const width = this.canvasWidth
+      const height = this.canvasHeight
+      const centerX = width / 2
+      const centerY = height / 2
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'
+      ctx.lineWidth = 2
+
+      ctx.beginPath()
+      ctx.moveTo(0, centerY)
+      ctx.lineTo(width, centerY)
+      ctx.stroke()
+
+      ctx.beginPath()
+      ctx.moveTo(centerX, 0)
+      ctx.lineTo(centerX, height)
+      ctx.stroke()
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'
+      ctx.font = '20px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'top'
+      ctx.fillText('O', centerX + 8, centerY + 8)
+      ctx.fillText('x', width - 15, centerY + 8)
+      ctx.textBaseline = 'bottom'
+      ctx.fillText('y', centerX + 8, 15)
+
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'top'
+      ctx.font = '12px sans-serif'
+      const scale = 20
+      for (let i = -9; i <= 9; i++) {
+        if (i !== 0) {
+          const x = centerX + i * scale
+          ctx.fillText(i.toString(), x, centerY + 8)
+        }
+      }
+
+      ctx.textAlign = 'right'
+      ctx.textBaseline = 'middle'
+      for (let i = -9; i <= 9; i++) {
+        if (i !== 0) {
+          const y = centerY - i * scale
+          ctx.fillText(i.toString(), centerX - 8, y)
+        }
+      }
+    },
+
+    drawGraph() {
+      const canvas = this.$element('canvas')
+      if (!canvas) return
+
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight)
+      this.drawGrid(ctx)
+      this.drawAxis(ctx)
+
+      const width = this.canvasWidth
+      const height = this.canvasHeight
+      const centerX = width / 2
+      const centerY = height / 2
+      const scale = 20
+
+      ctx.strokeStyle = '#00ff99'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+
+      let started = false
+
+      for (let px = 0; px < width; px++) {
+        const x = (px - centerX) / scale
+        let y
+
+        switch (this.currentFunc) {
+          case 'linear':
+            y = this.params.linear.k * x + this.params.linear.b
+            break
+          case 'quadratic':
+            y = this.params.quadratic.a * x * x + this.params.quadratic.b * x + this.params.quadratic.c
+            break
+          case 'cubic':
+            y = this.params.cubic.a * x * x * x + this.params.cubic.b * x * x + this.params.cubic.c * x + this.params.cubic.d
+            break
+          case 'inverse':
+            if (Math.abs(x) < 0.001) {
+              started = false
+              continue
+            }
+            y = this.params.inverse.k / x
+            break
+          case 'power':
+            y = Math.pow(x, this.params.power.n)
+            break
+          case 'exp':
+            y = Math.pow(this.params.exp.a, x)
+            break
+          case 'log':
+            if (x <= 0) {
+              started = false
+              continue
+            }
+            if (this.params.log.a === 10) {
+              y = Math.log10(x)
+            } else if (this.params.log.a === Math.E) {
+              y = Math.log(x)
+            } else {
+              y = Math.log(x) / Math.log(this.params.log.a)
+            }
+            break
+          case 'sin':
+            y = Math.sin(x)
+            break
+          case 'cos':
+            y = Math.cos(x)
+            break
+          case 'tan':
+            y = Math.tan(x)
+            break
+          case 'abs':
+            y = Math.abs(x)
+            break
+          case 'sqrt':
+            if (x < 0) {
+              started = false
+              continue
+            }
+            y = Math.sqrt(x)
+            break
+          default:
+            y = 0
+        }
+
+        if (!isFinite(y)) {
+          started = false
+          continue
+        }
+
+        const screenY = centerY - y * scale
+
+        if (screenY < 0 || screenY > height) {
+          started = false
+          continue
+        }
+
+        if (!started) {
+          ctx.moveTo(px, screenY)
+          started = true
+        } else {
+          ctx.lineTo(px, screenY)
+        }
+      }
+
+      ctx.stroke()
+    },
+  }
+</script>
+
+<style lang="scss">
+  @import './../../../assets/styles/style.scss';
+
+  .wrapper {
+    width: 100%;
+  }
+
+  .content {
+    width: 100%;
+    flex-direction: column;
+    padding: 0 2 * $size-factor 4 * $size-factor 2 * $size-factor;
+  }
+
+  .form-title {
+    font-size: 8 * $size-factor;
+    color: $white;
+    margin-bottom: 3 * $size-factor;
+    font-weight: 500;
+  }
+
+  .func-selector {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 4 * $size-factor;
+
+    .func-btn {
+      width: 48%;
+      padding: 3 * $size-factor 0;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 6 * $size-factor;
+      text-align: center;
+      margin-bottom: 2 * $size-factor;
+
+      &:active {
+        opacity: 0.4;
+      }
+
+      &.active {
+        background-color: $brand;
+      }
+
+      text {
+        font-size: 6 * $size-factor;
+        color: $white;
+      }
+    }
+  }
+
+  .params-form {
+    width: 100%;
+    flex-direction: column;
+    margin-bottom: 4 * $size-factor;
+
+    .formula {
+      font-size: 10 * $size-factor;
+      color: #00ff99;
+      font-family: monospace;
+      text-align: center;
+      margin-bottom: 4 * $size-factor;
+    }
+
+    .hint {
+      font-size: 7 * $size-factor;
+      color: rgba(255, 255, 255, 0.6);
+      text-align: center;
+    }
+  }
+
+  .param-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    margin-bottom: 3 * $size-factor;
+
+    .param-label {
+      font-size: 7 * $size-factor;
+      color: $white;
+      width: 60px;
+      margin-right: 2 * $size-factor;
+    }
+
+    .param-input {
+      flex: 1;
+      padding: 2 * $size-factor 3 * $size-factor;
+      background-color: rgba(255, 255, 255, 0.15);
+      border-radius: 6 * $size-factor;
+      color: $white;
+      font-size: 7 * $size-factor;
+    }
+  }
+
+  .draw-btn {
+    width: 100%;
+    padding: 4 * $size-factor 0;
+    background-color: $brand;
+    border-radius: 8 * $size-factor;
+    margin: 4 * $size-factor 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:active {
+      opacity: 0.4;
+    }
+  }
+
+  .draw-btn-text {
+    font-size: 9 * $size-factor;
+    font-weight: 600;
+    color: $white;
+  }
+
+  .canvas-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 4 * $size-factor;
+  }
+
+  .graph-canvas {
+    width: 400px;
+    height: 400px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 8 * $size-factor;
+  }
+</style>
