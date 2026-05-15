@@ -8,10 +8,10 @@
     <list-item>
       <d-back value="一元一次方程"></d-back>
     </list-item>
-
+    
     <list-item class="content">
       <text class="equation-form">ax + b = c</text>
-
+      
       <div class="input-row">
         <text class="input-label">a =</text>
         <d-number-input
@@ -20,7 +20,7 @@
           placeholder="点击输入"
           @change="handleChangeA"></d-number-input>
       </div>
-
+      
       <div class="input-row">
         <text class="input-label">b =</text>
         <d-number-input
@@ -29,7 +29,7 @@
           placeholder="点击输入"
           @change="handleChangeB"></d-number-input>
       </div>
-
+      
       <div class="input-row">
         <text class="input-label">c =</text>
         <d-number-input
@@ -38,25 +38,82 @@
           placeholder="点击输入"
           @change="handleChangeC"></d-number-input>
       </div>
-
+      
       <div class="solve-btn" onclick="solve">
         <text class="solve-btn-text">求解</text>
       </div>
-
-      <div if="{{ result !== '' }}" class="result-box">
-        <text class="result-text">{{ result }}</text>
+      
+      <div if="{{ showResult }}" class="result-box">
+        <text if="{{ showSimpleText }}" class="result-text">{{ simpleText }}</text>
+        <div else if="{{ showInteger }}" class="result-content">
+          <text class="result-label">x = </text>
+          <text class="result-value">{{ integerValue }}</text>
+        </div>
+        <div else if="{{ showFraction }}" class="result-content">
+          <text class="result-label">x = </text>
+          <div class="fraction-container">
+            <text class="fraction-numerator">{{ numeratorStr }}</text>
+            <text class="fraction-line">{{ fractionLine }}</text>
+            <text class="fraction-denominator">{{ denominatorStr }}</text>
+          </div>
+        </div>
       </div>
     </list-item>
   </list>
 </template>
 
 <script>
+  // 计算最大公约数
+  function gcd(a, b) {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while (b) {
+      const temp = a;
+      a = b;
+      b = temp % b;
+    }
+    return a;
+  }
+
+  // 简化分数
+  function simplifyFraction(numerator, denominator) {
+    if (numerator === 0) return { num: 0, den: 1 };
+    
+    const g = gcd(numerator, denominator);
+    let num = numerator / g;
+    let den = denominator / g;
+    
+    if (den < 0) {
+      num = -num;
+      den = -den;
+    }
+    
+    return { num, den };
+  }
+
+  // 生成分数线
+  function getFractionLine(len) {
+    let line = '';
+    for (let i = 0; i < len; i++) {
+      line += '─';
+    }
+    return line;
+  }
+
   export default {
     data: {
       a: '',
       b: '',
       c: '',
-      result: '',
+      showResult: false,
+      showSimpleText: false,
+      simpleText: '',
+      showInteger: false,
+      integerValue: '',
+      showFraction: false,
+      numeratorStr: '',
+      denominatorStr: '',
+      fractionLine: '',
     },
 
     onInit() {},
@@ -76,32 +133,39 @@
       const b = parseFloat(this.b)
       const c = parseFloat(this.c)
 
+      // 重置所有显示
+      this.showResult = true
+      this.showSimpleText = false
+      this.showInteger = false
+      this.showFraction = false
+
       if (isNaN(a) || isNaN(b) || isNaN(c)) {
-        this.result = '请输入有效的数字'
+        this.showSimpleText = true
+        this.simpleText = '请输入有效的数字'
         return
       }
 
       if (a === 0) {
+        this.showSimpleText = true
         if (b === c) {
-          this.result = '方程有无穷多解'
+          this.simpleText = '方程有无穷多解'
         } else {
-          this.result = '方程无解'
+          this.simpleText = '方程无解'
         }
         return
       }
 
-      const x = (c - b) / a
-      this.result = `x = ${this.formatNumber(x)}`
-    },
-
-    formatNumber(num) {
-      if (!isFinite(num)) return 'Error'
-      if (Math.abs(num) < 1e-10) return '0'
-      if (Math.abs(num - Math.round(num)) < 1e-10) {
-        return Math.round(num).toString()
+      const frac = simplifyFraction(c - b, a)
+      if (frac.den === 1) {
+        this.showInteger = true
+        this.integerValue = frac.num.toString()
+      } else {
+        this.showFraction = true
+        this.numeratorStr = frac.num.toString()
+        this.denominatorStr = frac.den.toString()
+        const maxLen = Math.max(this.numeratorStr.length, this.denominatorStr.length)
+        this.fractionLine = getFractionLine(maxLen)
       }
-      const str = num.toPrecision(10)
-      return parseFloat(str).toString()
     },
   }
 </script>
@@ -167,10 +231,56 @@
     border-left-color: #00ff99;
   }
 
+  .result-content {
+    display: flex;
+    align-items: center;
+  }
+
+  .result-label {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+    white-space: nowrap;
+  }
+
+  .result-value {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+  }
+
   .result-text {
     font-size: 6 * $size-factor;
     color: #00ff99;
     font-family: monospace;
-    line-height: 12 * $size-factor;
+  }
+
+  .fraction-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .fraction-numerator {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+    padding-bottom: 2px;
+    text-align: center;
+  }
+
+  .fraction-line {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+    line-height: 1;
+  }
+
+  .fraction-denominator {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+    padding-top: 2px;
+    text-align: center;
   }
 </style>

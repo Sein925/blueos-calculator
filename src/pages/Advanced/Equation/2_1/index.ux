@@ -73,14 +73,75 @@
         <text class="solve-btn-text">求解</text>
       </div>
       
-      <div if="{{ result !== '' }}" class="result-box">
-        <text class="result-text">{{ result }}</text>
+      <div if="{{ showResult }}" class="result-box">
+        <text if="{{ showSimpleText }}" class="result-text">{{ simpleText }}</text>
+        <div else class="solutions-container">
+          <div class="solution-item">
+            <text class="result-label">D = </text>
+            <text class="result-value">{{ dValue }}</text>
+          </div>
+          <div class="solution-item">
+            <text class="result-label">x = </text>
+            <text if="{{ xIsInteger }}" class="result-value">{{ xInteger }}</text>
+            <div else class="fraction-container">
+              <text class="fraction-numerator">{{ xNumeratorStr }}</text>
+              <text class="fraction-line">{{ xFractionLine }}</text>
+              <text class="fraction-denominator">{{ xDenominatorStr }}</text>
+            </div>
+          </div>
+          <div class="solution-item">
+            <text class="result-label">y = </text>
+            <text if="{{ yIsInteger }}" class="result-value">{{ yInteger }}</text>
+            <div else class="fraction-container">
+              <text class="fraction-numerator">{{ yNumeratorStr }}</text>
+              <text class="fraction-line">{{ yFractionLine }}</text>
+              <text class="fraction-denominator">{{ yDenominatorStr }}</text>
+            </div>
+          </div>
+        </div>
       </div>
     </list-item>
   </list>
 </template>
 
 <script>
+  // 计算最大公约数
+  function gcd(a, b) {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while (b) {
+      const temp = a;
+      a = b;
+      b = temp % b;
+    }
+    return a;
+  }
+
+  // 简化分数
+  function simplifyFraction(numerator, denominator) {
+    if (numerator === 0) return { num: 0, den: 1 };
+    
+    const g = gcd(numerator, denominator);
+    let num = numerator / g;
+    let den = denominator / g;
+    
+    if (den < 0) {
+      num = -num;
+      den = -den;
+    }
+    
+    return { num, den };
+  }
+
+  // 生成分数线
+  function getFractionLine(len) {
+    let line = '';
+    for (let i = 0; i < len; i++) {
+      line += '─';
+    }
+    return line;
+  }
+
   export default {
     data: {
       a1: '',
@@ -89,7 +150,21 @@
       a2: '',
       b2: '',
       c2: '',
-      result: '',
+      showResult: false,
+      showSimpleText: false,
+      simpleText: '',
+      showSolutions: false,
+      dValue: '',
+      xIsInteger: false,
+      xInteger: '',
+      xNumeratorStr: '',
+      xDenominatorStr: '',
+      xFractionLine: '',
+      yIsInteger: false,
+      yInteger: '',
+      yNumeratorStr: '',
+      yDenominatorStr: '',
+      yFractionLine: '',
     },
 
     onInit() {},
@@ -121,8 +196,14 @@
       const b2 = parseFloat(this.b2)
       const c2 = parseFloat(this.c2)
 
+      // 重置所有显示
+      this.showResult = true
+      this.showSimpleText = false
+      this.showSolutions = false
+
       if (isNaN(a1) || isNaN(b1) || isNaN(c1) || isNaN(a2) || isNaN(b2) || isNaN(c2)) {
-        this.result = '请输入有效的数字'
+        this.showSimpleText = true
+        this.simpleText = '请输入有效的数字'
         return
       }
 
@@ -131,27 +212,47 @@
       const Dy = a1 * c2 - a2 * c1
 
       if (D === 0) {
-        if (Dx === 0 && Dy === 0) {
-          this.result = '方程组有无穷多解'
+        this.showSimpleText = true
+        if (a1 === 0 && b1 === 0 && a2 === 0 && b2 === 0) {
+          if (c1 === 0 && c2 === 0) {
+            this.simpleText = '方程组有无穷多解'
+          } else {
+            this.simpleText = '方程组无解'
+          }
+        } else if (Dx === 0 && Dy === 0) {
+          this.simpleText = '方程组有无穷多解'
         } else {
-          this.result = '方程组无解'
+          this.simpleText = '方程组无解'
         }
         return
       }
 
-      const x = Dx / D
-      const y = Dy / D
-      this.result = `D = ${this.formatNumber(D)}\nx = ${this.formatNumber(x)}\ny = ${this.formatNumber(y)}`
-    },
+      this.showSolutions = true
+      this.dValue = D.toString()
 
-    formatNumber(num) {
-      if (!isFinite(num)) return 'Error'
-      if (Math.abs(num) < 1e-10) return '0'
-      if (Math.abs(num - Math.round(num)) < 1e-10) {
-        return Math.round(num).toString()
+      const xFrac = simplifyFraction(Dx, D)
+      if (xFrac.den === 1) {
+        this.xIsInteger = true
+        this.xInteger = xFrac.num.toString()
+      } else {
+        this.xIsInteger = false
+        this.xNumeratorStr = xFrac.num.toString()
+        this.xDenominatorStr = xFrac.den.toString()
+        const xMaxLen = Math.max(this.xNumeratorStr.length, this.xDenominatorStr.length)
+        this.xFractionLine = getFractionLine(xMaxLen)
       }
-      const str = num.toPrecision(10)
-      return parseFloat(str).toString()
+
+      const yFrac = simplifyFraction(Dy, D)
+      if (yFrac.den === 1) {
+        this.yIsInteger = true
+        this.yInteger = yFrac.num.toString()
+      } else {
+        this.yIsInteger = false
+        this.yNumeratorStr = yFrac.num.toString()
+        this.yDenominatorStr = yFrac.den.toString()
+        const yMaxLen = Math.max(this.yNumeratorStr.length, this.yDenominatorStr.length)
+        this.yFractionLine = getFractionLine(yMaxLen)
+      }
     },
   }
 </script>
@@ -224,10 +325,62 @@
     border-left-color: #00ff99;
   }
 
+  .solutions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .solution-item {
+    display: flex;
+    align-items: center;
+  }
+
+  .result-label {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+    white-space: nowrap;
+  }
+
+  .result-value {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+  }
+
   .result-text {
     font-size: 6 * $size-factor;
     color: #00ff99;
     font-family: monospace;
-    line-height: 12 * $size-factor;
+  }
+
+  .fraction-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .fraction-numerator {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+    padding-bottom: 2px;
+    text-align: center;
+  }
+
+  .fraction-line {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+    line-height: 1;
+  }
+
+  .fraction-denominator {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+    padding-top: 2px;
+    text-align: center;
   }
 </style>
