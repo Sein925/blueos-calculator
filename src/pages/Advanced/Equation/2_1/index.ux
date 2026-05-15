@@ -131,18 +131,10 @@
       const Dy = a1 * c2 - a2 * c1
 
       if (D === 0) {
-        if (a1 === 0 && b1 === 0 && a2 === 0 && b2 === 0) {
-          if (c1 === 0 && c2 === 0) {
-            this.result = '方程组有无穷多解'
-          } else {
-            this.result = '方程组无解'
-          }
+        if (Dx === 0 && Dy === 0) {
+          this.result = '方程组有无穷多解'
         } else {
-          if (Dx === 0 && Dy === 0) {
-            this.result = '方程组有无穷多解'
-          } else {
-            this.result = '方程组无解'
-          }
+          this.result = '方程组无解'
         }
         return
       }

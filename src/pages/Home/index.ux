@@ -637,8 +637,16 @@
           return
       }
 
-      this.display = this.formatResult(value)
-      this.waitingForOperand = true
+      const formattedValue = this.formatResult(value)
+
+      if (this.pendingFunction) {
+        this.executePendingFunction()
+        const funcResult = this.display
+        this.expression.push(funcResult)
+      }
+
+      this.display = formattedValue
+      this.waitingForOperand = false
     },
 
     inputPercent() {
