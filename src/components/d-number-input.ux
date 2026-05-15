@@ -245,7 +245,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 2 * $size-factor 4 * $size-factor;
+    padding: 0 4 * $size-factor;
     margin-bottom: 2 * $size-factor;
   }
 
@@ -259,7 +259,7 @@
     height: 72px;
     padding: 0 4 * $size-factor;
     background-color: rgba(0, 0, 0, 0.3);
-    border-radius: 6 * $size-factor;
+    border-radius: 8 * $size-factor;
     margin-bottom: 3 * $size-factor;
     display: flex;
     justify-content: flex-end;
@@ -279,9 +279,8 @@
   }
 
   .keypad-btn {
-    width: 23%;
-    height: 52px;
-    margin-bottom: 2 * $size-factor;
+    width: 25%;
+    height: 62px;
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 6 * $size-factor;
     display: flex;
@@ -307,7 +306,7 @@
   }
 
   .keypad-btn-confirm {
-    width: 48%;
+    width: 50%;
     background-color: $brand;
   }
 
