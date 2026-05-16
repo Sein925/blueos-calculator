@@ -40,9 +40,7 @@
             <text>6</text>
           </div>
           <div class="keypad-btn keypad-btn-fn" onclick="backspace">
-            <image
-              src="./../../assets/images/backspace.svg"
-              width="46px"></image>
+            <text class="iconfont" style="font-size: 46px">&#xe62b;</text>
           </div>
           <div class="keypad-btn" onclick="inputDigit('1')">
             <text>1</text>

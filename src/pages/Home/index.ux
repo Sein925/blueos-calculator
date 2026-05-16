@@ -50,9 +50,7 @@
                 <text>±</text>
               </div>
               <div class="btn btn-function" onclick="backspace">
-                <image
-                  src="./../../assets/images/backspace.svg"
-                  width="46px"></image>
+                <text class="iconfont" style="font-size: 46px">&#xe62b;</text>
               </div>
               <div class="btn btn-operator" onclick="inputOperator('/')">
                 <text>÷</text>

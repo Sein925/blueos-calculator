@@ -15,3 +15,12 @@ $size-factor: 5px;
   justify-content: $justify;
   align-items: $align-items;
 }
+
+@font-face {
+  font-family: "iconfont";
+  src: url('/assets/iconfont.ttf');
+}
+
+.iconfont {
+  font-family: "iconfont";
+}

@@ -132,9 +132,7 @@
               <text>2nd</text>
             </div>
             <div class="btn btn-function" onclick="deleteChar">
-              <image
-                src="./../../../assets/images/backspace.svg"
-                width="48px"></image>
+              <text class="iconfont" style="font-size: 46px">&#xe62b;</text>
             </div>
             <div class="btn btn-draw" onclick="drawGraph">
               <text class="draw-btn-text">绘图</text>
@@ -155,13 +153,13 @@
 
         <div class="action-buttons">
           <div class="action-btn" onclick="zoomIn">
-            <text>⊕</text>
+            <text class="iconfont" style="font-size: 36px">&#xe63b;</text>
           </div>
           <div class="action-btn" onclick="zoomOut">
-            <text>⊖</text>
+            <text class="iconfont" style="font-size: 36px">&#xe63a;</text>
           </div>
           <div class="action-btn" onclick="resetView">
-            <text>⟲</text>
+            <text class="iconfont" style="font-size: 36px">&#xe604;</text>
           </div>
           <div class="action-btn" onclick="backToInput">
             <text>编辑</text>
@@ -583,7 +581,8 @@
       font-size: 8 * $size-factor;
       color: #00ff99;
       font-family: monospace;
-      margin-right: 2 * $size-factor;
+      margin-left: 10px;
+      margin-right: 4 * $size-factor;
     }
 
     .expression-text {
@@ -703,9 +702,9 @@
     text-align: center;
 
     .equation-text {
-      font-size: 9 * $size-factor;
+      font-size: 8 * $size-factor;
       color: #00ff99;
-      font-family: monospace;
+      margin-left: 10px;
     }
   }
 
