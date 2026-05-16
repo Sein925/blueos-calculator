@@ -20,11 +20,11 @@
               <text class="feature-name">方程求解</text>
             </div>
           </list-item>
-          <!-- <list-item type="card" style="margin-top: 3 * $size-factor">
+          <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="openGraphPage">
-              <text class="feature-name">函数图像</text>
+              <text class="feature-name">函数绘图</text>
             </div>
-          </list-item> -->
+          </list-item>
         </list>
       </div>
 
