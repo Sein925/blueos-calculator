@@ -3,12 +3,13 @@
     <swiper class="swiper-container" index="1" indicator="true">
       <div class="swiper-slide advanced-panel">
         <list class="content" title="true">
-          <list-item style="flex-direction: column">
-            <div class="panel-header">
-              <text class="section-title" style="font-size: 45px; margin-top: 10px">
-                高级功能
-              </text>
-            </div>
+          <list-item class="title">
+            <text class="iconfont">&#xe629;</text>
+            <text
+              class="section-title"
+              style="font-size: 45px; margin-top: 10px">
+              高级功能
+            </text>
           </list-item>
           <!-- <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="openDateCalculator">
@@ -728,9 +729,22 @@
       padding: 4 * $size-factor 2 * $size-factor;
     }
 
-    .panel-header {
-      width: 100%;
-      @include flex-box-mixins(row, space-between, center);
+    .title {
+      @media (device: watch-round) {
+        @include flex-box-mixins(column, center, center);
+
+        .iconfont {
+          margin-left: 10px;
+          margin-bottom: -10px;
+          font-size: 66px;
+        }
+      }
+    }
+
+    .iconfont {
+      font-size: 56px;
+      color: $light-gray;
+      margin: 10px 20px 0 -10px;
     }
 
     .feature-card {

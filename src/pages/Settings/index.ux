@@ -6,7 +6,7 @@
       <d-back value="设置"></d-back>
     </list-item>
     <list-item class="content">
-      <div style="flex-direction: column;">
+      <div style="flex-direction: column">
         <div class="option-card" onclick="toggleAngleMode">
           <text class="card-label">角度模式</text>
           <text class="card-value">
@@ -20,7 +20,9 @@
             {{ equationOutputMode === 'exact' ? '精确形式' : '小数' }}
           </text>
         </div>
-        <text class="description" style="margin-bottom: 30px;">精确模式会增加求解时间，请避免输入过大数字以防设备卡顿</text>
+        <text class="description" style="margin-bottom: 30px">
+          精确模式会增加求解时间，请避免输入过大数字以防设备卡顿
+        </text>
       </div>
     </list-item>
   </list>
@@ -50,7 +52,8 @@
     },
 
     toggleEquationOutputMode() {
-      this.equationOutputMode = this.equationOutputMode === 'exact' ? 'decimal' : 'exact'
+      this.equationOutputMode =
+        this.equationOutputMode === 'exact' ? 'decimal' : 'exact'
       global.equationOutputMode = this.equationOutputMode
       global.saveSettings()
     },

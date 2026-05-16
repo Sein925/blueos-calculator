@@ -11,7 +11,9 @@
 
     <list-item class="content">
       <text class="equation-form">ax² + bx + c = 0</text>
-      <text if="{{ showExactModeTip }}" class="description">您已开启精确模式，请避免输入过大数字以防设备卡顿</text>
+      <text if="{{ showExactModeTip }}" class="description">
+        您已开启精确模式，请避免输入过大数字以防设备卡顿
+      </text>
 
       <div class="input-row">
         <text class="input-label">a =</text>
@@ -367,10 +369,14 @@
           const x1 = (-b + sqrtDelta) / (2 * a)
           const x2 = (-b - sqrtDelta) / (2 * a)
           this.simpleText =
-            '有两个不等实根：\nx₁ = ' + this.formatNumber(x1) + '\nx₂ = ' + this.formatNumber(x2)
+            '有两个不等实根：\nx₁ = ' +
+            this.formatNumber(x1) +
+            '\nx₂ = ' +
+            this.formatNumber(x2)
         } else {
           const x = -b / (2 * a)
-          this.simpleText = '有两个相等实根：\nx₁ = x₂ = ' + this.formatNumber(x)
+          this.simpleText =
+            '有两个相等实根：\nx₁ = x₂ = ' + this.formatNumber(x)
         }
         return
       }

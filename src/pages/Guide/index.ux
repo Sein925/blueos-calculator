@@ -1,9 +1,15 @@
 <template>
   <div class="wrapper">
-    <swiper class="guide-swiper" index="0" indicator="true" indicator-type="arc">
+    <swiper
+      class="guide-swiper"
+      index="0"
+      indicator="true"
+      indicator-type="arc">
       <div class="guide-slide">
         <div class="slide-content">
-          <image class="guide-icon" src="./../../assets/images/logo.png"></image>
+          <image
+            class="guide-icon"
+            src="./../../assets/images/logo.png"></image>
           <text class="guide-title">欢迎使用</text>
           <text class="guide-desc">简单易用的科学计算器</text>
         </div>
@@ -66,19 +72,17 @@
 
 <script>
   export default {
-    data: {
-      
-    },
+    data: {},
 
     startUsing() {
       global.storage.set({
         key: 'hasSeenGuide',
-        value: 'true'
+        value: 'true',
       })
       global.router.replace({
-        uri: '/pages/Home'
+        uri: '/pages/Home',
       })
-    }
+    },
   }
 </script>
 

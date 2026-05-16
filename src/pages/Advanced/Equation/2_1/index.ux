@@ -8,11 +8,11 @@
     <list-item>
       <d-back value="二元一次方程组"></d-back>
     </list-item>
-    
+
     <list-item class="content">
       <text class="equation-form">a₁x + b₁y = c₁</text>
       <text class="equation-form">a₂x + b₂y = c₂</text>
-      
+
       <div class="input-row">
         <text class="input-label">a₁ =</text>
         <d-number-input
@@ -21,7 +21,7 @@
           placeholder="点击输入"
           @change="handleChangeA1"></d-number-input>
       </div>
-      
+
       <div class="input-row">
         <text class="input-label">b₁ =</text>
         <d-number-input
@@ -30,7 +30,7 @@
           placeholder="点击输入"
           @change="handleChangeB1"></d-number-input>
       </div>
-      
+
       <div class="input-row">
         <text class="input-label">c₁ =</text>
         <d-number-input
@@ -39,9 +39,9 @@
           placeholder="点击输入"
           @change="handleChangeC1"></d-number-input>
       </div>
-      
+
       <div class="divider"></div>
-      
+
       <div class="input-row">
         <text class="input-label">a₂ =</text>
         <d-number-input
@@ -50,7 +50,7 @@
           placeholder="点击输入"
           @change="handleChangeA2"></d-number-input>
       </div>
-      
+
       <div class="input-row">
         <text class="input-label">b₂ =</text>
         <d-number-input
@@ -59,7 +59,7 @@
           placeholder="点击输入"
           @change="handleChangeB2"></d-number-input>
       </div>
-      
+
       <div class="input-row">
         <text class="input-label">c₂ =</text>
         <d-number-input
@@ -68,21 +68,25 @@
           placeholder="点击输入"
           @change="handleChangeC2"></d-number-input>
       </div>
-      
+
       <div class="solve-btn" onclick="solve">
         <text class="solve-btn-text">求解</text>
       </div>
-      
+
       <div if="{{ showResult }}" class="result-box">
-        <text if="{{ showSimpleText }}" class="result-text">{{ simpleText }}</text>
+        <text if="{{ showSimpleText }}" class="result-text">
+          {{ simpleText }}
+        </text>
         <div else class="solutions-container">
           <div class="solution-item">
-            <text class="result-label">D = </text>
+            <text class="result-label">D =</text>
             <text class="result-value">{{ dValue }}</text>
           </div>
           <div class="solution-item">
-            <text class="result-label">x = </text>
-            <text if="{{ xIsInteger }}" class="result-value">{{ xInteger }}</text>
+            <text class="result-label">x =</text>
+            <text if="{{ xIsInteger }}" class="result-value">
+              {{ xInteger }}
+            </text>
             <div else class="fraction-container">
               <text class="fraction-numerator">{{ xNumeratorStr }}</text>
               <text class="fraction-line">{{ xFractionLine }}</text>
@@ -90,8 +94,10 @@
             </div>
           </div>
           <div class="solution-item">
-            <text class="result-label">y = </text>
-            <text if="{{ yIsInteger }}" class="result-value">{{ yInteger }}</text>
+            <text class="result-label">y =</text>
+            <text if="{{ yIsInteger }}" class="result-value">
+              {{ yInteger }}
+            </text>
             <div else class="fraction-container">
               <text class="fraction-numerator">{{ yNumeratorStr }}</text>
               <text class="fraction-line">{{ yFractionLine }}</text>
@@ -107,40 +113,40 @@
 <script>
   // 计算最大公约数
   function gcd(a, b) {
-    a = Math.abs(a);
-    b = Math.abs(b);
+    a = Math.abs(a)
+    b = Math.abs(b)
     while (b) {
-      const temp = a;
-      a = b;
-      b = temp % b;
+      const temp = a
+      a = b
+      b = temp % b
     }
-    return a;
+    return a
   }
 
   // 简化分数
   function simplifyFraction(numerator, denominator) {
-    if (numerator === 0) return { num: 0, den: 1 };
-    
-    const g = gcd(numerator, denominator);
-    let num = numerator / g;
-    let den = denominator / g;
-    
+    if (numerator === 0) return { num: 0, den: 1 }
+
+    const g = gcd(numerator, denominator)
+    let num = numerator / g
+    let den = denominator / g
+
     if (den < 0) {
-      num = -num;
-      den = -den;
+      num = -num
+      den = -den
     }
-    
-    return { num, den };
+
+    return { num, den }
   }
 
   // 生成分数线
   function getFractionLine(len) {
-    len = Math.min(len, 11);
-    let line = '';
+    len = Math.min(len, 11)
+    let line = ''
     for (let i = 0; i < len; i++) {
-      line += '─';
+      line += '─'
     }
-    return line;
+    return line
   }
 
   export default {
@@ -209,7 +215,14 @@
       this.showSimpleText = false
       this.showSolutions = false
 
-      if (isNaN(a1) || isNaN(b1) || isNaN(c1) || isNaN(a2) || isNaN(b2) || isNaN(c2)) {
+      if (
+        isNaN(a1) ||
+        isNaN(b1) ||
+        isNaN(c1) ||
+        isNaN(a2) ||
+        isNaN(b2) ||
+        isNaN(c2)
+      ) {
         this.showSimpleText = true
         this.simpleText = '请输入有效的数字'
         return
@@ -239,7 +252,13 @@
         this.showSimpleText = true
         const x = Dx / D
         const y = Dy / D
-        this.simpleText = 'D = ' + D + '\nx = ' + this.formatNumber(x) + '\ny = ' + this.formatNumber(y)
+        this.simpleText =
+          'D = ' +
+          D +
+          '\nx = ' +
+          this.formatNumber(x) +
+          '\ny = ' +
+          this.formatNumber(y)
         return
       }
 
@@ -254,7 +273,10 @@
         this.xIsInteger = false
         this.xNumeratorStr = xFrac.num.toString()
         this.xDenominatorStr = xFrac.den.toString()
-        const xMaxLen = Math.max(this.xNumeratorStr.length, this.xDenominatorStr.length)
+        const xMaxLen = Math.max(
+          this.xNumeratorStr.length,
+          this.xDenominatorStr.length
+        )
         this.xFractionLine = getFractionLine(xMaxLen)
       }
 
@@ -266,7 +288,10 @@
         this.yIsInteger = false
         this.yNumeratorStr = yFrac.num.toString()
         this.yDenominatorStr = yFrac.den.toString()
-        const yMaxLen = Math.max(this.yNumeratorStr.length, this.yDenominatorStr.length)
+        const yMaxLen = Math.max(
+          this.yNumeratorStr.length,
+          this.yDenominatorStr.length
+        )
         this.yFractionLine = getFractionLine(yMaxLen)
       }
     },

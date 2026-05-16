@@ -5,41 +5,59 @@
     <list-item>
       <d-back value="日期计算器"></d-back>
     </list-item>
-    
+
     <list-item class="content">
       <div class="tab-container">
-        <div class="tab {{ currentTab === 'diff' ? 'active' : '' }}" onclick="switchTab('diff')">
+        <div
+          class="tab {{ currentTab === 'diff' ? 'active' : '' }}"
+          onclick="switchTab('diff')">
           <text class="tab-text">日期差</text>
         </div>
-        <div class="tab {{ currentTab === 'add' ? 'active' : '' }}" onclick="switchTab('add')">
+        <div
+          class="tab {{ currentTab === 'add' ? 'active' : '' }}"
+          onclick="switchTab('add')">
           <text class="tab-text">日期推算</text>
         </div>
       </div>
     </list-item>
-    
+
     <list-item if="{{ currentTab === 'diff' }}">
       <text class="label">开始日期: {{ startDateText }}</text>
     </list-item>
-    
+
     <list-item if="{{ currentTab === 'diff' }}">
-      <picker class="picker-full" type="date" start="1901-01-01" end="2100-12-31" selected="{{ startDateText }}" onchange="onStartDateChange"></picker>
+      <picker
+        class="picker-full"
+        type="date"
+        start="1901-01-01"
+        end="2100-12-31"
+        selected="{{ startDateText }}"
+        onchange="onStartDateChange"></picker>
     </list-item>
-    
+
     <list-item if="{{ currentTab === 'diff' }}">
       <text class="label">结束日期: {{ endDateText }}</text>
     </list-item>
-    
+
     <list-item if="{{ currentTab === 'diff' }}">
-      <picker class="picker-full" type="date" start="1901-01-01" end="2100-12-31" selected="{{ endDateText }}" onchange="onEndDateChange"></picker>
+      <picker
+        class="picker-full"
+        type="date"
+        start="1901-01-01"
+        end="2100-12-31"
+        selected="{{ endDateText }}"
+        onchange="onEndDateChange"></picker>
     </list-item>
-    
+
     <list-item if="{{ currentTab === 'diff' }}" class="content">
       <div class="calc-btn" onclick="calculateDiff">
         <text class="calc-btn-text">计算</text>
       </div>
     </list-item>
-    
-    <list-item if="{{ currentTab === 'diff' && diffResult.days !== null }}" class="content">
+
+    <list-item
+      if="{{ currentTab === 'diff' && diffResult.days !== null }}"
+      class="content">
       <div class="result-section">
         <text class="result-title">计算结果</text>
         <div class="result-item">
@@ -48,62 +66,90 @@
         </div>
         <div class="result-item">
           <text class="result-label">相差周数</text>
-          <text class="result-value">{{ diffResult.weeks }} 周 {{ diffResult.remainDays }} 天</text>
+          <text class="result-value">
+            {{ diffResult.weeks }} 周 {{ diffResult.remainDays }} 天
+          </text>
         </div>
         <div class="result-item">
           <text class="result-label">相差月数</text>
-          <text class="result-value">{{ diffResult.months }} 月 {{ diffResult.remainDaysAfterMonths }} 天</text>
+          <text class="result-value">
+            {{ diffResult.months }} 月 {{ diffResult.remainDaysAfterMonths }} 天
+          </text>
         </div>
       </div>
     </list-item>
-    
+
     <list-item if="{{ currentTab === 'add' }}">
       <text class="label">基准日期: {{ baseDateText }}</text>
     </list-item>
-    
+
     <list-item if="{{ currentTab === 'add' }}">
-      <picker class="picker-full" type="date" start="1901-01-01" end="2100-12-31" selected="{{ baseDateText }}" onchange="onBaseDateChange"></picker>
+      <picker
+        class="picker-full"
+        type="date"
+        start="1901-01-01"
+        end="2100-12-31"
+        selected="{{ baseDateText }}"
+        onchange="onBaseDateChange"></picker>
     </list-item>
-    
+
     <list-item if="{{ currentTab === 'add' }}" class="content">
       <div class="add-type-row">
-        <div class="add-type-btn {{ addType === 'add' ? 'active' : '' }}" onclick="setAddType('add')">
+        <div
+          class="add-type-btn {{ addType === 'add' ? 'active' : '' }}"
+          onclick="setAddType('add')">
           <text class="add-type-text">往后</text>
         </div>
-        <div class="add-type-btn {{ addType === 'sub' ? 'active' : '' }}" onclick="setAddType('sub')">
+        <div
+          class="add-type-btn {{ addType === 'sub' ? 'active' : '' }}"
+          onclick="setAddType('sub')">
           <text class="add-type-text">往前</text>
         </div>
       </div>
     </list-item>
-    
+
     <list-item if="{{ currentTab === 'add' }}" class="content">
       <div class="input-row">
         <text class="label">天数</text>
-        <input class="number-input" type="number" value="{{ addDays }}" onchange="onAddDaysChange" />
+        <input
+          class="number-input"
+          type="number"
+          value="{{ addDays }}"
+          onchange="onAddDaysChange" />
       </div>
     </list-item>
-    
+
     <list-item if="{{ currentTab === 'add' }}" class="content">
       <div class="input-row">
         <text class="label">周数</text>
-        <input class="number-input" type="number" value="{{ addWeeks }}" onchange="onAddWeeksChange" />
+        <input
+          class="number-input"
+          type="number"
+          value="{{ addWeeks }}"
+          onchange="onAddWeeksChange" />
       </div>
     </list-item>
-    
+
     <list-item if="{{ currentTab === 'add' }}" class="content">
       <div class="input-row">
         <text class="label">月数</text>
-        <input class="number-input" type="number" value="{{ addMonths }}" onchange="onAddMonthsChange" />
+        <input
+          class="number-input"
+          type="number"
+          value="{{ addMonths }}"
+          onchange="onAddMonthsChange" />
       </div>
     </list-item>
-    
+
     <list-item if="{{ currentTab === 'add' }}" class="content">
       <div class="calc-btn" onclick="calculateDate">
         <text class="calc-btn-text">计算</text>
       </div>
     </list-item>
-    
-    <list-item if="{{ currentTab === 'add' && addResult.date }}" class="content">
+
+    <list-item
+      if="{{ currentTab === 'add' && addResult.date }}"
+      class="content">
       <div class="result-section">
         <text class="result-title">计算结果</text>
         <div class="result-item">
@@ -123,31 +169,31 @@
   export default {
     data: {
       currentTab: 'diff',
-      
+
       startDateText: '',
       endDateText: '',
       baseDateText: '',
-      
+
       addType: 'add',
       addDays: 0,
       addWeeks: 0,
       addMonths: 0,
-      
+
       showPickerType: '',
-      
+
       diffResult: {
         days: null,
         weeks: null,
         remainDays: null,
         months: null,
-        remainDaysAfterMonths: null
+        remainDaysAfterMonths: null,
       },
-      
+
       addResult: {
         date: null,
         dateText: '',
-        weekDay: ''
-      }
+        weekDay: '',
+      },
     },
 
     onInit() {
@@ -188,33 +234,35 @@
       const { year, month, day } = evt
       this.baseDateText = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
     },
-    
+
     calculateDiff() {
       const start = new Date(this.startDateText)
       const end = new Date(this.endDateText)
-      
+
       const timeDiff = end.getTime() - start.getTime()
       const daysDiff = Math.abs(Math.floor(timeDiff / (1000 * 60 * 60 * 24)))
-      
+
       const weeks = Math.floor(daysDiff / 7)
       const remainDays = daysDiff % 7
-      
+
       const yearsDiff = end.getFullYear() - start.getFullYear()
       const monthsDiff = end.getMonth() - start.getMonth()
       const totalMonths = Math.abs(yearsDiff * 12 + monthsDiff)
-      
+
       const tempDate = new Date(start)
       tempDate.setMonth(tempDate.getMonth() + totalMonths)
-      const remainDaysAfterMonths = Math.abs(Math.floor((end.getTime() - tempDate.getTime()) / (1000 * 60 * 60 * 24)))
-      
+      const remainDaysAfterMonths = Math.abs(
+        Math.floor((end.getTime() - tempDate.getTime()) / (1000 * 60 * 60 * 24))
+      )
+
       this.diffResult = {
         days: daysDiff,
         weeks: weeks,
         remainDays: remainDays,
         months: totalMonths,
-        remainDaysAfterMonths: remainDaysAfterMonths
+        remainDaysAfterMonths: remainDaysAfterMonths,
       }
-      
+
       this.showPickerType = ''
     },
 
@@ -237,9 +285,9 @@
     calculateDate() {
       const base = new Date(this.baseDateText)
       const result = new Date(base)
-      
-      const totalDays = this.addDays + (this.addWeeks * 7)
-      
+
+      const totalDays = this.addDays + this.addWeeks * 7
+
       if (this.addType === 'add') {
         result.setMonth(result.getMonth() + this.addMonths)
         result.setDate(result.getDate() + totalDays)
@@ -247,39 +295,47 @@
         result.setMonth(result.getMonth() - this.addMonths)
         result.setDate(result.getDate() - totalDays)
       }
-      
-      const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
-      
+
+      const weekDays = [
+        '星期日',
+        '星期一',
+        '星期二',
+        '星期三',
+        '星期四',
+        '星期五',
+        '星期六',
+      ]
+
       this.addResult = {
         date: result,
         dateText: this.formatDate(result),
-        weekDay: weekDays[result.getDay()]
+        weekDay: weekDays[result.getDay()],
       }
-      
+
       this.showPickerType = ''
-    }
+    },
   }
 </script>
 
 <style lang="scss">
   @import './../../../assets/styles/style.scss';
-  
+
   .wrapper {
     width: 100%;
     height: 100%;
   }
-  
+
   .content {
     width: 100%;
     padding: 0 5 * $size-factor;
   }
-  
+
   .tab-container {
     width: 100%;
     @include flex-box-mixins(row, space-between, center);
     margin-bottom: 2 * $size-factor;
   }
-  
+
   .tab {
     flex: 1;
     padding: 3 * $size-factor 0;
@@ -288,16 +344,16 @@
     margin: 0 1 * $size-factor;
     @include flex-box-mixins(row, center, center);
   }
-  
+
   .tab.active {
     background-color: $brand;
   }
-  
+
   .tab-text {
     font-size: 5 * $size-factor;
     color: $white;
   }
-  
+
   .picker-full {
     width: 100%;
     height: 280px;
@@ -308,13 +364,13 @@
     color: $white;
     padding: 0 5 * $size-factor;
   }
-  
+
   .add-type-row {
     width: 100%;
     @include flex-box-mixins(row, space-between, center);
     margin-bottom: 2 * $size-factor;
   }
-  
+
   .add-type-btn {
     flex: 1;
     padding: 3 * $size-factor 0;
@@ -323,22 +379,22 @@
     margin: 0 1 * $size-factor;
     @include flex-box-mixins(row, center, center);
   }
-  
+
   .add-type-btn.active {
     background-color: $brand;
   }
-  
+
   .add-type-text {
     font-size: 5 * $size-factor;
     color: $white;
   }
-  
+
   .input-row {
     width: 100%;
     @include flex-box-mixins(row, space-between, center);
     margin-bottom: 2 * $size-factor;
   }
-  
+
   .number-input {
     width: 40%;
     padding: 3 * $size-factor;
@@ -347,7 +403,7 @@
     color: $white;
     font-size: 5 * $size-factor;
   }
-  
+
   .calc-btn {
     width: 100%;
     padding: 4 * $size-factor 0;
@@ -356,43 +412,43 @@
     margin: 2 * $size-factor 0;
     @include flex-box-mixins(row, center, center);
   }
-  
+
   .calc-btn-text {
     font-size: 6 * $size-factor;
     font-weight: 600;
     color: $white;
   }
-  
+
   .result-section {
     width: 100%;
     padding: 4 * $size-factor;
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 8 * $size-factor;
   }
-  
+
   .result-title {
     font-size: 6 * $size-factor;
     font-weight: 600;
     color: $white;
     margin-bottom: 3 * $size-factor;
   }
-  
+
   .result-item {
     width: 100%;
     @include flex-box-mixins(row, space-between, center);
     padding: 2 * $size-factor 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
-  
+
   .result-item:last-child {
     border-bottom: none;
   }
-  
+
   .result-label {
     font-size: 5 * $size-factor;
     color: $gray;
   }
-  
+
   .result-value {
     font-size: 5 * $size-factor;
     font-weight: 600;

@@ -19,13 +19,13 @@
         <div class="buttons-container">
           <!-- 科学函数行 - 仅 2nd 模式下显示 -->
           <div class="button-row" show="{{ showAdvanced }}">
-            <div class="btn btn-scientific" onclick="inputPreset('sin')">
+            <div class="btn btn-scientific" onclick="inputPreset('sin(x)')">
               <text>sin</text>
             </div>
-            <div class="btn btn-scientific" onclick="inputPreset('cos')">
+            <div class="btn btn-scientific" onclick="inputPreset('cos(x)')">
               <text>cos</text>
             </div>
-            <div class="btn btn-scientific" onclick="inputPreset('tan')">
+            <div class="btn btn-scientific" onclick="inputPreset('tan(x)')">
               <text>tan</text>
             </div>
             <div class="btn btn-scientific" onclick="inputPreset('x^2')">
@@ -179,8 +179,8 @@
       currentStep: 'input',
       expression: '',
       showAdvanced: false,
-      canvasWidth: 350,
-      canvasHeight: 350,
+      canvasWidth: 400,
+      canvasHeight: 400,
       scale: 20,
       drawTimerId: 0,
     },
@@ -411,9 +411,56 @@
       return { err: true, pos: pos }
     },
 
+    preprocessExpression(expr) {
+      var result = ''
+      var functions = ['sin', 'cos', 'tan', 'sqrt', 'log', 'ln', 'exp', 'abs']
+
+      for (var i = 0; i < expr.length; i++) {
+        var curr = expr[i]
+
+        if (i > 0) {
+          var prev = expr[i - 1]
+
+          var prevIsNum = (prev >= '0' && prev <= '9') || prev === '.'
+          var prevIsClose = prev === ')'
+          var prevIsLetter =
+            (prev >= 'a' && prev <= 'z') || (prev >= 'A' && prev <= 'Z')
+
+          var currIsLetter =
+            (curr >= 'a' && curr <= 'z') || (curr >= 'A' && curr <= 'Z')
+          var currIsNum = (curr >= '0' && curr <= '9') || curr === '.'
+          var currIsOpen = curr === '('
+
+          if (prevIsNum && (currIsLetter || currIsOpen)) {
+            result += '*'
+          } else if (prevIsClose && (currIsNum || currIsLetter || currIsOpen)) {
+            result += '*'
+          } else if (prevIsLetter && currIsOpen) {
+            var funcName = ''
+            var j = i - 1
+            while (
+              j >= 0 &&
+              ((expr[j] >= 'a' && expr[j] <= 'z') ||
+                (expr[j] >= 'A' && expr[j] <= 'Z'))
+            ) {
+              funcName = expr[j] + funcName
+              j--
+            }
+            if (functions.indexOf(funcName) === -1) {
+              result += '*'
+            }
+          }
+        }
+
+        result += curr
+      }
+      return result
+    },
+
     evalExpr(expr, x) {
       if (!expr) return 0 / 0
-      var tokens = this.tokenize(expr)
+      var processed = this.preprocessExpression(expr)
+      var tokens = this.tokenize(processed)
       if (tokens.length === 0) return 0 / 0
       var result = this.parseExpr(tokens, 0, x)
       if (result.err) return 0 / 0
@@ -455,18 +502,30 @@
 
       ctx.clearRect(0, 0, width, height)
 
+      var step = Math.max(1, Math.ceil(50 / scale))
+
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'
       ctx.lineWidth = 1
-      for (var i = 0; i <= width; i += scale) {
+
+      var xLeft = Math.floor(-centerX / scale)
+      var xRight = Math.floor((width - centerX) / scale)
+      var yBottom = Math.floor(-(height - centerY) / scale)
+      var yTop = Math.floor(centerY / scale)
+
+      var xStart = Math.floor(xLeft / step) * step
+      for (var i = xStart; i <= xRight; i += step) {
+        var xv = centerX + i * scale
         ctx.beginPath()
-        ctx.moveTo(i, 0)
-        ctx.lineTo(i, height)
+        ctx.moveTo(xv, 0)
+        ctx.lineTo(xv, height)
         ctx.stroke()
       }
-      for (var i = 0; i <= height; i += scale) {
+      var yStart = Math.floor(yBottom / step) * step
+      for (var i = yStart; i <= yTop; i += step) {
+        var yv = centerY - i * scale
         ctx.beginPath()
-        ctx.moveTo(0, i)
-        ctx.lineTo(width, i)
+        ctx.moveTo(0, yv)
+        ctx.lineTo(width, yv)
         ctx.stroke()
       }
 
@@ -485,15 +544,16 @@
       ctx.font = '12px sans-serif'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'top'
-      for (var i = -8; i <= 8; i++) {
+      for (var i = xStart; i <= xRight; i += step) {
         if (i !== 0) {
           var xv = centerX + i * scale
           ctx.fillText(i.toString(), xv, centerY + 4)
         }
       }
+
       ctx.textAlign = 'right'
       ctx.textBaseline = 'middle'
-      for (var i = -8; i <= 8; i++) {
+      for (var i = yStart; i <= yTop; i += step) {
         if (i !== 0) {
           var yv = centerY - i * scale
           ctx.fillText(i.toString(), centerX - 4, yv)
@@ -533,12 +593,12 @@
     },
 
     zoomIn() {
-      this.scale = Math.min(this.scale * 1.5, 80)
+      this.scale = this.scale * 1.5
       this.doDrawGraph()
     },
 
     zoomOut() {
-      this.scale = Math.max(this.scale / 1.5, 5)
+      this.scale = this.scale / 1.5
       this.doDrawGraph()
     },
 
@@ -560,6 +620,8 @@
     width: 100%;
     flex-direction: column;
     padding: 0 2 * $size-factor 4 * $size-factor 2 * $size-factor;
+    margin-top: 6px;
+    margin-bottom: 20px;
 
     @media (device: watch-round) {
       margin-bottom: 50px;
@@ -702,7 +764,7 @@
     border-radius: 8 * $size-factor;
     border-left-width: 3px;
     border-left-color: #00ff99;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     text-align: center;
 
     .equation-text {
@@ -721,8 +783,8 @@
   }
 
   .graph-canvas {
-    width: 350px;
-    height: 350px;
+    width: 400px;
+    height: 400px;
     background-color: rgba(0, 0, 0, 0.3);
     border-radius: 8 * $size-factor;
   }
