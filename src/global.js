@@ -10,6 +10,7 @@ global.device = device
 
 global.calculatorHistory = []
 global.angleMode = 'deg'
+global.equationOutputMode = 'exact'
 
 const HISTORY_STORAGE_KEY = 'calculator_history'
 const SETTINGS_STORAGE_KEY = 'calculator_settings'
@@ -61,19 +62,24 @@ global.loadSettings = function () {
           try {
             const settings = JSON.parse(data)
             global.angleMode = settings.angleMode || 'deg'
+            global.equationOutputMode = settings.equationOutputMode || 'exact'
           } catch (e) {
             global.angleMode = 'deg'
+            global.equationOutputMode = 'exact'
           }
         } else {
           global.angleMode = 'deg'
+          global.equationOutputMode = 'exact'
         }
       },
       fail: function () {
         global.angleMode = 'deg'
+        global.equationOutputMode = 'exact'
       },
     })
   } catch (e) {
     global.angleMode = 'deg'
+    global.equationOutputMode = 'exact'
   }
 }
 
@@ -81,6 +87,7 @@ global.saveSettings = function () {
   try {
     const settings = {
       angleMode: global.angleMode || 'deg',
+      equationOutputMode: global.equationOutputMode || 'exact',
     }
     storage.set({
       key: SETTINGS_STORAGE_KEY,

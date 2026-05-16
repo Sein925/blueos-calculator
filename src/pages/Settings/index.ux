@@ -6,13 +6,21 @@
       <d-back value="设置"></d-back>
     </list-item>
     <list-item class="content">
-      <div>
+      <div style="flex-direction: column;">
         <div class="option-card" onclick="toggleAngleMode">
           <text class="card-label">角度模式</text>
           <text class="card-value">
             {{ angleMode === 'deg' ? 'DEG' : 'RAD' }}
           </text>
         </div>
+        <text class="section-title">方程求解</text>
+        <div class="option-card" onclick="toggleEquationOutputMode">
+          <text class="card-label">方程解输出</text>
+          <text class="card-value">
+            {{ equationOutputMode === 'exact' ? '精确形式' : '小数' }}
+          </text>
+        </div>
+        <text class="description" style="margin-bottom: 30px;">精确模式会增加求解时间，请避免输入过大数字以防设备卡顿</text>
       </div>
     </list-item>
   </list>
@@ -22,19 +30,28 @@
   export default {
     data: {
       angleMode: 'deg',
+      equationOutputMode: 'exact',
     },
 
     onInit() {
       this.angleMode = global.angleMode || 'deg'
+      this.equationOutputMode = global.equationOutputMode || 'exact'
     },
 
     onShow() {
       this.angleMode = global.angleMode || 'deg'
+      this.equationOutputMode = global.equationOutputMode || 'exact'
     },
 
     toggleAngleMode() {
       this.angleMode = this.angleMode === 'deg' ? 'rad' : 'deg'
       global.angleMode = this.angleMode
+      global.saveSettings()
+    },
+
+    toggleEquationOutputMode() {
+      this.equationOutputMode = this.equationOutputMode === 'exact' ? 'decimal' : 'exact'
+      global.equationOutputMode = this.equationOutputMode
       global.saveSettings()
     },
   }
@@ -52,6 +69,27 @@
       width: 100%;
       padding: 0 2 * $size-factor;
     }
+  }
+
+  .section-title {
+    color: $light-gray;
+    font-size: 7 * $size-factor;
+    margin-top: 4 * $size-factor;
+    margin-left: 4 * $size-factor;
+
+    @media (device: watch-round) {
+      width: 100%;
+      margin-left: 10px;
+      text-align: center;
+      font-size: 40px;
+    }
+  }
+
+  .description {
+    color: $gray;
+    font-size: 6 * $size-factor;
+    margin-top: 3 * $size-factor;
+    margin-left: 3 * $size-factor;
   }
 
   .option-card {

@@ -11,6 +11,7 @@
 
     <list-item class="content">
       <text class="equation-form">ax² + bx + c = 0</text>
+      <text if="{{ showExactModeTip }}" class="description">您已开启精确模式，请避免输入过大数字以防设备卡顿</text>
 
       <div class="input-row">
         <text class="input-label">a =</text>
@@ -124,12 +125,39 @@
   function gcd(a, b) {
     a = Math.abs(a)
     b = Math.abs(b)
-    while (b) {
-      const temp = a
-      a = b
-      b = temp % b
+
+    if (a === 0) return b
+    if (b === 0) return a
+
+    // 找到 a 和 b 中 2 的最高次幂因子
+    let shift = 0
+    while (((a | b) & 1) === 0) {
+      a >>= 1
+      b >>= 1
+      shift++
     }
-    return a
+
+    // 使 a 变为奇数
+    while ((a & 1) === 0) {
+      a >>= 1
+    }
+
+    do {
+      // 使 b 变为奇数
+      while ((b & 1) === 0) {
+        b >>= 1
+      }
+
+      // 此时 a 和 b 都是奇数，交换使得 a <= b，然后 b = b - a
+      if (a > b) {
+        const temp = a
+        a = b
+        b = temp
+      }
+      b -= a
+    } while (b !== 0)
+
+    return a << shift
   }
 
   function gcd3(a, b, c) {
@@ -245,9 +273,16 @@
       x2RadIsDenOne: false,
       x2RadDen: '',
       x2RadLine: '',
+      showExactModeTip: false,
     },
 
-    onInit() {},
+    onInit() {
+      this.showExactModeTip = global.equationOutputMode === 'exact'
+    },
+
+    onShow() {
+      this.showExactModeTip = global.equationOutputMode === 'exact'
+    },
 
     handleChangeA(evt) {
       this.a = evt.value
@@ -322,6 +357,21 @@
           ' - ' +
           this.formatNumber(imagPart) +
           'i'
+        return
+      }
+
+      if (global.equationOutputMode === 'decimal') {
+        this.showSimpleText = true
+        this.showRoots = false
+        if (delta > 0) {
+          const x1 = (-b + sqrtDelta) / (2 * a)
+          const x2 = (-b - sqrtDelta) / (2 * a)
+          this.simpleText =
+            '有两个不等实根：\nx₁ = ' + this.formatNumber(x1) + '\nx₂ = ' + this.formatNumber(x2)
+        } else {
+          const x = -b / (2 * a)
+          this.simpleText = '有两个相等实根：\nx₁ = x₂ = ' + this.formatNumber(x)
+        }
         return
       }
 
@@ -460,6 +510,13 @@
     font-size: 8 * $size-factor;
     color: #00ff99;
     font-family: monospace;
+  }
+
+  .description {
+    color: $gray;
+    font-size: 6 * $size-factor;
+    margin-top: 3 * $size-factor;
+    margin-left: 2.4 * $size-factor;
   }
 
   .input-row {

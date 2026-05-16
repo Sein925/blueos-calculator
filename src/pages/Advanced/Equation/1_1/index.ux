@@ -129,6 +129,13 @@
       this.c = evt.value
     },
 
+    formatNumber(num) {
+      if (!isFinite(num)) return 'Error'
+      if (Math.abs(num) < 1e-10) return '0'
+      const str = num.toPrecision(10)
+      return parseFloat(str).toString()
+    },
+
     solve() {
       const a = parseFloat(this.a)
       const b = parseFloat(this.b)
@@ -153,6 +160,12 @@
         } else {
           this.simpleText = '方程无解'
         }
+        return
+      }
+
+      if (global.equationOutputMode === 'decimal') {
+        this.showSimpleText = true
+        this.simpleText = 'x = ' + this.formatNumber((c - b) / a)
         return
       }
 

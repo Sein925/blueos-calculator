@@ -16,6 +16,7 @@ declare const global: {
   device: Device;
   calculatorHistory: HistoryItem[];
   angleMode: 'deg' | 'rad';
+  equationOutputMode: 'exact' | 'decimal';
   loadHistory: () => void;
   saveHistory: () => void;
   loadSettings: () => void;
