@@ -135,9 +135,10 @@
 
   // 生成分数线
   function getFractionLine(len) {
+    len = Math.min(len, 11);
     let line = '';
     for (let i = 0; i < len; i++) {
-      line += '—';
+      line += '─';
     }
     return line;
   }
@@ -374,7 +375,7 @@
     font-size: 6 * $size-factor;
     color: #00ff99;
     font-family: monospace;
-    line-height: 1;
+    line-height: 2;
   }
 
   .fraction-denominator {

@@ -8,10 +8,10 @@
     <list-item>
       <d-back value="一元二次方程"></d-back>
     </list-item>
-    
+
     <list-item class="content">
       <text class="equation-form">ax² + bx + c = 0</text>
-      
+
       <div class="input-row">
         <text class="input-label">a =</text>
         <d-number-input
@@ -20,7 +20,7 @@
           placeholder="点击输入"
           @change="handleChangeA"></d-number-input>
       </div>
-      
+
       <div class="input-row">
         <text class="input-label">b =</text>
         <d-number-input
@@ -29,7 +29,7 @@
           placeholder="点击输入"
           @change="handleChangeB"></d-number-input>
       </div>
-      
+
       <div class="input-row">
         <text class="input-label">c =</text>
         <d-number-input
@@ -38,28 +38,34 @@
           placeholder="点击输入"
           @change="handleChangeC"></d-number-input>
       </div>
-      
+
       <div class="solve-btn" onclick="solve">
         <text class="solve-btn-text">求解</text>
       </div>
-      
+
       <div if="{{ showResult }}" class="result-box">
-        <text if="{{ showSimpleText }}" class="result-text">{{ simpleText }}</text>
-        
+        <text if="{{ showSimpleText }}" class="result-text">
+          {{ simpleText }}
+        </text>
+
         <text if="{{ showRoots }}" class="result-text">{{ deltaText }}</text>
         <text if="{{ showRoots }}" class="result-text">{{ rootsLabel }}</text>
-        
+
         <div if="{{ showRoots }}" class="result-row">
-          <text if="{{ !isDoubleRoot }}" class="result-label">x₁ = </text>
-          <text else class="result-label">x₁ = x₂ = </text>
+          <text if="{{ !isDoubleRoot }}" class="result-label">x₁ =</text>
+          <text else class="result-label">x₁ = x₂ =</text>
           <div if="{{ x1IsInt }}" class="result-content">
             <text class="result-value">{{ x1IntValue }}</text>
           </div>
           <div else if="{{ x1IsFrac }}" class="result-content">
             <div class="fraction-container">
-              <text class="fraction-numerator">{{ x1Num }}</text>
+              <marquee double-ended-shadow="false" class="fraction-numerator">
+                {{ x1Num }}
+              </marquee>
               <text class="fraction-line">{{ x1Line }}</text>
-              <text class="fraction-denominator">{{ x1Den }}</text>
+              <marquee double-ended-shadow="false" class="fraction-denominator">
+                {{ x1Den }}
+              </marquee>
             </div>
           </div>
           <div else if="{{ x1IsRad }}" class="result-content">
@@ -67,23 +73,31 @@
               <text class="result-value">{{ x1RadNumStr }}</text>
             </div>
             <div else class="fraction-container">
-              <text class="fraction-numerator">{{ x1RadNumStr }}</text>
+              <marquee double-ended-shadow="false" class="fraction-numerator">
+                {{ x1RadNumStr }}
+              </marquee>
               <text class="fraction-line">{{ x1RadLine }}</text>
-              <text class="fraction-denominator">{{ x1RadDen }}</text>
+              <marquee double-ended-shadow="false" class="fraction-denominator">
+                {{ x1RadDen }}
+              </marquee>
             </div>
           </div>
         </div>
-        
+
         <div if="{{ showX2 }}" class="result-row">
-          <text class="result-label">x₂ = </text>
+          <text class="result-label">x₂ =</text>
           <div if="{{ x2IsInt }}" class="result-content">
             <text class="result-value">{{ x2IntValue }}</text>
           </div>
           <div else if="{{ x2IsFrac }}" class="result-content">
             <div class="fraction-container">
-              <text class="fraction-numerator">{{ x2Num }}</text>
+              <marquee double-ended-shadow="false" class="fraction-numerator">
+                {{ x2Num }}
+              </marquee>
               <text class="fraction-line">{{ x2Line }}</text>
-              <text class="fraction-denominator">{{ x2Den }}</text>
+              <marquee double-ended-shadow="false" class="fraction-denominator">
+                {{ x2Den }}
+              </marquee>
             </div>
           </div>
           <div else if="{{ x2IsRad }}" class="result-content">
@@ -91,9 +105,13 @@
               <text class="result-value">{{ x2RadNumStr }}</text>
             </div>
             <div else class="fraction-container">
-              <text class="fraction-numerator">{{ x2RadNumStr }}</text>
+              <marquee double-ended-shadow="false" class="fraction-numerator">
+                {{ x2RadNumStr }}
+              </marquee>
               <text class="fraction-line">{{ x2RadLine }}</text>
-              <text class="fraction-denominator">{{ x2RadDen }}</text>
+              <marquee double-ended-shadow="false" class="fraction-denominator">
+                {{ x2RadDen }}
+              </marquee>
             </div>
           </div>
         </div>
@@ -104,79 +122,92 @@
 
 <script>
   function gcd(a, b) {
-    a = Math.abs(a);
-    b = Math.abs(b);
+    a = Math.abs(a)
+    b = Math.abs(b)
     while (b) {
-      const temp = a;
-      a = b;
-      b = temp % b;
+      const temp = a
+      a = b
+      b = temp % b
     }
-    return a;
+    return a
   }
 
   function gcd3(a, b, c) {
-    return gcd(gcd(Math.abs(a), Math.abs(b)), Math.abs(c));
+    return gcd(gcd(a, b), c)
   }
 
   function simplifyFraction(numerator, denominator) {
-    if (numerator === 0) return { num: 0, den: 1 };
-    
-    const g = gcd(numerator, denominator);
-    let num = numerator / g;
-    let den = denominator / g;
-    
+    if (numerator === 0) return { num: 0, den: 1 }
+
+    const g = gcd(numerator, denominator)
+    let num = numerator / g
+    let den = denominator / g
+
     if (den < 0) {
-      num = -num;
-      den = -den;
+      num = -num
+      den = -den
     }
-    
-    return { num, den };
+
+    return { num, den }
   }
 
   function getFractionLine(len) {
-    let line = '';
+    len = Math.min(len, 11)
+    let line = ''
     for (let i = 0; i < len; i++) {
-      line += '─';
+      line += '─'
     }
-    return line;
+    return line
   }
 
   function isInteger(num) {
-    return Math.abs(num - Math.round(num)) < 1e-10;
+    return Math.abs(num - Math.round(num)) < 1e-10
   }
 
   function simplifyRadical(n) {
-    let outside = 1;
-    let inside = Math.abs(Math.round(n));
-    
-    for (let i = 2; i * i <= inside; i++) {
-      while (inside % (i * i) === 0) {
-        outside *= i;
-        inside /= (i * i);
+    let outside = 1
+    let inside = Math.abs(Math.round(n))
+
+    if (inside === 0 || inside === 1) {
+      return { coeff: outside, radicand: inside }
+    }
+
+    // 先处理 2
+    while (inside % 4 === 0) {
+      outside *= 2
+      inside /= 4
+    }
+
+    // 再处理奇数，从 3 开始，每次加 2
+    for (let i = 3; i * i <= inside; i += 2) {
+      const square = i * i
+      while (inside % square === 0) {
+        outside *= i
+        inside /= square
       }
     }
-    
-    return { coeff: outside, radicand: inside };
+
+    return { coeff: outside, radicand: inside }
   }
 
   function formatRadicalNum(N, K, D) {
-    let str = '';
+    let str = ''
     if (N !== 0) {
-      str += N.toString();
+      str += N.toString()
     }
-    
+
     if (K > 0) {
-      if (N !== 0) str += ' + ';
-      if (K !== 1) str += K.toString();
-      str += '√' + D.toString();
+      if (N !== 0) str += ' + '
+      if (K !== 1) str += K.toString()
+      str += '√' + D.toString()
     } else if (K < 0) {
-      if (N !== 0) str += ' − ';
-      else str += '−';
-      if (K !== -1) str += (-K).toString();
-      str += '√' + D.toString();
+      if (N !== 0) str += ' − '
+      else str += '−'
+      if (K !== -1) str += (-K).toString()
+      str += '√' + D.toString()
     }
-    
-    return str || '0';
+
+    return str || '0'
   }
 
   export default {
@@ -279,7 +310,18 @@
         this.showSimpleText = true
         const realPart = -b / (2 * a)
         const imagPart = Math.sqrt(-delta) / (2 * a)
-        this.simpleText = 'Δ = ' + this.formatNumber(delta) + ' < 0\n无实根，有两个共轭复根：\nx₁ = ' + this.formatNumber(realPart) + ' + ' + this.formatNumber(imagPart) + 'i\nx₂ = ' + this.formatNumber(realPart) + ' - ' + this.formatNumber(imagPart) + 'i'
+        this.simpleText =
+          'Δ = ' +
+          this.formatNumber(delta) +
+          ' < 0\n无实根，有两个共轭复根：\nx₁ = ' +
+          this.formatNumber(realPart) +
+          ' + ' +
+          this.formatNumber(imagPart) +
+          'i\nx₂ = ' +
+          this.formatNumber(realPart) +
+          ' - ' +
+          this.formatNumber(imagPart) +
+          'i'
         return
       }
 
@@ -478,6 +520,7 @@
   .result-content {
     display: flex;
     align-items: center;
+    margin-left: 8px;
   }
 
   .result-label {
@@ -491,6 +534,7 @@
     font-size: 6 * $size-factor;
     color: #00ff99;
     font-family: monospace;
+    margin-left: 8px;
   }
 
   .fraction-container {
@@ -511,7 +555,7 @@
     font-size: 6 * $size-factor;
     color: #00ff99;
     font-family: monospace;
-    line-height: 1;
+    line-height: 2;
   }
 
   .fraction-denominator {
