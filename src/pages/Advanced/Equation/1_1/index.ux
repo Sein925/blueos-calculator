@@ -95,7 +95,7 @@
   function getFractionLine(len) {
     let line = '';
     for (let i = 0; i < len; i++) {
-      line += '─';
+      line += '—';
     }
     return line;
   }
@@ -229,6 +229,7 @@
     border-radius: 8 * $size-factor;
     border-left-width: 3px;
     border-left-color: #00ff99;
+    margin-bottom: 16px;
   }
 
   .result-content {

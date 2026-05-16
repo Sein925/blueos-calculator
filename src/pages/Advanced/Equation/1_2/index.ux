@@ -43,20 +43,177 @@
         <text class="solve-btn-text">求解</text>
       </div>
       
-      <div if="{{ result !== '' }}" class="result-box">
-        <text class="result-text">{{ result }}</text>
+      <div if="{{ showResult }}" class="result-box">
+        <text if="{{ showSimpleText }}" class="result-text">{{ simpleText }}</text>
+        
+        <text if="{{ showRoots }}" class="result-text">{{ deltaText }}</text>
+        <text if="{{ showRoots }}" class="result-text">{{ rootsLabel }}</text>
+        
+        <div if="{{ showRoots }}" class="result-row">
+          <text if="{{ !isDoubleRoot }}" class="result-label">x₁ = </text>
+          <text else class="result-label">x₁ = x₂ = </text>
+          <div if="{{ x1IsInt }}" class="result-content">
+            <text class="result-value">{{ x1IntValue }}</text>
+          </div>
+          <div else if="{{ x1IsFrac }}" class="result-content">
+            <div class="fraction-container">
+              <text class="fraction-numerator">{{ x1Num }}</text>
+              <text class="fraction-line">{{ x1Line }}</text>
+              <text class="fraction-denominator">{{ x1Den }}</text>
+            </div>
+          </div>
+          <div else if="{{ x1IsRad }}" class="result-content">
+            <div if="{{ x1RadIsDenOne }}" class="result-content">
+              <text class="result-value">{{ x1RadNumStr }}</text>
+            </div>
+            <div else class="fraction-container">
+              <text class="fraction-numerator">{{ x1RadNumStr }}</text>
+              <text class="fraction-line">{{ x1RadLine }}</text>
+              <text class="fraction-denominator">{{ x1RadDen }}</text>
+            </div>
+          </div>
+        </div>
+        
+        <div if="{{ showX2 }}" class="result-row">
+          <text class="result-label">x₂ = </text>
+          <div if="{{ x2IsInt }}" class="result-content">
+            <text class="result-value">{{ x2IntValue }}</text>
+          </div>
+          <div else if="{{ x2IsFrac }}" class="result-content">
+            <div class="fraction-container">
+              <text class="fraction-numerator">{{ x2Num }}</text>
+              <text class="fraction-line">{{ x2Line }}</text>
+              <text class="fraction-denominator">{{ x2Den }}</text>
+            </div>
+          </div>
+          <div else if="{{ x2IsRad }}" class="result-content">
+            <div if="{{ x2RadIsDenOne }}" class="result-content">
+              <text class="result-value">{{ x2RadNumStr }}</text>
+            </div>
+            <div else class="fraction-container">
+              <text class="fraction-numerator">{{ x2RadNumStr }}</text>
+              <text class="fraction-line">{{ x2RadLine }}</text>
+              <text class="fraction-denominator">{{ x2RadDen }}</text>
+            </div>
+          </div>
+        </div>
       </div>
     </list-item>
   </list>
 </template>
 
 <script>
+  function gcd(a, b) {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while (b) {
+      const temp = a;
+      a = b;
+      b = temp % b;
+    }
+    return a;
+  }
+
+  function gcd3(a, b, c) {
+    return gcd(gcd(Math.abs(a), Math.abs(b)), Math.abs(c));
+  }
+
+  function simplifyFraction(numerator, denominator) {
+    if (numerator === 0) return { num: 0, den: 1 };
+    
+    const g = gcd(numerator, denominator);
+    let num = numerator / g;
+    let den = denominator / g;
+    
+    if (den < 0) {
+      num = -num;
+      den = -den;
+    }
+    
+    return { num, den };
+  }
+
+  function getFractionLine(len) {
+    let line = '';
+    for (let i = 0; i < len; i++) {
+      line += '─';
+    }
+    return line;
+  }
+
+  function isInteger(num) {
+    return Math.abs(num - Math.round(num)) < 1e-10;
+  }
+
+  function simplifyRadical(n) {
+    let outside = 1;
+    let inside = Math.abs(Math.round(n));
+    
+    for (let i = 2; i * i <= inside; i++) {
+      while (inside % (i * i) === 0) {
+        outside *= i;
+        inside /= (i * i);
+      }
+    }
+    
+    return { coeff: outside, radicand: inside };
+  }
+
+  function formatRadicalNum(N, K, D) {
+    let str = '';
+    if (N !== 0) {
+      str += N.toString();
+    }
+    
+    if (K > 0) {
+      if (N !== 0) str += ' + ';
+      if (K !== 1) str += K.toString();
+      str += '√' + D.toString();
+    } else if (K < 0) {
+      if (N !== 0) str += ' − ';
+      else str += '−';
+      if (K !== -1) str += (-K).toString();
+      str += '√' + D.toString();
+    }
+    
+    return str || '0';
+  }
+
   export default {
     data: {
       a: '',
       b: '',
       c: '',
-      result: '',
+      showResult: false,
+      showSimpleText: false,
+      simpleText: '',
+      showRoots: false,
+      deltaText: '',
+      rootsLabel: '',
+      isDoubleRoot: false,
+      x1IsInt: false,
+      x1IntValue: '',
+      x1IsFrac: false,
+      x1Num: '',
+      x1Den: '',
+      x1Line: '',
+      x1IsRad: false,
+      x1RadNumStr: '',
+      x1RadIsDenOne: false,
+      x1RadDen: '',
+      x1RadLine: '',
+      showX2: false,
+      x2IsInt: false,
+      x2IntValue: '',
+      x2IsFrac: false,
+      x2Num: '',
+      x2Den: '',
+      x2Line: '',
+      x2IsRad: false,
+      x2RadNumStr: '',
+      x2RadIsDenOne: false,
+      x2RadDen: '',
+      x2RadLine: '',
     },
 
     onInit() {},
@@ -71,54 +228,173 @@
       this.c = evt.value
     },
 
+    formatNumber(num) {
+      if (!isFinite(num)) return 'Error'
+      if (Math.abs(num) < 1e-10) return '0'
+      if (isInteger(num)) {
+        return Math.round(num).toString()
+      }
+      const str = num.toPrecision(10)
+      return parseFloat(str).toString()
+    },
+
     solve() {
       const a = parseFloat(this.a)
       const b = parseFloat(this.b)
       const c = parseFloat(this.c)
 
+      this.showResult = true
+      this.showSimpleText = false
+      this.showRoots = false
+      this.isDoubleRoot = false
+
       if (isNaN(a) || isNaN(b) || isNaN(c)) {
-        this.result = '请输入有效的数字'
+        this.showSimpleText = true
+        this.simpleText = '请输入有效的数字'
         return
       }
 
       if (a === 0) {
+        this.showSimpleText = true
         if (b === 0) {
           if (c === 0) {
-            this.result = '方程有无穷多解'
+            this.simpleText = '方程有无穷多解'
           } else {
-            this.result = '方程无解'
+            this.simpleText = '方程无解'
           }
         } else {
-          const x = -c / b
-          this.result = `化为一元一次方程：x = ${this.formatNumber(x)}`
+          this.simpleText = '化为一元一次方程：x = ' + this.formatNumber(-c / b)
         }
         return
       }
 
       const delta = b * b - 4 * a * c
+      this.showRoots = true
+      this.deltaText = 'Δ = ' + this.formatNumber(delta)
 
-      if (delta > 0) {
-        const x1 = (-b + Math.sqrt(delta)) / (2 * a)
-        const x2 = (-b - Math.sqrt(delta)) / (2 * a)
-        this.result = `Δ = ${this.formatNumber(delta)} > 0\n有两个不等实根：\nx₁ = ${this.formatNumber(x1)}\nx₂ = ${this.formatNumber(x2)}`
-      } else if (delta === 0) {
-        const x = -b / (2 * a)
-        this.result = `Δ = 0\n有两个相等实根：\nx₁ = x₂ = ${this.formatNumber(x)}`
-      } else {
+      const sqrtDelta = Math.sqrt(delta)
+
+      if (delta < 0) {
+        this.showRoots = false
+        this.showSimpleText = true
         const realPart = -b / (2 * a)
         const imagPart = Math.sqrt(-delta) / (2 * a)
-        this.result = `Δ = ${this.formatNumber(delta)} < 0\n无实根，有两个共轭复根：\nx₁ = ${this.formatNumber(realPart)} + ${this.formatNumber(imagPart)}i\nx₂ = ${this.formatNumber(realPart)} - ${this.formatNumber(imagPart)}i`
+        this.simpleText = 'Δ = ' + this.formatNumber(delta) + ' < 0\n无实根，有两个共轭复根：\nx₁ = ' + this.formatNumber(realPart) + ' + ' + this.formatNumber(imagPart) + 'i\nx₂ = ' + this.formatNumber(realPart) + ' - ' + this.formatNumber(imagPart) + 'i'
+        return
       }
-    },
 
-    formatNumber(num) {
-      if (!isFinite(num)) return 'Error'
-      if (Math.abs(num) < 1e-10) return '0'
-      if (Math.abs(num - Math.round(num)) < 1e-10) {
-        return Math.round(num).toString()
+      this.x1IsInt = false
+      this.x1IsFrac = false
+      this.x1IsRad = false
+      this.x2IsInt = false
+      this.x2IsFrac = false
+      this.x2IsRad = false
+
+      if (isInteger(sqrtDelta)) {
+        const sqrtD = Math.round(sqrtDelta)
+
+        if (delta > 0) {
+          this.rootsLabel = '有两个不等实根：'
+          this.showX2 = true
+
+          const frac1 = simplifyFraction(-b + sqrtD, 2 * a)
+          if (frac1.den === 1) {
+            this.x1IsInt = true
+            this.x1IntValue = frac1.num.toString()
+          } else {
+            this.x1IsFrac = true
+            this.x1Num = frac1.num.toString()
+            this.x1Den = frac1.den.toString()
+            const maxLen1 = Math.max(this.x1Num.length, this.x1Den.length)
+            this.x1Line = getFractionLine(maxLen1)
+          }
+
+          const frac2 = simplifyFraction(-b - sqrtD, 2 * a)
+          if (frac2.den === 1) {
+            this.x2IsInt = true
+            this.x2IntValue = frac2.num.toString()
+          } else {
+            this.x2IsFrac = true
+            this.x2Num = frac2.num.toString()
+            this.x2Den = frac2.den.toString()
+            const maxLen2 = Math.max(this.x2Num.length, this.x2Den.length)
+            this.x2Line = getFractionLine(maxLen2)
+          }
+        } else {
+          this.rootsLabel = '有两个相等实根：'
+          this.showX2 = false
+          this.isDoubleRoot = true
+
+          const frac = simplifyFraction(-b, 2 * a)
+          if (frac.den === 1) {
+            this.x1IsInt = true
+            this.x1IntValue = frac.num.toString()
+          } else {
+            this.x1IsFrac = true
+            this.x1Num = frac.num.toString()
+            this.x1Den = frac.den.toString()
+            const maxLen = Math.max(this.x1Num.length, this.x1Den.length)
+            this.x1Line = getFractionLine(maxLen)
+          }
+        }
+        return
       }
-      const str = num.toPrecision(10)
-      return parseFloat(str).toString()
+
+      const rad = simplifyRadical(delta)
+      const k = rad.coeff
+      const D = rad.radicand
+      const bInt = Math.round(b)
+      const a2Int = Math.round(2 * a)
+
+      const g = gcd3(bInt, k, a2Int)
+
+      let N = -bInt / g
+      let tK = k / g
+      let Den = a2Int / g
+
+      if (Den < 0) {
+        N = -N
+        tK = -tK
+        Den = -Den
+      }
+
+      const x1K = tK
+      const x2K = -tK
+
+      const x1NumStr = formatRadicalNum(N, x1K, D)
+      const x2NumStr = formatRadicalNum(N, x2K, D)
+
+      this.rootsLabel = delta > 0 ? '有两个不等实根：' : '有两个相等实根：'
+      this.isDoubleRoot = delta === 0
+
+      if (Den === 1) {
+        this.x1IsRad = true
+        this.x1RadNumStr = x1NumStr
+        this.x1RadIsDenOne = true
+      } else {
+        this.x1IsRad = true
+        this.x1RadNumStr = x1NumStr
+        this.x1RadDen = Den.toString()
+        const maxLen1 = Math.max(x1NumStr.length, Den.toString().length)
+        this.x1RadLine = getFractionLine(maxLen1)
+      }
+
+      if (delta > 0) {
+        this.showX2 = true
+        if (Den === 1) {
+          this.x2IsRad = true
+          this.x2RadNumStr = x2NumStr
+          this.x2RadIsDenOne = true
+        } else {
+          this.x2IsRad = true
+          this.x2RadNumStr = x2NumStr
+          this.x2RadDen = Den.toString()
+          const maxLen2 = Math.max(x2NumStr.length, Den.toString().length)
+          this.x2RadLine = getFractionLine(maxLen2)
+        }
+      } else {
+        this.showX2 = false
+      }
     },
   }
 </script>
@@ -177,11 +453,13 @@
 
   .result-box {
     width: 100%;
+    flex-direction: column;
     padding: 4 * $size-factor;
     background-color: rgba(0, 255, 153, 0.15);
     border-radius: 8 * $size-factor;
     border-left-width: 3px;
     border-left-color: #00ff99;
+    margin-bottom: 16px;
   }
 
   .result-text {
@@ -189,5 +467,58 @@
     color: #00ff99;
     font-family: monospace;
     line-height: 12 * $size-factor;
+  }
+
+  .result-row {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+  }
+
+  .result-content {
+    display: flex;
+    align-items: center;
+  }
+
+  .result-label {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+    white-space: nowrap;
+  }
+
+  .result-value {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+  }
+
+  .fraction-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .fraction-numerator {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+    padding-bottom: 2px;
+    text-align: center;
+  }
+
+  .fraction-line {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+    line-height: 1;
+  }
+
+  .fraction-denominator {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+    padding-top: 2px;
+    text-align: center;
   }
 </style>
