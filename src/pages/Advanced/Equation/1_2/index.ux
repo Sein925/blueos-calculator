@@ -11,9 +11,7 @@
 
     <list-item class="content">
       <text class="equation-form">ax² + bx + c = 0</text>
-      <text if="{{ showExactModeTip }}" class="description">
-        您已开启精确模式，请避免输入过大数字以防设备卡顿
-      </text>
+      <text if="{{ showExactModeTip }}" class="description">您已开启精确模式，请避免输入过大数字以防设备卡顿</text>
 
       <div class="input-row">
         <text class="input-label">a =</text>

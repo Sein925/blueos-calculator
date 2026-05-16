@@ -4,7 +4,7 @@
       <div class="swiper-slide advanced-panel">
         <list class="content" title="true">
           <list-item class="title">
-            <text class="iconfont">&#xe629;</text>
+            <!-- <text class="iconfont">&#xe629;</text> -->
             <text
               class="section-title"
               style="font-size: 45px; margin-top: 10px">
@@ -21,7 +21,7 @@
               <text class="feature-name">方程求解</text>
             </div>
           </list-item>
-          <list-item type="card" style="margin-top: 3 * $size-factor">
+          <list-item type="card" style="margin-top: 3 * $size-factor;margin-bottom: 80px;">
             <div class="feature-card" onclick="openGraphPage">
               <text class="feature-name">函数绘图</text>
             </div>
@@ -732,19 +732,19 @@
     .title {
       @media (device: watch-round) {
         @include flex-box-mixins(column, center, center);
-
-        .iconfont {
-          margin-left: 10px;
-          margin-bottom: -10px;
-          font-size: 66px;
-        }
       }
     }
 
     .iconfont {
       font-size: 56px;
       color: $light-gray;
-      margin: 10px 20px 0 -10px;
+      margin: 10px -10px 0 20px;
+
+      @media (device: watch-round) {
+        margin-left: 10px;
+        margin-bottom: -10px;
+        font-size: 66px;
+      }
     }
 
     .feature-card {
