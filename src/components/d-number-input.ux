@@ -28,7 +28,7 @@
             <text>9</text>
           </div>
           <div class="keypad-btn keypad-btn-fn" onclick="toggleSign">
-            <text>±</text>
+            <text class="iconfont" style="font-size: 34px">&#xe622;</text>
           </div>
           <div class="keypad-btn" onclick="inputDigit('4')">
             <text>4</text>

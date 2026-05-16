@@ -560,6 +560,10 @@
     width: 100%;
     flex-direction: column;
     padding: 0 2 * $size-factor 4 * $size-factor 2 * $size-factor;
+
+    @media (device: watch-round) {
+      margin-bottom: 50px;
+    }
   }
 
   .input-container {
