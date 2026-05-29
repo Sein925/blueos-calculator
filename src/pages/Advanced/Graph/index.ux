@@ -7,7 +7,6 @@
     </list-item>
 
     <list-item class="content">
-      <!-- 输入页面 -->
       <div show="{{ currentStep === 'input' }}" class="input-container">
         <div class="input-display">
           <text class="y-label">y =</text>
@@ -17,92 +16,72 @@
         </div>
 
         <div class="buttons-container">
-          <!-- 科学函数行 - 仅 2nd 模式下显示 -->
-          <div class="button-row" show="{{ showAdvanced }}">
-            <div class="btn btn-scientific" onclick="inputPreset('sin(x)')">
-              <text>sin</text>
-            </div>
-            <div class="btn btn-scientific" onclick="inputPreset('cos(x)')">
-              <text>cos</text>
-            </div>
-            <div class="btn btn-scientific" onclick="inputPreset('tan(x)')">
-              <text>tan</text>
-            </div>
-            <div class="btn btn-scientific" onclick="inputPreset('x^2')">
-              <text>x²</text>
-            </div>
-          </div>
-
-          <div class="button-row" show="{{ showAdvanced }}">
-            <div class="btn btn-scientific" onclick="inputPreset('sqrt(x)')">
-              <text>√x</text>
-            </div>
-            <div class="btn btn-scientific" onclick="inputPreset('log(x)')">
-              <text>log</text>
-            </div>
-            <div class="btn btn-scientific" onclick="inputPreset('ln(x)')">
-              <text>ln</text>
-            </div>
-            <div class="btn btn-scientific" onclick="inputPreset('exp(x)')">
-              <text>e^x</text>
-            </div>
-          </div>
-
-          <div class="button-row" show="{{ showAdvanced }}">
-            <div class="btn btn-scientific" onclick="inputPreset('abs(x)')">
-              <text>|x|</text>
-            </div>
-            <div class="btn btn-scientific" onclick="inputPreset('pi')">
-              <text>π</text>
-            </div>
-            <div class="btn btn-scientific" onclick="inputPreset('(')">
-              <text>(</text>
-            </div>
-            <div class="btn btn-scientific" onclick="inputPreset(')')">
-              <text>)</text>
-            </div>
-          </div>
-
-          <!-- 数字和操作符行 - 默认模式下显示 -->
-          <div class="button-row" show="{{ !showAdvanced }}">
-            <div class="btn btn-number" onclick="inputChar('7')">
+          <div class="button-row">
+            <div class="btn btn-number" show="{{ !showAdvanced }}" onclick="inputChar('7')">
               <text>7</text>
             </div>
-            <div class="btn btn-number" onclick="inputChar('8')">
+            <div class="btn btn-number" show="{{ !showAdvanced }}" onclick="inputChar('8')">
               <text>8</text>
             </div>
-            <div class="btn btn-number" onclick="inputChar('9')">
+            <div class="btn btn-number" show="{{ !showAdvanced }}" onclick="inputChar('9')">
               <text>9</text>
+            </div>
+            <div class="btn btn-scientific" show="{{ showAdvanced }}" onclick="inputPreset('sin(x)')">
+              <text>sin</text>
+            </div>
+            <div class="btn btn-scientific" show="{{ showAdvanced }}" onclick="inputPreset('cos(x)')">
+              <text>cos</text>
+            </div>
+            <div class="btn btn-scientific" show="{{ showAdvanced }}" onclick="inputPreset('tan(x)')">
+              <text>tan</text>
             </div>
             <div class="btn btn-operator" onclick="inputChar('*')">
               <text>×</text>
             </div>
           </div>
 
-          <div class="button-row" show="{{ !showAdvanced }}">
-            <div class="btn btn-number" onclick="inputChar('4')">
+          <div class="button-row">
+            <div class="btn btn-number" show="{{ !showAdvanced }}" onclick="inputChar('4')">
               <text>4</text>
             </div>
-            <div class="btn btn-number" onclick="inputChar('5')">
+            <div class="btn btn-number" show="{{ !showAdvanced }}" onclick="inputChar('5')">
               <text>5</text>
             </div>
-            <div class="btn btn-number" onclick="inputChar('6')">
+            <div class="btn btn-number" show="{{ !showAdvanced }}" onclick="inputChar('6')">
               <text>6</text>
+            </div>
+            <div class="btn btn-scientific" show="{{ showAdvanced }}" onclick="inputPreset('sqrt(x)')">
+              <text>√x</text>
+            </div>
+            <div class="btn btn-scientific" show="{{ showAdvanced }}" onclick="inputPreset('log(x)')">
+              <text>log</text>
+            </div>
+            <div class="btn btn-scientific" show="{{ showAdvanced }}" onclick="inputPreset('ln(x)')">
+              <text>ln</text>
             </div>
             <div class="btn btn-operator" onclick="inputChar('/')">
               <text>÷</text>
             </div>
           </div>
 
-          <div class="button-row" show="{{ !showAdvanced }}">
-            <div class="btn btn-number" onclick="inputChar('1')">
+          <div class="button-row">
+            <div class="btn btn-number" show="{{ !showAdvanced }}" onclick="inputChar('1')">
               <text>1</text>
             </div>
-            <div class="btn btn-number" onclick="inputChar('2')">
+            <div class="btn btn-number" show="{{ !showAdvanced }}" onclick="inputChar('2')">
               <text>2</text>
             </div>
-            <div class="btn btn-number" onclick="inputChar('3')">
+            <div class="btn btn-number" show="{{ !showAdvanced }}" onclick="inputChar('3')">
               <text>3</text>
+            </div>
+            <div class="btn btn-scientific" show="{{ showAdvanced }}" onclick="inputPreset('abs(x)')">
+              <text>|x|</text>
+            </div>
+            <div class="btn btn-scientific" show="{{ showAdvanced }}" onclick="inputPreset('pi')">
+              <text>π</text>
+            </div>
+            <div class="btn btn-scientific" show="{{ showAdvanced }}" onclick="inputPreset('exp(x)')">
+              <text>e^x</text>
             </div>
             <div class="btn btn-operator" onclick="inputChar('+')">
               <text>+</text>
@@ -110,14 +89,23 @@
           </div>
 
           <div class="button-row">
-            <div class="btn btn-x" onclick="inputChar('x')">
+            <div class="btn btn-x" show="{{ !showAdvanced }}" onclick="inputChar('x')">
               <text>x</text>
             </div>
-            <div class="btn btn-number" onclick="inputChar('0')">
+            <div class="btn btn-number" show="{{ !showAdvanced }}" onclick="inputChar('0')">
               <text>0</text>
             </div>
-            <div class="btn btn-function" onclick="inputChar('^')">
+            <div class="btn btn-function" show="{{ !showAdvanced }}" onclick="inputChar('^')">
               <text>^</text>
+            </div>
+            <div class="btn btn-scientific" show="{{ showAdvanced }}" onclick="inputPreset('x^2')">
+              <text>x²</text>
+            </div>
+            <div class="btn btn-scientific" show="{{ showAdvanced }}" onclick="inputPreset('(')">
+              <text>(</text>
+            </div>
+            <div class="btn btn-scientific" show="{{ showAdvanced }}" onclick="inputPreset(')')">
+              <text>)</text>
             </div>
             <div class="btn btn-operator" onclick="inputChar('-')">
               <text>-</text>
@@ -667,6 +655,7 @@
   .button-row {
     width: 100%;
     @include flex-box-mixins(row, space-between, center);
+    gap: 8px;
   }
 
   .btn {

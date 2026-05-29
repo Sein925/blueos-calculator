@@ -4,7 +4,7 @@
       <div class="swiper-slide advanced-panel">
         <list class="content" title="true">
           <list-item class="title">
-            <!-- <text class="iconfont">&#xe629;</text> -->
+            <text class="title-icon">&#xe629;</text>
             <text
               class="section-title"
               style="font-size: 45px; margin-top: 10px">
@@ -13,16 +13,21 @@
           </list-item>
           <!-- <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="openDateCalculator">
+              <text class="feature-icon">&#xe600;</text>
               <text class="feature-name">日期计算</text>
             </div>
           </list-item> -->
           <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="openEquationPage">
+              <text class="feature-icon">&#xe66f;</text>
               <text class="feature-name">方程求解</text>
             </div>
           </list-item>
-          <list-item type="card" style="margin-top: 3 * $size-factor;margin-bottom: 80px;">
+          <list-item
+            type="card"
+            style="margin-top: 3 * $size-factor; margin-bottom: 80px">
             <div class="feature-card" onclick="openGraphPage">
+              <text class="feature-icon">&#xe63f;</text>
               <text class="feature-name">函数绘图</text>
             </div>
           </list-item>
@@ -735,10 +740,11 @@
       }
     }
 
-    .iconfont {
+    .title-icon {
       font-size: 56px;
       color: $light-gray;
       margin: 10px -10px 0 20px;
+      font-family: "iconfont";
 
       @media (device: watch-round) {
         margin-left: 10px;
@@ -757,6 +763,13 @@
 
       &:active {
         opacity: 0.4;
+      }
+
+      .feature-icon {
+        font-size: 56px;
+        color: #00ff99;
+        margin: -12px 12px -12px 0;
+        font-family: "iconfont";
       }
 
       .feature-name {

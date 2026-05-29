@@ -313,6 +313,13 @@
       this.showSimpleText = false
       this.showRoots = false
       this.isDoubleRoot = false
+      this.showX2 = false
+      this.x1IsInt = false
+      this.x1IsFrac = false
+      this.x1IsRad = false
+      this.x2IsInt = false
+      this.x2IsFrac = false
+      this.x2IsRad = false
 
       if (isNaN(a) || isNaN(b) || isNaN(c)) {
         this.showSimpleText = true
