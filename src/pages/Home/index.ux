@@ -7,7 +7,7 @@
             <text class="title-icon">&#xe629;</text>
             <text
               class="section-title"
-              style="font-size: 45px; margin-top: 10px">
+              style="font-size: 45px; margin-left: 48px">
               高级功能
             </text>
           </list-item>
@@ -17,7 +17,7 @@
               <text class="feature-name">日期计算</text>
             </div>
           </list-item> -->
-          <list-item type="card" style="margin-top: 3 * $size-factor">
+          <list-item type="card" style="margin-top: 5 * $size-factor">
             <div class="feature-card" onclick="openEquationPage">
               <text class="feature-icon">&#xe66f;</text>
               <text class="feature-name">方程求解</text>
@@ -735,22 +735,14 @@
     }
 
     .title {
-      @media (device: watch-round) {
-        @include flex-box-mixins(column, center, center);
-      }
+      @include flex-box-mixins(column, center, center);
     }
 
     .title-icon {
-      font-size: 56px;
+      font-size: 66px;
       color: $light-gray;
-      margin: 10px -10px 0 20px;
-      font-family: "iconfont";
-
-      @media (device: watch-round) {
-        margin-left: 10px;
-        margin-bottom: -10px;
-        font-size: 66px;
-      }
+      margin: 10px 0 -20px 0;
+      font-family: 'iconfont';
     }
 
     .feature-card {
@@ -769,7 +761,7 @@
         font-size: 56px;
         color: #00ff99;
         margin: -12px 12px -12px 0;
-        font-family: "iconfont";
+        font-family: 'iconfont';
       }
 
       .feature-name {
