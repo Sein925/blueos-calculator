@@ -6,7 +6,7 @@
 <template>
   <list class="wrapper" title="true">
     <list-item>
-      <d-back value="统计"></d-back>
+      <d-back value="统计分析"></d-back>
     </list-item>
     <list-item type="card" class="content">
       <text class="section-title">数据输入</text>

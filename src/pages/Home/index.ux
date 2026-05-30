@@ -32,7 +32,7 @@
             style="margin-top: 3 * $size-factor; margin-bottom: 80px">
             <div class="feature-card" onclick="openStatisticsPage">
               <text class="feature-icon">&#xe644;</text>
-              <text class="feature-name">统计计算</text>
+              <text class="feature-name">统计分析</text>
             </div>
           </list-item>
         </list>
