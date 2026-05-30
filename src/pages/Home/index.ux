@@ -21,10 +21,18 @@
           </list-item>
           <list-item
             type="card"
-            style="margin-top: 3 * $size-factor; margin-bottom: 80px">
+            style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="openGraphPage">
               <text class="feature-icon">&#xe63f;</text>
               <text class="feature-name">函数绘图</text>
+            </div>
+          </list-item>
+          <list-item
+            type="card"
+            style="margin-top: 3 * $size-factor; margin-bottom: 80px">
+            <div class="feature-card" onclick="openStatisticsPage">
+              <text class="feature-icon">&#xe644;</text>
+              <text class="feature-name">统计计算</text>
             </div>
           </list-item>
         </list>
@@ -699,6 +707,12 @@
     openGraphPage() {
       global.router.push({
         uri: 'pages/Advanced/Graph',
+      })
+    },
+
+    openStatisticsPage() {
+      global.router.push({
+        uri: 'pages/Advanced/Statistics',
       })
     },
   }

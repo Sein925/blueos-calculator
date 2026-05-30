@@ -1,0 +1,394 @@
+<import name="d-back" src="./../../../components/d-back"></import>
+<import
+  name="d-number-input"
+  src="./../../../components/d-number-input"></import>
+
+<template>
+  <list class="wrapper" title="true">
+    <list-item>
+      <d-back value="统计"></d-back>
+    </list-item>
+    <list-item type="card" class="content">
+      <text class="section-title">数据输入</text>
+      <div class="input-row">
+        <text class="input-label">数据:</text>
+        <d-number-input
+          value="{{ currentValue }}"
+          label="输入数据"
+          placeholder="点击输入"
+          @change="handleInputChange"></d-number-input>
+      </div>
+      <div class="btn-row">
+        <div class="add-btn" onclick="addData">
+          <text class="add-btn-text">添加</text>
+        </div>
+        <div
+          class="clear-btn"
+          onclick="clearAll"
+          style="background-color: rgba(255, 100, 100, 0.2)">
+          <text class="clear-btn-text">清空</text>
+        </div>
+      </div>
+      <div class="data-list" show="{{ dataList.length > 0 }}">
+        <text class="data-title">已输入数据:</text>
+        <div class="data-items">
+          <text
+            for="(index, item) in dataList"
+            class="data-item"
+            onclick="removeData(index)">
+            {{ item }} ×
+          </text>
+        </div>
+      </div>
+    </list-item>
+    <list-item type="card" class="content">
+      <text class="section-title">统计结果</text>
+      <div class="result-list" show="{{ dataList.length > 0 }}">
+        <div class="result-item">
+          <text class="result-label">数据个数:</text>
+          <marquee
+            class="result-value"
+            double-ended-shadow-color="#191919"
+            style="width: 240px">
+            {{ results.count }}
+          </marquee>
+        </div>
+        <div class="result-item">
+          <text class="result-label">求和:</text>
+          <marquee class="result-value" double-ended-shadow-color="#191919">
+            {{ results.sum }}
+          </marquee>
+        </div>
+        <div class="result-item">
+          <text class="result-label">平均数:</text>
+          <marquee class="result-value" double-ended-shadow-color="#191919">
+            {{ results.mean }}
+          </marquee>
+        </div>
+        <div class="result-item">
+          <text class="result-label">中位数:</text>
+          <marquee class="result-value" double-ended-shadow-color="#191919">
+            {{ results.median }}
+          </marquee>
+        </div>
+        <div class="result-item">
+          <text class="result-label">众数:</text>
+          <marquee class="result-value" double-ended-shadow-color="#191919">
+            {{ results.mode }}
+          </marquee>
+        </div>
+        <div class="result-item">
+          <text class="result-label">最大值:</text>
+          <marquee class="result-value" double-ended-shadow-color="#191919">
+            {{ results.max }}
+          </marquee>
+        </div>
+        <div class="result-item">
+          <text class="result-label">最小值:</text>
+          <marquee class="result-value" double-ended-shadow-color="#191919">
+            {{ results.min }}
+          </marquee>
+        </div>
+        <div class="result-item">
+          <text class="result-label">极差:</text>
+          <marquee class="result-value" double-ended-shadow-color="#191919">
+            {{ results.range }}
+          </marquee>
+        </div>
+        <div class="result-item">
+          <text class="result-label">方差:</text>
+          <marquee class="result-value" double-ended-shadow-color="#191919">
+            {{ results.variance }}
+          </marquee>
+        </div>
+        <div class="result-item">
+          <text class="result-label">标准差:</text>
+          <marquee class="result-value" double-ended-shadow-color="#191919">
+            {{ results.stdDev }}
+          </marquee>
+        </div>
+      </div>
+      <div class="empty-hint" show="{{ dataList.length === 0 }}">
+        <text class="empty-text">请先输入数据</text>
+      </div>
+    </list-item>
+  </list>
+</template>
+
+<script>
+  function round(num, decimals = 4) {
+    const factor = Math.pow(10, decimals)
+    return Math.round(num * factor) / factor
+  }
+
+  export default {
+    data: {
+      currentValue: '0',
+      dataList: [],
+      results: {
+        count: 0,
+        sum: 0,
+        mean: 0,
+        mode: '-',
+        max: 0,
+        min: 0,
+        range: 0,
+        variance: 0,
+        stdDev: 0,
+      },
+    },
+
+    onInit() {},
+
+    handleInputChange(e) {
+      this.currentValue = e.value
+    },
+
+    addData() {
+      const value = parseFloat(this.currentValue)
+      if (isNaN(value)) {
+        return
+      }
+
+      this.dataList = [...this.dataList, this.currentValue]
+      this.calculate()
+    },
+
+    removeData(index) {
+      this.dataList.splice(index, 1)
+      this.calculate()
+    },
+
+    clearAll() {
+      this.dataList = []
+      this.currentValue = '0'
+      this.calculate()
+    },
+
+    calculate() {
+      if (this.dataList.length === 0) {
+        this.results = {
+          count: 0,
+          sum: 0,
+          mean: 0,
+          mode: '-',
+          max: 0,
+          min: 0,
+          range: 0,
+          variance: 0,
+          stdDev: 0,
+        }
+        return
+      }
+
+      const data = this.dataList.map((x) => parseFloat(x)).sort((a, b) => a - b)
+      const n = data.length
+
+      const sum = data.reduce((acc, val) => acc + val, 0)
+      const mean = sum / n
+      const max = data[n - 1]
+      const min = data[0]
+      const range = max - min
+
+      let median
+      if (n % 2 === 0) {
+        median = (data[n / 2 - 1] + data[n / 2]) / 2
+      } else {
+        median = data[Math.floor(n / 2)]
+      }
+
+      const frequency = {}
+      let maxFreq = 0
+      let modes = []
+      data.forEach((num) => {
+        frequency[num] = (frequency[num] || 0) + 1
+        if (frequency[num] > maxFreq) {
+          maxFreq = frequency[num]
+          modes = [num]
+        } else if (frequency[num] === maxFreq && !modes.includes(num)) {
+          modes.push(num)
+        }
+      })
+      const mode = modes.length === n ? '-' : modes.join(', ')
+
+      const variance =
+        data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n
+      const stdDev = Math.sqrt(variance)
+
+      this.results = {
+        count: n,
+        sum: round(sum),
+        mean: round(mean),
+        median: round(median),
+        mode: mode,
+        max: round(max),
+        min: round(min),
+        range: round(range),
+        variance: round(variance),
+        stdDev: round(stdDev),
+      }
+    },
+  }
+</script>
+
+<style lang="scss">
+  @import './../../../assets/styles/style.scss';
+
+  .wrapper {
+    width: 100%;
+  }
+
+  .content {
+    width: 100%;
+    padding: 10px 10px;
+    flex-direction: column;
+  }
+
+  .section-title {
+    font-size: 8 * $size-factor;
+    color: $white;
+    font-weight: bold;
+    margin-left: 12px;
+
+    @media (device: watch-round) {
+      text-align: center;
+      margin-left: 0;
+    }
+  }
+
+  .input-row {
+    width: 100%;
+    @include flex-box-mixins(row, space-between, center);
+    margin-top: 20px;
+  }
+
+  .input-label {
+    font-size: 6.4 * $size-factor;
+    color: white;
+    width: 80px;
+    margin: 0 2 * $size-factor;
+  }
+
+  .btn-row {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+
+  .add-btn {
+    flex: 1;
+    padding: 3 * $size-factor 0;
+    background-color: $brand;
+    margin-right: 4 * $size-factor;
+    border-radius: 8 * $size-factor;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    &:active {
+      opacity: 0.4;
+    }
+
+    .add-btn-text {
+      font-size: 8 * $size-factor;
+      color: $white;
+      font-weight: bold;
+    }
+  }
+
+  .clear-btn {
+    flex: 1;
+    padding: 3 * $size-factor 0;
+    border-radius: 8 * $size-factor;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    &:active {
+      opacity: 0.4;
+    }
+
+    .clear-btn-text {
+      font-size: 8 * $size-factor;
+      color: #ff6464;
+      font-weight: bold;
+    }
+  }
+
+  .data-list {
+    width: 100%;
+    flex-direction: column;
+    margin-top: 30px;
+    margin-left: 12px;
+  }
+
+  .data-title {
+    font-size: 6.4 * $size-factor;
+    color: $light-gray;
+    margin-bottom: 2 * $size-factor;
+  }
+
+  .data-items {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-bottom: 3 * $size-factor;
+  }
+
+  .data-item {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4 * $size-factor;
+    padding: 2 * $size-factor 3 * $size-factor;
+    font-size: 5.4 * $size-factor;
+    margin-right: 2 * $size-factor;
+    margin-bottom: 10px;
+    color: $white;
+
+    &:active {
+      opacity: 0.4;
+    }
+  }
+
+  .result-list {
+    width: 100%;
+    flex-direction: column;
+    margin-top: 10px;
+  }
+
+  .result-item {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8 * $size-factor;
+    padding: 24px 30px;
+    margin-bottom: 12px;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .result-label {
+    font-size: 6 * $size-factor;
+    color: $light-gray;
+  }
+
+  .result-value {
+    font-size: 7 * $size-factor;
+    color: $brand;
+    font-weight: bold;
+    text-align: right;
+    width: 270px;
+  }
+
+  .empty-hint {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 0;
+
+    .empty-text {
+      font-size: 6 * $size-factor;
+      color: $light-gray;
+    }
+  }
+</style>

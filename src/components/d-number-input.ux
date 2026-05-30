@@ -4,7 +4,7 @@
       <div class="input-value">
         <marquee
           class="input-text {{ (value === '0' || value === '' || !value) && placeholder ? 'placeholder' : '' }}"
-          lines="1">
+          double-ended-shadow-color="#262626">
           {{ displayValue }}
         </marquee>
       </div>
@@ -15,7 +15,9 @@
           <text class="keypad-title">{{ label }}</text>
         </div>
         <div class="keypad-display">
-          <marquee class="keypad-value" lines="1">{{ inputValue }}</marquee>
+          <marquee class="keypad-value" double-ended-shadow-color="#121212">
+            {{ inputValue }}
+          </marquee>
         </div>
         <div class="keypad-grid">
           <div class="keypad-btn" onclick="inputDigit('7')">
@@ -93,7 +95,10 @@
     },
 
     updateDisplayValue() {
-      if ((this.value === '0' || this.value === '' || !this.value) && this.placeholder) {
+      if (
+        (this.value === '0' || this.value === '' || !this.value) &&
+        this.placeholder
+      ) {
         this.displayValue = this.placeholder
       } else {
         this.displayValue = this.value

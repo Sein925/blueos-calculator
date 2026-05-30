@@ -67,6 +67,9 @@
       },
       "pages/Advanced/Graph": {
         "component": "index"
+      },
+      "pages/Advanced/Statistics": {
+        "component": "index"
       }
     }
   },
