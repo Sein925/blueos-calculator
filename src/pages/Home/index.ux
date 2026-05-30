@@ -5,11 +5,7 @@
         <list class="content" title="true">
           <list-item class="title">
             <text class="title-icon">&#xe629;</text>
-            <text
-              class="section-title"
-              style="font-size: 45px; margin-left: 48px">
-              高级功能
-            </text>
+            <text class="advanced-title">高级功能</text>
           </list-item>
           <!-- <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="openDateCalculator">
@@ -736,6 +732,16 @@
 
     .title {
       @include flex-box-mixins(column, center, center);
+
+      .advanced-title {
+        color: $light-gray;
+        font-size: 45px;
+        margin-top: 4 * $size-factor;
+
+        @media (device: watch-round) {
+          font-size: 40px;
+        }
+      }
     }
 
     .title-icon {
@@ -793,7 +799,7 @@
 
     @media (device: watch-round) {
       width: 100%;
-      margin-left: 10px;
+      margin-left: 0;
       text-align: center;
       font-size: 40px;
     }

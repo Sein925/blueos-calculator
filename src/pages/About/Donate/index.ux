@@ -2,7 +2,7 @@
 
 <template>
   <div class="wrapper">
-    <swiper vertical="true">
+    <swiper>
       <div class="content">
         <d-back></d-back>
         <qrcode
@@ -19,11 +19,39 @@
         <text>支付宝打赏</text>
         <text style="color: #999; font-size: 26px; margin-top: -2px">感谢您的支持</text>
       </div>
+      <list class="content" title="true">
+        <list-item>
+          <d-back></d-back>
+        </list-item>
+        <list-item class="list-header">
+          <text class="list-title">打赏名单</text>
+          <text class="list-desc">感谢以下支持者</text>
+        </list-item>
+        <list-item for="group in donorList" class="donor-group">
+          <text class="group-amount">¥{{ group.a }}</text>
+          <text class="donor-names">{{ group.n.join(', ') }}</text>
+        </list-item>
+        <list-item class="empty-hint" show="{{ donorList.length === 0 }}">
+          <text class="empty-text">暂无打赏记录</text>
+        </list-item>
+      </list>
     </swiper>
   </div>
 </template>
 
+<script>
+  import donorData from './../../../assets/data/donors.json';
+
+  export default {
+    data: {
+      donorList: donorData,
+    },
+  }
+</script>
+
 <style lang="scss">
+  @import './../../../assets/styles/style.scss';
+
   .wrapper {
     flex-direction: column;
 
@@ -41,6 +69,62 @@
         color: #fff;
         font-size: 36px;
         margin-top: 8px;
+      }
+
+      .list-header {
+        width: 100%;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 30px;
+
+        .list-title {
+          font-size: 9 * $size-factor;
+          font-weight: bold;
+          color: $white;
+          margin: 2 * $size-factor;
+        }
+
+        .list-desc {
+          font-size: 6 * $size-factor;
+          color: $gray;
+        }
+      }
+
+      .donor-group {
+        width: 100%;
+        background-color: #1a1a1a;
+        border-radius: 8 * $size-factor;
+        padding: 24px 30px;
+        margin-bottom: 18px;
+        flex-direction: column;
+        align-items: flex-start;
+
+        .group-amount {
+          font-size: 10 * $size-factor;
+          color: $brand;
+          font-weight: bold;
+          margin-bottom: 16px;
+        }
+
+        .donor-names {
+          width: 100%;
+          font-size: 6 * $size-factor;
+          color: $white;
+          font-weight: 500;
+        }
+      }
+
+      .empty-hint {
+        width: 100%;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 0;
+
+        .empty-text {
+          font-size: 6 * $size-factor;
+          color: $light-gray;
+        }
       }
     }
   }
