@@ -36,8 +36,22 @@
 <script>
   export default {
     data: {
-      appName: '科学计算器',
-      appVersion: '1.1.5',
+      appName: '',
+      appVersion: '',
+    },
+
+    onInit() {
+      try {
+        const appInfo = global.app.getInfo()
+        if (appInfo && appInfo.versionName) {
+          this.appVersion = appInfo.versionName
+        }
+        if (appInfo && appInfo.name) {
+          this.appName = appInfo.name
+        }
+      } catch (e) {
+        console.error('Failed to get app info:', e)
+      }
     },
 
     feedback() {

@@ -3,6 +3,7 @@ type Router = typeof import('@blueos.app.appmanager.router');
 type Storage = typeof import('@blueos.storage.storage');
 type Fetch = typeof import('@blueos.network.fetch');
 type Device = typeof import('@blueos.hardware.deviceInfo');
+type App = typeof import('@blueos.app.context');
 
 interface HistoryItem {
   expression: string;
@@ -14,6 +15,7 @@ declare const global: {
   storage: Storage;
   fetch: Fetch;
   device: Device;
+  app: App;
   calculatorHistory: HistoryItem[];
   angleMode: 'deg' | 'rad';
   equationOutputMode: 'exact' | 'decimal';

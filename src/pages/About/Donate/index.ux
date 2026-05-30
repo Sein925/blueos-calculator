@@ -2,16 +2,24 @@
 
 <template>
   <div class="wrapper">
-    <d-back></d-back>
-    <div class="content">
-      <qrcode
-        value="wxp://f2f0mNO7_JkaWQ0N7E0w4IfMNgbiO64MQRasJ6jB-Gu70DOZOnhfVZ0k1v8iFjZQfkX0"
-        type="circle"></qrcode>
-      <text>微信打赏</text>
-      <text style="color: #999; font-size: 26px; margin-top: -2px">
-        感谢您的支持
-      </text>
-    </div>
+    <swiper vertical="true">
+      <div class="content">
+        <d-back></d-back>
+        <qrcode
+          value="wxp://f2f0mNO7_JkaWQ0N7E0w4IfMNgbiO64MQRasJ6jB-Gu70DOZOnhfVZ0k1v8iFjZQfkX0"
+          type="circle"></qrcode>
+        <text>微信打赏</text>
+        <text style="color: #999; font-size: 26px; margin-top: -2px">感谢您的支持</text>
+      </div>
+      <div class="content">
+        <d-back></d-back>
+        <qrcode
+          value="https://qr.alipay.com/tsx15421dkgubkqrf52i502"
+          type="circle"></qrcode>
+        <text>支付宝打赏</text>
+        <text style="color: #999; font-size: 26px; margin-top: -2px">感谢您的支持</text>
+      </div>
+    </swiper>
   </div>
 </template>
 
