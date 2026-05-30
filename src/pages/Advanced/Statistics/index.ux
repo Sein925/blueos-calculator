@@ -101,7 +101,7 @@
             {{ results.variance }}
           </marquee>
         </div>
-        <div class="result-item">
+        <div class="result-item" style="margin-bottom: 50px;">
           <text class="result-label">标准差:</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.stdDev }}
