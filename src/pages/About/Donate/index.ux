@@ -27,12 +27,21 @@
           <text class="list-title">打赏名单</text>
           <text class="list-desc">感谢以下支持者</text>
         </list-item>
-        <list-item for="group in donorList" class="donor-group">
-          <text class="group-amount">¥{{ group.a }}</text>
-          <text class="donor-names">{{ group.n.join(', ') }}</text>
+        <list-item for="group in donorList" style="padding: 0 10px;">
+          <div class="donor-group">
+            <text class="group-amount">¥{{ group.a }}</text>
+            <text class="donor-names">{{ group.n.join(', ') }}</text>
+          </div>
         </list-item>
         <list-item class="empty-hint" show="{{ donorList.length === 0 }}">
           <text class="empty-text">暂无打赏记录</text>
+        </list-item>
+        <list-item class="total-item">
+          <div class="total-box">
+            <text class="total-label">累计打赏</text>
+            <text class="total-amount">¥{{ getTotalAmount() }}</text>
+            <text class="total-count">共 {{ getTotalCount() }} 位支持者</text>
+          </div>
         </list-item>
       </list>
     </swiper>
@@ -40,11 +49,34 @@
 </template>
 
 <script>
-  import donorData from './../../../assets/data/donors.json';
+  import donorData from './../../../assets/data/donors.json'
 
   export default {
     data: {
       donorList: donorData,
+    },
+
+    getTotalAmount() {
+      let amount = 0
+      for (let i = 0; i < this.donorList.length; i++) {
+        const item = this.donorList[i]
+        const a = parseFloat(item.a) || 0
+        const c = (item.n && item.n.length) || 0
+        amount += a * c
+      }
+      const cents = Math.round(amount * 100)
+      const integerPart = Math.floor(cents / 100)
+      const decimalPart = cents % 100
+      return integerPart + '.' + (decimalPart < 10 ? '0' + decimalPart : decimalPart)
+    },
+
+    getTotalCount() {
+      let count = 0
+      for (let i = 0; i < this.donorList.length; i++) {
+        const names = this.donorList[i].n
+        count += (names && names.length) || 0
+      }
+      return count
     },
   }
 </script>
@@ -103,7 +135,7 @@
           font-size: 10 * $size-factor;
           color: $brand;
           font-weight: bold;
-          margin-bottom: 16px;
+          margin-bottom: 6px;
         }
 
         .donor-names {
@@ -111,6 +143,7 @@
           font-size: 6 * $size-factor;
           color: $white;
           font-weight: 500;
+          margin-bottom: 14px;
         }
       }
 
@@ -124,6 +157,37 @@
         .empty-text {
           font-size: 6 * $size-factor;
           color: $light-gray;
+        }
+      }
+
+      .total-item {
+        width: 100%;
+        padding: 10px 10px 30px;
+
+        .total-box {
+          width: 100%;
+          background-color: #1a1a1a;
+          border-radius: 8 * $size-factor;
+          padding: 28px 30px;
+          @include flex-box-mixins(column, center, center);
+
+          .total-label {
+            font-size: 6 * $size-factor;
+            color: $gray;
+            margin-bottom: 6px;
+          }
+
+          .total-amount {
+            font-size: 14 * $size-factor;
+            color: $brand;
+            font-weight: bold;
+            margin-bottom: 6px;
+          }
+
+          .total-count {
+            font-size: 5 * $size-factor;
+            color: $light-gray;
+          }
         }
       }
     }

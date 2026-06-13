@@ -3,8 +3,7 @@
     <swiper
       class="guide-swiper"
       index="0"
-      indicator="true"
-      indicator-type="arc">
+      indicator="true">
       <div class="guide-slide">
         <div class="slide-content">
           <image
