@@ -1,0 +1,16 @@
+{
+  "name": "donors-admin",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "打赏名单管理后台：Vercel Serverless + GitHub Contents API 同步",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@octokit/rest": "^21.0.0",
+    "express": "^4.19.2"
+  }
+}

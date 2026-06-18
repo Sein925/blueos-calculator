@@ -3,4 +3,6 @@
 /dist
 /node_modules
 /backend/node_modules
+/tools/donors-admin/node_modules
+/tools/donors-admin/.env
 blue-os.zip

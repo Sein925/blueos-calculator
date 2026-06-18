@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>打赏名单管理</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- 登录页 -->
+    <div id="login-view" class="view login-view hidden">
+      <div class="login-card">
+        <h1>打赏名单管理</h1>
+        <p class="login-tip">请输入 Token 进入（启动服务时会在控制台打印）</p>
+        <input id="login-token" type="password" placeholder="Token" autocomplete="off" />
+        <button id="login-btn" class="btn-primary">进入</button>
+        <p id="login-error" class="error-msg"></p>
+      </div>
+    </div>
+
+    <!-- 主管理页 -->
+    <div id="main-view" class="view main-view hidden">
+      <header class="topbar">
+        <h1>打赏名单</h1>
+        <div class="topbar-right">
+          <span id="storage-info" class="storage-tag"></span>
+          <button id="logout-btn" class="btn-link">退出</button>
+        </div>
+      </header>
+
+      <section class="stats">
+        <div class="stat-card">
+          <div class="stat-label">累计金额</div>
+          <div class="stat-value" id="stat-amount">¥0.00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">支持者</div>
+          <div class="stat-value" id="stat-count">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">分组数</div>
+          <div class="stat-value" id="stat-groups">0</div>
+        </div>
+      </section>
+
+      <section class="toolbar">
+        <button id="add-btn" class="btn-primary">+ 新增分组</button>
+        <button id="reload-btn" class="btn-ghost">↻ 重新加载</button>
+        <span class="muted">编辑后点击「保存」写入 donors.json</span>
+      </section>
+
+      <main id="donor-list" class="donor-list"></main>
+
+      <footer class="footer">
+        <span id="dirty-tip" class="muted">未修改</span>
+        <div>
+          <button id="reset-btn" class="btn-ghost">放弃修改</button>
+          <button id="save-btn" class="btn-primary">保存到 donors.json</button>
+        </div>
+      </footer>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
