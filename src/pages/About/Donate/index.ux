@@ -27,11 +27,12 @@
           <text class="list-title">打赏名单</text>
           <text class="list-desc">感谢以下支持者</text>
           <div class="refresh-bar" onclick="fetchDonors">
-            <text class="refresh-btn">{{ isLoading ? '刷新中…' : '刷新数据' }}</text>
-            <text class="update-time">{{ updateTime }}</text>
+            <text class="refresh-btn">
+              {{ isLoading ? '刷新中…' : '刷新数据' }}
+            </text>
           </div>
         </list-item>
-        <list-item for="group in donorList" style="padding: 0 10px;">
+        <list-item for="group in donorList" style="padding: 0 10px">
           <div class="donor-group">
             <text class="group-amount">¥{{ group.a }}</text>
             <text class="donor-names">{{ group.n.join(', ') }}</text>
@@ -40,12 +41,13 @@
         <list-item class="empty-hint" show="{{ donorList.length === 0 }}">
           <text class="empty-text">暂无打赏记录</text>
         </list-item>
-        <list-item class="total-item">
+        <list-item class="total-item" show="{{ donorList.length > 0 }}">
           <div class="total-box">
             <text class="total-label">累计打赏</text>
             <text class="total-amount">¥{{ getTotalAmount() }}</text>
             <text class="total-count">共 {{ getTotalCount() }} 位支持者</text>
           </div>
+          <text class="update-time">{{ updateTime }}</text>
         </list-item>
       </list>
     </swiper>
@@ -53,15 +55,9 @@
 </template>
 
 <script>
-  // vivo watch 系统模块
   import fetch from '@system.fetch'
-  import prompt from '@system.prompt'
-  import storage from '@system.storage'
-
-  // ★ 部署后请把这里替换成你的 Vercel 域名（不要带 https://，不要带尾部 /）
   const API_BASE = 'donors.666-114514.eu.org'
 
-  // 本地缓存 key（手表的 @system.storage）
   const STORAGE_KEY = 'donors_cache_v1'
 
   export default {
@@ -72,52 +68,44 @@
     },
 
     onInit() {
-      // 进入页面时从本地缓存加载上次的数据（如果有）
       this.loadFromLocal()
     },
 
     loadFromLocal() {
-      // vivo watch @system.storage 的标准 API 是同步的：
-      //   storage.getItem(key) -> string
-      //   storage.setItem(key, value) -> boolean
-      // 部分版本的 callback 形式（{ key, success, fail }）不可用。
-      // 这里用 try-catch 兜底，避免 API 不匹配时崩溃。
+      const self = this
       try {
-        if (
-          typeof storage !== 'undefined' &&
-          storage &&
-          typeof storage.getItem === 'function'
-        ) {
-          const raw = storage.getItem(STORAGE_KEY)
-          if (raw) {
-            const parsed = JSON.parse(raw)
-            if (parsed && Array.isArray(parsed.data)) {
-              this.donorList = parsed.data
-              this.updateTime = parsed.updateTime || '本地缓存（未联网）'
+        global.storage.get({
+          key: STORAGE_KEY,
+          success: function (data) {
+            if (data) {
+              try {
+                const parsed = JSON.parse(data)
+                if (parsed && Array.isArray(parsed.data)) {
+                  self.donorList = parsed.data
+                  self.updateTime = parsed.updateTime || '本地缓存（未联网）'
+                }
+              } catch (e) {}
             }
-          }
-        }
-      } catch (e) {
-        // 存储不可用或 API 不兼容，静默忽略
-      }
+          },
+          fail: function () {},
+        })
+      } catch (e) {}
     },
 
     saveToLocal() {
+      const self = this
       try {
-        if (
-          typeof storage !== 'undefined' &&
-          storage &&
-          typeof storage.setItem === 'function'
-        ) {
-          const cache = JSON.stringify({
-            data: this.donorList,
-            updateTime: this.updateTime,
-          })
-          storage.setItem(STORAGE_KEY, cache)
-        }
-      } catch (e) {
-        // 写入失败忽略
-      }
+        const cache = JSON.stringify({
+          data: self.donorList,
+          updateTime: self.updateTime,
+        })
+        global.storage.set({
+          key: STORAGE_KEY,
+          value: cache,
+          success: function () {},
+          fail: function () {},
+        })
+      } catch (e) {}
     },
 
     fetchDonors() {
@@ -126,44 +114,110 @@
       self.isLoading = true
       self.updateTime = '正在刷新...'
 
-      // 默认 GET /api/donors 已是「按金额降序 + 过滤 < 1 元」的数据
-      // 手表端不做任何二次过滤，直接展示
       fetch.fetch({
         url: 'https://' + API_BASE + '/api/donors',
         method: 'GET',
+        responseType: 'json',
+        header: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        timeout: 15000,
         success: function (response) {
           self.isLoading = false
-          try {
-            const json = JSON.parse(response.data)
-            if (json.ok && Array.isArray(json.data)) {
-              self.donorList = json.data
-              if (json.meta && json.meta.updatedAt) {
-                self.updateTime =
-                  '数据更新于 ' + self.formatTime(json.meta.updatedAt)
-              } else {
-                self.updateTime =
-                  '已刷新 · ' + self.formatTime(new Date().toISOString())
+
+          let rawBody = null
+          let json = null
+          let debugKeys = ''
+
+          if (response !== undefined && response !== null) {
+            if (typeof response === 'object') {
+              const keys = []
+              const vals = {}
+              for (const k in response) {
+                keys.push(k)
+                vals[k] = response[k]
               }
-              // 拉到最新数据后，保存到本地缓存
-              self.saveToLocal()
-              prompt.showToast({
-                message: '已更新 ' + json.data.length + ' 条',
-                duration: 2000,
-              })
+              debugKeys = keys.join(',')
+
+              if (vals.data !== undefined && vals.data !== null) {
+                rawBody = vals.data
+              } else if (vals.text !== undefined && vals.text !== null) {
+                rawBody = vals.text
+              } else if (vals.body !== undefined && vals.body !== null) {
+                rawBody = vals.body
+              } else if (vals.content !== undefined && vals.content !== null) {
+                rawBody = vals.content
+              }
+
+              if (
+                rawBody === null &&
+                keys.length === 2 &&
+                keys.indexOf('code') >= 0
+              ) {
+                rawBody = null
+              } else if (rawBody === null) {
+                rawBody = response
+              }
             } else {
-              self.updateTime =
-                '刷新失败：' + (json.message || '数据格式错误')
+              rawBody = response
+            }
+          }
+
+          if (rawBody === null) {
+            self.updateTime = '解析失败：仅 keys=' + debugKeys
+            return
+          }
+
+          try {
+            if (typeof rawBody === 'string') {
+              json = JSON.parse(rawBody)
+            } else if (typeof rawBody === 'object') {
+              json = rawBody
+            } else {
+              self.updateTime = '解析失败：body 类型=' + typeof rawBody
+              return
             }
           } catch (e) {
-            self.updateTime = '解析失败：' + e.message
+            self.updateTime = '解析失败：' + e
+            return
           }
+
+          if (!json || json.ok !== true) {
+            self.updateTime =
+              '刷新失败：' +
+              (json && json.message ? json.message : '返回 ok=false')
+            return
+          }
+
+          if (!Array.isArray(json.data)) {
+            self.updateTime = '刷新失败：data 字段不是数组'
+            return
+          }
+
+          self.donorList = json.data
+          if (json.meta && json.meta.updatedAt) {
+            self.updateTime =
+              '数据更新于 ' + self.formatTime(json.meta.updatedAt)
+          } else {
+            self.updateTime =
+              '已更新 ' + self.formatTime(new Date().toISOString())
+          }
+          self.saveToLocal()
         },
-        fail: function (data, code) {
+        fail: function (data) {
           self.isLoading = false
-          // data 是 vivo 返回的错误描述，code 是错误码
-          self.updateTime =
-            '网络错误（' + code + (data ? '：' + data : '') + '）'
-          prompt.showToast({ message: '网络错误' })
+          let msg = '网络错误'
+          if (typeof data === 'object') {
+            if (data.code) msg = msg + '（' + data.code + '）'
+            else if (data.errMsg) msg = msg + '：' + data.errMsg
+          } else if (typeof data === 'string') {
+            msg = msg + '：' + data
+          }
+          self.updateTime = msg
+        },
+        complete: function () {
+          self.isLoading = false
         },
       })
     },
@@ -174,10 +228,14 @@
         const pad = (n) => (n < 10 ? '0' + n : '' + n)
         return (
           d.getFullYear() +
-          '-' + pad(d.getMonth() + 1) +
-          '-' + pad(d.getDate()) +
-          ' ' + pad(d.getHours()) +
-          ':' + pad(d.getMinutes())
+          '-' +
+          pad(d.getMonth() + 1) +
+          '-' +
+          pad(d.getDate()) +
+          ' ' +
+          pad(d.getHours()) +
+          ':' +
+          pad(d.getMinutes())
         )
       } catch (e) {
         return iso
@@ -197,7 +255,9 @@
       const cents = Math.round(amount * 100)
       const integerPart = Math.floor(cents / 100)
       const decimalPart = cents % 100
-      return integerPart + '.' + (decimalPart < 10 ? '0' + decimalPart : decimalPart)
+      return (
+        integerPart + '.' + (decimalPart < 10 ? '0' + decimalPart : decimalPart)
+      )
     },
 
     getTotalCount() {
@@ -255,27 +315,21 @@
         .refresh-bar {
           width: 100%;
           margin-top: 16px;
-          padding: 0 24px;
-          flex-direction: row;
+          flex-direction: column;
           align-items: center;
-          justify-content: space-between;
+
+          &:active {
+            opacity: 0.4;
+          }
         }
 
         .refresh-btn {
-          padding: 8px 22px;
+          padding: 12px 34px;
           background-color: $brand;
           color: $white;
-          font-size: 6 * $size-factor;
+          font-size: 7 * $size-factor;
           font-weight: bold;
-          border-radius: 6 * $size-factor;
-        }
-
-        .update-time {
-          flex: 1;
-          margin-left: 16px;
-          color: $light-gray;
-          font-size: 4 * $size-factor;
-          text-align: right;
+          border-radius: 7 * $size-factor;
         }
       }
 
@@ -320,6 +374,15 @@
       .total-item {
         width: 100%;
         padding: 10px 10px 30px;
+        flex-direction: column;
+
+        .update-time {
+          color: $light-gray;
+          margin-top: 20px;
+          margin-bottom: 20px;
+          font-size: 4.4 * $size-factor;
+          text-align: center;
+        }
 
         .total-box {
           width: 100%;

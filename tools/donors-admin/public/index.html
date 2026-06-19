@@ -17,54 +17,124 @@
     <!-- 登录页 -->
     <div id="login-view" class="view login-view hidden">
       <div class="login-card">
+        <div class="login-logo">💰</div>
         <h1>打赏名单管理</h1>
         <p class="login-tip">请输入 Token 进入（启动服务时会在控制台打印）</p>
-        <input id="login-token" type="password" placeholder="Token" autocomplete="off" />
-        <button id="login-btn" class="btn-primary">进入</button>
+        <div class="login-input-wrap">
+          <input id="login-token" type="password" placeholder="Token" autocomplete="off" />
+          <button id="login-toggle" class="login-toggle" title="显示/隐藏">👁</button>
+        </div>
+        <button id="login-btn" class="btn-primary btn-block">进入</button>
         <p id="login-error" class="error-msg"></p>
+        <p class="login-foot">数据存储在 Vercel KV · 前端仅做管理界面</p>
       </div>
     </div>
 
     <!-- 主管理页 -->
     <div id="main-view" class="view main-view hidden">
       <header class="topbar">
-        <h1>打赏名单</h1>
+        <div class="topbar-left">
+          <span class="logo-emoji">💰</span>
+          <h1>打赏名单</h1>
+        </div>
         <div class="topbar-right">
           <span id="storage-info" class="storage-tag"></span>
+          <span id="update-info" class="storage-tag muted"></span>
           <button id="logout-btn" class="btn-link">退出</button>
         </div>
       </header>
 
+      <!-- 增强统计区：4 张卡片 + 预览 -->
       <section class="stats">
-        <div class="stat-card">
+        <div class="stat-card stat-amount">
           <div class="stat-label">累计金额</div>
           <div class="stat-value" id="stat-amount">¥0.00</div>
+          <div class="stat-sub" id="stat-amount-hint">共 0 人</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">支持者</div>
           <div class="stat-value" id="stat-count">0</div>
+          <div class="stat-sub" id="stat-avg">人均 ¥0.00</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">分组数</div>
           <div class="stat-value" id="stat-groups">0</div>
+          <div class="stat-sub" id="stat-top">最高 ¥0.00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">小金额待审核</div>
+          <div class="stat-value" id="stat-hidden">0</div>
+          <div class="stat-sub">&lt; ¥1.00 不对外展示</div>
         </div>
       </section>
 
+      <!-- 工具栏：筛选 + 操作 -->
       <section class="toolbar">
-        <button id="add-btn" class="btn-primary">+ 新增分组</button>
-        <button id="reload-btn" class="btn-ghost">↻ 重新加载</button>
-        <span class="muted">编辑后点击「保存」写入 donors.json</span>
+        <div class="toolbar-left">
+          <input id="search-input" class="search-input" type="text" placeholder="🔎 搜索姓名 / 金额..." />
+          <select id="sort-select" class="sort-select">
+            <option value="desc">金额 · 高到低</option>
+            <option value="asc">金额 · 低到高</option>
+            <option value="countDesc">人数 · 多到少</option>
+            <option value="countAsc">人数 · 少到多</option>
+            <option value="original">原始顺序</option>
+          </select>
+          <input
+            type="file"
+            id="import-file"
+            accept=".json,application/json"
+            style="display: none"
+          />
+        </div>
+        <div class="toolbar-right">
+          <button id="add-btn" class="btn-primary">+ 新增分组</button>
+          <button id="reload-btn" class="btn-ghost">↻ 重新加载</button>
+          <button id="export-btn" class="btn-ghost" title="导出当前数据为 JSON">⤓ 导出</button>
+          <button id="import-btn" class="btn-ghost" title="从 JSON 文件导入">⤒ 导入</button>
+          <button id="preview-btn" class="btn-ghost" title="切换手表端预览">👀 预览</button>
+        </div>
+      </section>
+
+      <!-- 手表端预览（默认隐藏） -->
+      <section id="preview-section" class="preview-section hidden">
+        <div class="preview-card">
+          <div class="preview-header">
+            <span>⌚ 手表端预览（按金额降序，&lt;¥1 自动隐藏）</span>
+            <span id="preview-count" class="muted"></span>
+          </div>
+          <div id="preview-body" class="preview-body"></div>
+        </div>
       </section>
 
       <main id="donor-list" class="donor-list"></main>
 
       <footer class="footer">
-        <span id="dirty-tip" class="muted">未修改</span>
-        <div>
+        <div class="footer-left">
+          <span id="dirty-tip" class="dirty-tip">未修改</span>
+          <span class="divider">·</span>
+          <span class="muted">快捷键：Ctrl+S 保存 · Ctrl+Z 放弃</span>
+        </div>
+        <div class="footer-right">
           <button id="reset-btn" class="btn-ghost">放弃修改</button>
-          <button id="save-btn" class="btn-primary">保存到 donors.json</button>
+          <button id="save-btn" class="btn-primary">💾 保存到 donors.json</button>
         </div>
       </footer>
+    </div>
+
+    <!-- 通用模态框（导入 JSON 等） -->
+    <div id="modal" class="modal hidden">
+      <div class="modal-mask"></div>
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="modal-title">标题</h3>
+          <button id="modal-close" class="modal-close" aria-label="关闭">✕</button>
+        </div>
+        <div id="modal-body" class="modal-body"></div>
+        <div class="modal-footer">
+          <button id="modal-cancel" class="btn-ghost">取消</button>
+          <button id="modal-confirm" class="btn-primary">确定</button>
+        </div>
+      </div>
     </div>
 
     <div id="toast" class="toast"></div>
