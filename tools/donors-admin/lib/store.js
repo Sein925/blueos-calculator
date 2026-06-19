@@ -1,6 +1,10 @@
 /**
  * donors.json 存储抽象
- * 使用 Upstash Redis（Vercel Marketplace 集成会自动注入环境变量）
+ * 使用 @upstash/redis SDK，兼容：
+ *   1) 新版 Vercel Marketplace Upstash 集成（重命名后的变量）
+ *      → KV_REST_API_URL / KV_REST_API_TOKEN
+ *   2) 标准 Upstash 变量名
+ *      → UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN
  *
  * 数据布局：
  *   donors:data   → 主数据（Array<{ a, n }>）
@@ -8,14 +12,26 @@
  */
 import { Redis } from '@upstash/redis'
 
-// 延迟初始化客户端（避免模块加载时环境变量还没注入）
+// 延迟初始化客户端
 let _client = null
 function client() {
   if (_client) return _client
-  _client = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
-  })
+  const url =
+    process.env.KV_REST_API_URL ||
+    process.env.UPSTASH_REDIS_REST_URL ||
+    ''
+  const token =
+    process.env.KV_REST_API_TOKEN ||
+    process.env.UPSTASH_REDIS_REST_TOKEN ||
+    ''
+  if (!url || !token) {
+    throw new Error(
+      'Redis 未配置：请在 Vercel 项目环境变量中设置 ' +
+        'KV_REST_API_URL / KV_REST_API_TOKEN ' +
+        '（或 UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN）'
+    )
+  }
+  _client = new Redis({ url, token })
   return _client
 }
 
@@ -38,13 +54,12 @@ export async function getMeta() {
 export async function writeDonors(list) {
   const now = new Date().toISOString()
   const c = client()
-  // Pipeline 减少 2 次 RTT
   const pipe = c.pipeline()
   pipe.set(KV_KEY, list)
   pipe.set(KV_META_KEY, { updatedAt: now, count: list.length })
   await pipe.exec()
   return {
-    source: 'upstash-redis',
+    source: process.env.KV_REST_API_URL ? 'upstash-redis' : 'upstash-redis-std',
     key: KV_KEY,
     count: list.length,
     updatedAt: now,
@@ -53,11 +68,16 @@ export async function writeDonors(list) {
 
 // ── 探活 / 存储信息 ──────────────────────────────
 export function getStorageInfo() {
+  const hasNew =
+    !!process.env.KV_REST_API_URL && !!process.env.KV_REST_API_TOKEN
+  const hasStd =
+    !!process.env.UPSTASH_REDIS_REST_URL &&
+    !!process.env.UPSTASH_REDIS_REST_TOKEN
   return {
-    mode: 'upstash-redis',
+    mode: hasNew ? 'upstash-redis' : hasStd ? 'upstash-redis-std' : 'not-configured',
     key: KV_KEY,
     metaKey: KV_META_KEY,
-    hasUrl: !!process.env.UPSTASH_REDIS_REST_URL,
-    hasToken: !!process.env.UPSTASH_REDIS_REST_TOKEN,
+    hasUrl: hasNew || hasStd,
+    hasToken: hasNew || hasStd,
   }
 }
