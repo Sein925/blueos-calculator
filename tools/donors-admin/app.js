@@ -465,6 +465,231 @@
     $('modal').classList.add('hidden')
   }
 
+  // ─── 快速添加支持者 ───────────────────────────────
+  //
+  // 通过模态框输入金额 + 姓名，系统自动判断：
+  //   1. 若已有同金额分组 → 追加到该分组
+  //   2. 若无 → 新建分组
+  //   3. 若姓名已存在于其他金额分组 → 询问是否合并到更高金额分组
+
+  function openAddModal() {
+    openModal({
+      title: '新增支持者',
+      body:
+        '<p class="muted">输入金额和支持者姓名（每行一个）。系统会自动查找同金额分组并追加。</p>' +
+        '<div class="form-row">' +
+        '<label>金额 (¥)</label>' +
+        '<input id="add-amount" class="amount-input" type="number" inputmode="decimal" step="0.01" min="0" placeholder="例如 5.00" />' +
+        '</div>' +
+        '<div class="form-row">' +
+        '<label>支持者姓名（每行一个）</label>' +
+        '<textarea id="add-names" class="names-input" rows="4" placeholder="张三&#10;李四&#10;王五"></textarea>' +
+        '</div>',
+      confirmText: '添加',
+      cancelText: '取消',
+      onConfirm: function () {
+        const amountEl = document.getElementById('add-amount')
+        const namesEl = document.getElementById('add-names')
+        if (!amountEl || !namesEl) return
+        const amount = String(amountEl.value).trim()
+        const namesRaw = namesEl.value.split('\n').map((s) => s.trim()).filter((s) => s.length > 0)
+
+        // 校验
+        if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+          showToast('请输入有效的金额（大于 0）', 'error')
+          return
+        }
+        if (namesRaw.length === 0) {
+          showToast('请输入至少一个支持者姓名', 'error')
+          return
+        }
+
+        const a = parseFloat(amount).toFixed(2)
+        const aNum = parseFloat(a)
+
+        // 去重（同一批输入中避免重复姓名）
+        const seen = new Set()
+        const names = []
+        namesRaw.forEach((n) => {
+          if (!seen.has(n)) {
+            seen.add(n)
+            names.push(n)
+          }
+        })
+
+        // 检查这些姓名是否已存在于其他分组
+        const existing = [] // [{name, groups: [{idx, a, amount}]}]
+        data.forEach((g, idx) => {
+          if (!g || !Array.isArray(g.n)) return
+          const ga = parseFloat(g.a)
+          g.n.forEach((name) => {
+            const clean = String(name).trim()
+            if (!clean) return
+            if (names.includes(clean)) {
+              let item = existing.find((e) => e.name === clean)
+              if (!item) {
+                item = { name: clean, groups: [] }
+                existing.push(item)
+              }
+              item.groups.push({ idx, a: isNaN(ga) ? 0 : ga, amount: String(g.a) })
+            }
+          })
+        })
+
+        // 找出同金额的分组（供后续追加）
+        let sameAmountIdx = -1
+        data.forEach((g, idx) => {
+          if (!g) return
+          const ga = parseFloat(g.a)
+          if (!isNaN(ga) && Math.abs(ga - aNum) < 0.001 && sameAmountIdx === -1) {
+            sameAmountIdx = idx
+          }
+        })
+
+        // 确定每个新姓名要放到哪个分组：
+        //   - 如果姓名已存在于金额 >= 新金额的分组 → 该分组就是目标
+        //   - 如果姓名只存在于金额 < 新金额的分组 → 目标是新金额分组
+        //   - 如果姓名全新 → 目标是新金额分组
+        // 对于那些需要合并到其他分组的姓名，先弹窗询问用户
+
+        const needAsk = [] // 需要询问的姓名
+        const addToSame = [] // 可以直接加到同金额分组的姓名（或新建）
+        const alreadyHigher = [] // 已在更高或相同金额分组
+
+        names.forEach((name) => {
+          const ex = existing.find((e) => e.name === name)
+          if (!ex) {
+            addToSame.push(name)
+            return
+          }
+          // 检查是否已有 >= 新金额的分组包含该姓名
+          const higherOrSame = ex.groups.some((g) => g.a >= aNum - 0.001)
+          if (higherOrSame) {
+            alreadyHigher.push(name)
+          } else {
+            // 只在更低金额分组中出现 → 询问是否移到新金额分组
+            needAsk.push({ name, groups: ex.groups })
+          }
+        })
+
+        const finalizeAdd = function () {
+          // 执行实际添加
+          if (addToSame.length > 0) {
+            if (sameAmountIdx >= 0) {
+              data[sameAmountIdx].n = data[sameAmountIdx].n.concat(addToSame)
+            } else {
+              data.push({ a: a, n: addToSame.slice() })
+            }
+          }
+          setDirty(true)
+          render()
+          const totalAdded = addToSame.length
+          let msg = '添加完成'
+          if (totalAdded > 0) {
+            msg = '成功添加 ' + totalAdded + ' 位支持者（金额 ¥' + a + '）'
+            if (alreadyHigher.length > 0) {
+              msg += '；' + alreadyHigher.length + ' 位已存在于更高金额分组，已跳过'
+            }
+          } else if (alreadyHigher.length > 0) {
+            msg = alreadyHigher.length + ' 位支持者已在更高金额分组中，无需添加'
+          }
+          showToast(msg, 'success')
+        }
+
+        // 如果有需要询问的姓名 → 逐个询问
+        if (needAsk.length > 0) {
+          let i = 0
+          const askNext = function () {
+            if (i >= needAsk.length) {
+              finalizeAdd()
+              return
+            }
+            const item = needAsk[i]
+            i++
+            const groupsHtml = item.groups
+              .map(
+                (g) =>
+                  '<li>分组 #' +
+                  (g.idx + 1) +
+                  ' · 金额 ' +
+                  escapeHtml(formatAmount(g.a)) +
+                  '</li>'
+              )
+              .join('')
+            openModal({
+              title: '「' + escapeHtml(item.name) + '」已在其他分组',
+              body:
+                '<p class="muted">该姓名已出现在较低金额分组中。是否合并到新金额分组（¥' +
+                escapeHtml(a) +
+                '）？</p>' +
+                '<ul style="list-style:disc;margin:10px 0 10px 24px;line-height:1.8;">' +
+                groupsHtml +
+                '</ul>' +
+                '<p class="muted">选择「合并」后，该姓名将从以上分组移到新金额分组（¥' +
+                escapeHtml(a) +
+                '），空分组会自动删除；选择「保留」则跳过该姓名。</p>',
+              confirmText: '合并到 ¥' + a,
+              cancelText: '保留不动',
+              onConfirm: function () {
+                // 从原分组删除
+                item.groups.forEach((g) => {
+                  const grp = data[g.idx]
+                  if (grp && Array.isArray(grp.n)) {
+                    grp.n = grp.n.filter((n) => String(n).trim() !== item.name)
+                  }
+                })
+                // 加到目标分组（或新建）
+                if (sameAmountIdx >= 0) {
+                  if (!data[sameAmountIdx].n.some((n) => String(n).trim() === item.name)) {
+                    data[sameAmountIdx].n.push(item.name)
+                  }
+                } else {
+                  // 需要新建一个分组作为目标
+                  let targetIdx = data.length
+                  let found = data.find((g, idx) => {
+                    const ga = parseFloat(g.a)
+                    return !isNaN(ga) && Math.abs(ga - aNum) < 0.001
+                  })
+                  if (found) {
+                    // 重新找索引
+                    for (let j = 0; j < data.length; j++) {
+                      const ga = parseFloat(data[j].a)
+                      if (!isNaN(ga) && Math.abs(ga - aNum) < 0.001) {
+                        targetIdx = j
+                        break
+                      }
+                    }
+                    if (targetIdx < data.length && !data[targetIdx].n.some((n) => String(n).trim() === item.name)) {
+                      data[targetIdx].n.push(item.name)
+                    }
+                  } else {
+                    data.push({ a: a, n: [item.name] })
+                    sameAmountIdx = data.length - 1
+                  }
+                }
+                // 清理空分组
+                cleanupEmptyGroups()
+                setDirty(true)
+                showToast('已合并「' + item.name + '」到 ¥' + a + ' 分组', 'success')
+                askNext()
+              },
+              onCancel: askNext,
+            })
+          }
+          askNext()
+        } else {
+          finalizeAdd()
+        }
+      },
+    })
+
+    // 聚焦到金额输入框
+    requestAnimationFrame(() => {
+      const el = document.getElementById('add-amount')
+      if (el) el.focus()
+    })
+  }
+
   // ─── 重复姓名检测 & 合并 ────────────────────────
   //
   // 返回值: [{ name, groups: [{idx, a, countInGroup}] }]
@@ -770,10 +995,13 @@
   // ─── 工具栏按钮 ─────────────────────────────────────
   function bindToolbar() {
     $('add-btn').addEventListener('click', () => {
+      openAddModal()
+    })
+
+    $('add-group-btn').addEventListener('click', () => {
       data.push({ a: '1.00', n: [''] })
       setDirty(true)
       render()
-      // 滚动到底部并聚焦金额
       requestAnimationFrame(() => {
         const cards = listEl.querySelectorAll('.donor-card')
         const last = cards[cards.length - 1]
