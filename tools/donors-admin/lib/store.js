@@ -8,9 +8,12 @@
  *
  * 数据布局：
  *   donors:data   → 主数据（Array<{ a, n }>）
- *   donors:meta   → 元信息 { updatedAt, count }
+ *   donors:meta   → 元信息：
+ *                    { updatedAt, count, totalCount, totalAmount, smallNames, visible }
+ *   visible/smallNames 在写入时预计算，GET 请求直接返回，避免每次重复计算
  */
 import { Redis } from '@upstash/redis'
+import { computeView } from './donors.js'
 
 // 延迟初始化客户端
 let _client = null
@@ -44,25 +47,43 @@ export async function readDonors() {
   return Array.isArray(data) ? data : []
 }
 
-// ── 读取元信息（含 updatedAt） ────────────────
+// ── 读取元信息（含 precomputed view）───────────
 export async function getMeta() {
   const meta = await client().get(KV_META_KEY)
   return meta && typeof meta === 'object' ? meta : {}
 }
 
-// ── 写入主数据 + 元信息 ─────────────────────────
+// ── 写入主数据 + 元信息（预计算）─────────────────
 export async function writeDonors(list) {
   const now = new Date().toISOString()
+  const safeList = Array.isArray(list) ? list : []
+
+  const view = computeView(safeList)
+
+  const meta = {
+    updatedAt: now,
+    count: safeList.length,
+    totalCount: view.totalCount,
+    totalAmount: view.totalAmount,
+    visibleCount: view.visible.length,
+    smallCount: view.smallNames.length,
+    // 以下两个即为前端展示用数据，由后端预计算
+    visible: view.visible,
+    smallNames: view.smallNames,
+  }
+
   const c = client()
   const pipe = c.pipeline()
-  pipe.set(KV_KEY, list)
-  pipe.set(KV_META_KEY, { updatedAt: now, count: list.length })
+  pipe.set(KV_KEY, safeList)
+  pipe.set(KV_META_KEY, meta)
   await pipe.exec()
   return {
     source: process.env.KV_REST_API_URL ? 'upstash-redis' : 'upstash-redis-std',
     key: KV_KEY,
-    count: list.length,
+    count: safeList.length,
     updatedAt: now,
+    totalAmount: view.totalAmount,
+    totalCount: view.totalCount,
   }
 }
 

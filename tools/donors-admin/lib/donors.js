@@ -1,6 +1,10 @@
 /**
  * 共享：donors 数据校验与金额归一化
  */
+
+// 金额展示阈值：低于此值的条目会被归并到 smallNames，前端不再单独分组
+export const SMALL_AMOUNT_THRESHOLD = 1
+
 export function validateDonor(d) {
   if (!d || typeof d !== 'object') return '条目必须为对象'
   if (typeof d.a !== 'string' && typeof d.a !== 'number')
@@ -16,35 +20,85 @@ export function validateDonor(d) {
 export function normalizeAmount(a) {
   const num = typeof a === 'number' ? a : parseFloat(a)
   if (isNaN(num) || num < 0) return null
-  // 保留两位小数，输出为字符串以匹配现有数据格式
   return (Math.round(num * 100) / 100).toFixed(2)
 }
 
 /**
- * 排序 + 过滤
- *  - 按金额（a）从大到小
- *  - 过滤掉金额低于 minAmount 的条目
+ * 把列表按金额聚合：相同金额的人合并到同一组
+ *   list: [{ a, n: [...] }, ...]
+ *   return: [{ a: 'x.xx', n: [...] }]  按金额从高到低排序
  */
-export function sortAndFilterDonors(list, { minAmount = 1 } = {}) {
-  if (!Array.isArray(list)) return []
-  const threshold = Number(minAmount)
-  const hasThreshold = !isNaN(threshold)
-  return list
-    .filter((item) => {
-      if (!hasThreshold) return true
-      const a = parseFloat(item && item.a)
-      return !isNaN(a) && a >= threshold
-    })
-    .slice()
-    .sort((a, b) => {
-      const av = parseFloat(a && a.a) || 0
-      const bv = parseFloat(b && b.a) || 0
-      return bv - av
-    })
+function groupByAmount(list) {
+  const map = new Map()
+  const arr = Array.isArray(list) ? list : []
+  for (const g of arr) {
+    if (!g) continue
+    const aNum = parseFloat(g.a)
+    if (isNaN(aNum) || aNum < 0) continue
+    const aStr = aNum.toFixed(2)
+    const names = Array.isArray(g.n) ? g.n : []
+    const cleaned = names
+      .map((n) => String(n).trim())
+      .filter((n) => n.length > 0)
+    if (cleaned.length === 0) continue
+    const existing = map.get(aStr)
+    if (existing) {
+      for (const n of cleaned) existing.push(n)
+    } else {
+      map.set(aStr, cleaned)
+    }
+  }
+  // 按金额从高到低
+  const groups = Array.from(map.entries())
+    .sort((a, b) => parseFloat(b[0]) - parseFloat(a[0]))
+    .map(([a, n]) => ({ a, n }))
+  return groups
 }
 
 /**
- * 校验并归一化整个 donors 列表，返回 { ok, data, error }
+ * 写入前统一计算的「显示层」。
+ * 返回：
+ *   { visible: [{a, n}], smallNames: [...], totalCount, totalAmount }
+ */
+export function computeView(list, { threshold = SMALL_AMOUNT_THRESHOLD } = {}) {
+  const t = Number(threshold)
+  const safeT = !isNaN(t) && t > 0 ? t : 1
+
+  // 先按金额合并分组
+  const groups = groupByAmount(list)
+
+  const visible = []
+  const smallNames = []
+  let totalCount = 0
+  let totalCents = 0
+
+  for (const g of groups) {
+    const a = parseFloat(g.a)
+    const count = g.n.length
+    totalCount += count
+    if (!isNaN(a) && a > 0) totalCents += Math.round(a * 100) * count
+    if (a >= safeT) visible.push(g)
+    else for (const n of g.n) smallNames.push(n)
+  }
+
+  return {
+    visible,
+    smallNames,
+    totalCount,
+    totalAmount: (totalCents / 100).toFixed(2),
+  }
+}
+
+/**
+ * 过滤 + 排序（已由 computeView 预计算，这里保留兼容函数供管理端 all=1 时原样返回 raw）
+ */
+export function sortAndFilterDonors(list, { minAmount = SMALL_AMOUNT_THRESHOLD } = {}) {
+  const result = computeView(list, { threshold: minAmount })
+  return result.visible
+}
+
+/**
+ * 校验并归一化整个 donors 列表
  */
 export function validateAndNormalize(list) {
   if (!Array.isArray(list)) {
@@ -56,8 +110,7 @@ export function validateAndNormalize(list) {
     const err = validateDonor(item)
     if (err) return { ok: false, error: `第 ${i + 1} 条：${err}` }
     const amount = normalizeAmount(item.a)
-    if (amount === null)
-      return { ok: false, error: `第 ${i + 1} 条：金额无效` }
+    if (amount === null) return { ok: false, error: `第 ${i + 1} 条：金额无效` }
     const names = item.n
       .map((n) => String(n).trim())
       .filter((n) => n.length > 0)

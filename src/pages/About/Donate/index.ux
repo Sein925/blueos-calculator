@@ -38,14 +38,20 @@
             <text class="donor-names">{{ group.n.join(', ') }}</text>
           </div>
         </list-item>
-        <list-item class="empty-hint" show="{{ donorList.length === 0 }}">
+        <list-item class="small-item" show="{{ smallNames.length > 0 }}">
+          <div class="donor-group small-group">
+            <text class="group-amount small-amount">小额支持</text>
+            <text class="donor-names small-names">{{ smallNames.join(', ') }}</text>
+          </div>
+        </list-item>
+        <list-item class="empty-hint" show="{{ donorList.length === 0 && smallNames.length === 0 }}">
           <text class="empty-text">暂无打赏记录</text>
         </list-item>
-        <list-item class="total-item" show="{{ donorList.length > 0 }}">
+        <list-item class="total-item" show="{{ donorList.length > 0 || smallNames.length > 0 }}">
           <div class="total-box">
             <text class="total-label">累计打赏</text>
-            <text class="total-amount">¥{{ getTotalAmount() }}</text>
-            <text class="total-count">共 {{ getTotalCount() }} 位支持者</text>
+            <text class="total-amount">¥{{ totalAmount }}</text>
+            <text class="total-count">共 {{ totalCount }} 位支持者</text>
           </div>
           <text class="update-time">{{ updateTime }}</text>
         </list-item>
@@ -63,6 +69,9 @@
   export default {
     data: {
       donorList: [],
+      smallNames: [],
+      totalAmount: '0.00',
+      totalCount: 0,
       updateTime: '点击刷新获取最新',
       isLoading: false,
     },
@@ -82,8 +91,12 @@
                 const parsed = JSON.parse(data)
                 if (parsed && Array.isArray(parsed.data)) {
                   self.donorList = parsed.data
-                  self.updateTime = parsed.updateTime || '本地缓存（未联网）'
                 }
+                self.smallNames = Array.isArray(parsed.smallNames) ? parsed.smallNames : []
+                self.totalAmount = parsed.totalAmount || '0.00'
+                self.totalCount =
+                  typeof parsed.totalCount === 'number' ? parsed.totalCount : 0
+                self.updateTime = parsed.updateTime || '本地缓存（未联网）'
               } catch (e) {}
             }
           },
@@ -97,6 +110,9 @@
       try {
         const cache = JSON.stringify({
           data: self.donorList,
+          smallNames: self.smallNames,
+          totalAmount: self.totalAmount,
+          totalCount: self.totalCount,
           updateTime: self.updateTime,
         })
         global.storage.set({
@@ -196,6 +212,22 @@
           }
 
           self.donorList = json.data
+          self.smallNames = Array.isArray(json.smallNames) ? json.smallNames : []
+
+          // 优先使用后端返回的 totalAmount / totalCount，避免前端计算遗漏
+          if (
+            json.meta &&
+            (typeof json.meta.totalAmount === 'string' ||
+              typeof json.meta.totalAmount === 'number') &&
+            typeof json.meta.totalCount === 'number'
+          ) {
+            self.totalAmount = String(json.meta.totalAmount)
+            self.totalCount = json.meta.totalCount
+          } else {
+            self.totalAmount = self.getTotalAmount()
+            self.totalCount = self.getTotalCount() + self.smallNames.length
+          }
+
           if (json.meta && json.meta.updatedAt) {
             self.updateTime =
               '数据更新于 ' + self.formatTime(json.meta.updatedAt)
@@ -356,6 +388,20 @@
           font-weight: 500;
           margin-bottom: 14px;
         }
+      }
+
+      .small-item .small-group {
+        background-color: #202020;
+      }
+
+      .small-item .small-amount {
+        font-size: 8 * $size-factor;
+        color: #ffcc66;
+      }
+
+      .small-item .small-names {
+        font-size: 5.2 * $size-factor;
+        color: #d8d8d8;
       }
 
       .empty-hint {

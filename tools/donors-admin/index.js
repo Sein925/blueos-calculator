@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
 
 import { readDonors, writeDonors, getMeta, getStorageInfo } from './lib/store.js'
-import { validateAndNormalize, sortAndFilterDonors } from './lib/donors.js'
+import { validateAndNormalize } from './lib/donors.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PUBLIC_DIR = path.join(__dirname, 'public')
@@ -92,22 +92,44 @@ app.post('/api/auth', (req, res) => {
 })
 
 // ── API：/api/donors ───────────────────────────
+// visible / smallNames / totalAmount / totalCount 都在 PUT 保存时
+// 由 writeDonors 预计算并写入 donors:meta，此处 GET 直接读取 meta
 app.get('/api/donors', async (req, res) => {
   try {
-    const [raw, meta] = await Promise.all([readDonors(), getMeta()])
     const includeAll =
       req.query.all === '1' || req.query.all === 'true' || req.query.raw === '1'
-    const minAmount =
-      req.query.minAmount !== undefined ? Number(req.query.minAmount) : 1
-    const data = includeAll ? raw : sortAndFilterDonors(raw, { minAmount })
+
+    const [raw, meta] = await Promise.all([readDonors(), getMeta()])
+
+    // visible / smallNames 已在 meta 里预计算好
+    const visible = Array.isArray(meta.visible) ? meta.visible : []
+    const smallNames = Array.isArray(meta.smallNames) ? meta.smallNames : []
+
+    const totalCount =
+      typeof meta.totalCount === 'number' ? meta.totalCount : safeCount(raw)
+    const totalAmount =
+      typeof meta.totalAmount === 'string'
+        ? meta.totalAmount
+        : typeof meta.totalAmount === 'number'
+          ? meta.totalAmount.toFixed(2)
+          : safeTotalAmount(raw)
+
+    // 管理界面 ?all=1 时返回原始的、未经合并的 data，方便编辑
+    const data = includeAll ? raw : visible
+
     return res.status(200).json({
       ok: true,
       data,
+      smallNames: includeAll ? [] : smallNames,
       meta: {
         total: raw.length,
         returned: data.length,
-        filtered: raw.length - data.length,
-        minAmount: includeAll ? 0 : minAmount,
+        filtered: Math.max(0, raw.length - visible.length),
+        minAmount: includeAll ? 0 : 1,
+        totalCount: totalCount,
+        totalAmount: totalAmount,
+        visibleCount: typeof meta.visibleCount === 'number' ? meta.visibleCount : visible.length,
+        smallCount: typeof meta.smallCount === 'number' ? meta.smallCount : smallNames.length,
         updatedAt: meta.updatedAt || null,
       },
     })
@@ -115,6 +137,26 @@ app.get('/api/donors', async (req, res) => {
     return res.status(500).json({ ok: false, message: '读取失败：' + e.message })
   }
 })
+
+// 兼容：meta 缺失时 fallback 在请求时即时计算（仅旧数据首次读取时触发）
+function safeCount(list) {
+  if (!Array.isArray(list)) return 0
+  let n = 0
+  for (const g of list) if (Array.isArray(g && g.n)) n += g.n.length
+  return n
+}
+
+function safeTotalAmount(list) {
+  if (!Array.isArray(list)) return '0.00'
+  let cents = 0
+  for (const g of list) {
+    const a = parseFloat(g && g.a)
+    if (isNaN(a) || a <= 0) continue
+    const n = Array.isArray(g.n) ? g.n.length : 0
+    cents += Math.round(a * 100) * n
+  }
+  return (cents / 100).toFixed(2)
+}
 
 app.put('/api/donors', async (req, res) => {
   if (!checkAdminToken(req)) {
