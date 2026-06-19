@@ -6,6 +6,9 @@
     }
   ],
   "rewrites": [
-    { "source": "/", "destination": "/index.html" }
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/api/donors", "destination": "/api/donors" },
+    { "source": "/api/auth", "destination": "/api/auth" },
+    { "source": "/api/health", "destination": "/api/health" }
   ]
 }
