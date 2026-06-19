@@ -26,10 +26,16 @@
         <list-item class="list-header">
           <text class="list-title">打赏名单</text>
           <text class="list-desc">感谢以下支持者</text>
-          <div class="refresh-bar" onclick="fetchDonors">
+          <div class="refresh-bar" @click="fetchDonors">
             <text class="refresh-btn">
               {{ isLoading ? '刷新中…' : '刷新数据' }}
             </text>
+          </div>
+        </list-item>
+        <list-item class="error-box" show="{{ errInfo.length > 0 }}" style="padding: 0 10px">
+          <div class="error-inner">
+            <text class="error-title">请求失败</text>
+            <text class="error-text">{{ errInfo }}</text>
           </div>
         </list-item>
         <list-item for="group in donorList" style="padding: 0 10px">
@@ -38,14 +44,14 @@
             <text class="donor-names">{{ group.n.join(', ') }}</text>
           </div>
         </list-item>
-        <list-item class="small-item" show="{{ smallNames.length > 0 }}">
+        <list-item class="small-item" show="{{ smallNames.length > 0 }}" style="padding: 0 10px">
           <div class="donor-group small-group">
             <text class="group-amount small-amount">小额支持</text>
             <text class="donor-names small-names">{{ smallNames.join(', ') }}</text>
           </div>
         </list-item>
         <list-item class="empty-hint" show="{{ donorList.length === 0 && smallNames.length === 0 }}">
-          <text class="empty-text">暂无打赏记录</text>
+          <text class="empty-text">请点击按钮获取打赏数据</text>
         </list-item>
         <list-item class="total-item" show="{{ donorList.length > 0 || smallNames.length > 0 }}">
           <div class="total-box">
@@ -61,7 +67,6 @@
 </template>
 
 <script>
-  import fetch from '@system.fetch'
   const API_BASE = 'donors.666-114514.eu.org'
 
   const STORAGE_KEY = 'donors_cache_v1'
@@ -74,6 +79,7 @@
       totalCount: 0,
       updateTime: '点击刷新获取最新',
       isLoading: false,
+      errInfo: '',
     },
 
     onInit() {
@@ -128,130 +134,208 @@
       const self = this
       if (self.isLoading) return
       self.isLoading = true
-      self.updateTime = '正在刷新...'
+      self.errInfo = ''
+      const url = 'https://' + API_BASE + '/api/donors'
 
-      fetch.fetch({
-        url: 'https://' + API_BASE + '/api/donors',
-        method: 'GET',
-        responseType: 'json',
-        header: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        timeout: 15000,
-        success: function (response) {
+      // 兜底：18 秒后还没有任何回调，强制重置 isLoading 并报日志
+      let finished = false
+      const watchdog = setTimeout(function () {
+        if (!finished) {
+          finished = true
           self.isLoading = false
+          self.errInfo =
+            '请求 URL: ' + url + '\n' +
+            '请求超时（>18s），请检查手表网络或域名是否可达'
+        }
+      }, 18000)
 
-          let rawBody = null
-          let json = null
-          let debugKeys = ''
+      function markDone() {
+        if (!finished) {
+          finished = true
+          clearTimeout(watchdog)
+        }
+      }
 
-          if (response !== undefined && response !== null) {
-            if (typeof response === 'object') {
-              const keys = []
-              const vals = {}
+      // 构造错误日志
+      function buildLog(title, details) {
+        const parts = []
+        parts.push('[' + title + ']')
+        parts.push('URL: ' + url)
+        if (details && details.length > 0) {
+          for (let i = 0; i < details.length; i++) {
+            parts.push(details[i])
+          }
+        }
+        return parts.join('\n')
+      }
+
+      try {
+        const net = global.fetch
+        if (!net || typeof net.fetch !== 'function') {
+          markDone()
+          self.isLoading = false
+          self.errInfo = buildLog('运行环境错误', [
+            '未找到 global.fetch (@blueos.network.fetch)',
+            'typeof global.fetch = ' + (typeof net),
+          ])
+          return
+        }
+
+        net.fetch({
+          url: url,
+          method: 'GET',
+          responseType: 'json',
+          header: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          success: function (response) {
+            markDone()
+            self.isLoading = false
+
+            const vals = {}
+            const keys = []
+            if (
+              response !== undefined &&
+              response !== null &&
+              typeof response === 'object'
+            ) {
               for (const k in response) {
                 keys.push(k)
                 vals[k] = response[k]
               }
-              debugKeys = keys.join(',')
-
-              if (vals.data !== undefined && vals.data !== null) {
-                rawBody = vals.data
-              } else if (vals.text !== undefined && vals.text !== null) {
-                rawBody = vals.text
-              } else if (vals.body !== undefined && vals.body !== null) {
-                rawBody = vals.body
-              } else if (vals.content !== undefined && vals.content !== null) {
-                rawBody = vals.content
-              }
-
-              if (
-                rawBody === null &&
-                keys.length === 2 &&
-                keys.indexOf('code') >= 0
-              ) {
-                rawBody = null
-              } else if (rawBody === null) {
-                rawBody = response
-              }
-            } else {
-              rawBody = response
             }
-          }
 
-          if (rawBody === null) {
-            self.updateTime = '解析失败：仅 keys=' + debugKeys
-            return
-          }
+            let httpCode = ''
+            if (typeof vals.code === 'number') httpCode = 'code=' + vals.code
+            else if (typeof vals.status === 'number') httpCode = 'status=' + vals.status
 
-          try {
-            if (typeof rawBody === 'string') {
-              json = JSON.parse(rawBody)
-            } else if (typeof rawBody === 'object') {
-              json = rawBody
-            } else {
-              self.updateTime = '解析失败：body 类型=' + typeof rawBody
+            let rawBody = null
+            if (vals.data !== undefined && vals.data !== null) rawBody = vals.data
+            else if (vals.text !== undefined && vals.text !== null) rawBody = vals.text
+            else if (vals.body !== undefined && vals.body !== null) rawBody = vals.body
+            else if (vals.content !== undefined && vals.content !== null) rawBody = vals.content
+            if (rawBody === null) rawBody = response
+
+            let bodyPreview = ''
+            try {
+              if (typeof rawBody === 'string') {
+                if (rawBody.length <= 300) bodyPreview = rawBody
+                else bodyPreview = rawBody.substring(0, 300) + '…'
+              } else if (typeof rawBody === 'object' && rawBody !== null) {
+                const k2 = []
+                for (const k in rawBody) k2.push(k)
+                bodyPreview = '{' + k2.join(',') + '}'
+              } else {
+                bodyPreview = 'type=' + (typeof rawBody)
+              }
+            } catch (e2) {
+              bodyPreview = 'err'
+            }
+
+            let json = null
+            try {
+              if (typeof rawBody === 'string') json = JSON.parse(rawBody)
+              else if (typeof rawBody === 'object') json = rawBody
+            } catch (e) {
+              self.errInfo = buildLog('响应解析失败', [
+                'HTTP: ' + (httpCode || 'unknown'),
+                'response keys: ' + keys.join(','),
+                '原始内容: ' + bodyPreview,
+                'JSON.parse err: ' + e,
+              ])
               return
             }
-          } catch (e) {
-            self.updateTime = '解析失败：' + e
-            return
-          }
 
-          if (!json || json.ok !== true) {
-            self.updateTime =
-              '刷新失败：' +
-              (json && json.message ? json.message : '返回 ok=false')
-            return
-          }
+            if (!json || json.ok !== true) {
+              let message = ''
+              if (json && typeof json.message === 'string') message = json.message
+              else if (json && typeof json.msg === 'string') message = json.msg
 
-          if (!Array.isArray(json.data)) {
-            self.updateTime = '刷新失败：data 字段不是数组'
-            return
-          }
+              self.errInfo = buildLog('接口返回失败', [
+                'HTTP: ' + (httpCode || 'unknown'),
+                'response keys: ' + keys.join(','),
+                'ok: ' + (json && json.ok),
+                message ? 'message: ' + message : '响应: ' + bodyPreview,
+              ])
+              return
+            }
 
-          self.donorList = json.data
-          self.smallNames = Array.isArray(json.smallNames) ? json.smallNames : []
+            if (!Array.isArray(json.data)) {
+              self.errInfo = buildLog('返回结构异常', [
+                'HTTP: ' + (httpCode || 'unknown'),
+                'json.data 类型: ' + (typeof json.data),
+                'data keys: ' + bodyPreview,
+              ])
+              return
+            }
 
-          // 优先使用后端返回的 totalAmount / totalCount，避免前端计算遗漏
-          if (
-            json.meta &&
-            (typeof json.meta.totalAmount === 'string' ||
-              typeof json.meta.totalAmount === 'number') &&
-            typeof json.meta.totalCount === 'number'
-          ) {
-            self.totalAmount = String(json.meta.totalAmount)
-            self.totalCount = json.meta.totalCount
-          } else {
-            self.totalAmount = self.getTotalAmount()
-            self.totalCount = self.getTotalCount() + self.smallNames.length
-          }
+            self.donorList = json.data
+            self.smallNames = Array.isArray(json.smallNames) ? json.smallNames : []
 
-          if (json.meta && json.meta.updatedAt) {
-            self.updateTime =
-              '数据更新于 ' + self.formatTime(json.meta.updatedAt)
-          } else {
-            self.updateTime =
-              '已更新 ' + self.formatTime(new Date().toISOString())
-          }
-          self.saveToLocal()
-        },
-        fail: function (data) {
-          self.isLoading = false
-          let msg = '网络错误'
-          if (typeof data === 'object') {
-            if (data.code) msg = msg + '（' + data.code + '）'
-            else if (data.errMsg) msg = msg + '：' + data.errMsg
-          } else if (typeof data === 'string') {
-            msg = msg + '：' + data
-          }
-          self.updateTime = msg
-        },
-        complete: function () {
-          self.isLoading = false
-        },
-      })
+            if (
+              json.meta &&
+              (typeof json.meta.totalAmount === 'string' ||
+                typeof json.meta.totalAmount === 'number') &&
+              typeof json.meta.totalCount === 'number'
+            ) {
+              self.totalAmount = String(json.meta.totalAmount)
+              self.totalCount = json.meta.totalCount
+            } else {
+              self.totalAmount = self.getTotalAmount()
+              self.totalCount = self.getTotalCount() + self.smallNames.length
+            }
+
+            if (json.meta && json.meta.updatedAt) {
+              self.updateTime = '数据更新于 ' + self.formatTime(json.meta.updatedAt)
+            } else {
+              self.updateTime = '已更新 ' + self.formatTime(new Date().toISOString())
+            }
+            self.errInfo = ''
+            self.saveToLocal()
+          },
+          fail: function (data) {
+            markDone()
+            self.isLoading = false
+
+            const details = []
+            try {
+              if (typeof data === 'object') {
+                const keys = []
+                for (const k in data) keys.push(k)
+                if (keys.length > 0) details.push('fail keys: ' + keys.join(','))
+                if (typeof data.code === 'number' || typeof data.code === 'string') {
+                  details.push('code: ' + data.code)
+                } else if (typeof data.status === 'number') {
+                  details.push('status: ' + data.status)
+                }
+                if (typeof data.errMsg === 'string' && data.errMsg.length > 0) {
+                  details.push('errMsg: ' + data.errMsg)
+                } else if (typeof data.message === 'string' && data.message.length > 0) {
+                  details.push('message: ' + data.message)
+                } else if (typeof data.data === 'string' && data.data.length > 0) {
+                  details.push('data: ' + data.data)
+                }
+              } else if (typeof data === 'string') {
+                details.push('raw: ' + data)
+              }
+            } catch (e) {
+              details.push('处理失败回包时异常: ' + e)
+            }
+            self.errInfo = buildLog('网络错误', details)
+          },
+          complete: function () {
+            markDone()
+            self.isLoading = false
+          },
+        })
+      } catch (e) {
+        markDone()
+        self.isLoading = false
+        self.errInfo = buildLog('调用失败', [
+          'exception: ' + e,
+        ])
+      }
     },
 
     formatTime(iso) {
@@ -275,7 +359,6 @@
     },
 
     getTotalAmount() {
-      // 总金额 = 当前列表的累计
       const data = this.donorList
       let amount = 0
       for (let i = 0; i < data.length; i++) {
@@ -345,9 +428,13 @@
         }
 
         .refresh-bar {
-          width: 100%;
-          margin-top: 16px;
+          width: 220px;
+          height: 100px;
+          background-color: $brand;
+          margin-top: 20px;
+          border-radius: 8 * $size-factor;
           flex-direction: column;
+          justify-content: center;
           align-items: center;
 
           &:active {
@@ -356,13 +443,38 @@
         }
 
         .refresh-btn {
-          padding: 12px 34px;
-          background-color: $brand;
+          font-size: 8 * $size-factor;
           color: $white;
-          font-size: 7 * $size-factor;
           font-weight: bold;
-          border-radius: 7 * $size-factor;
+          margin-bottom: 6px;
         }
+      }
+
+      .error-box {
+        width: 100%;
+        margin-bottom: 20px;
+      }
+
+      .error-box .error-inner {
+        width: 100%;
+        background-color: rgba(255, 100, 100, 0.15);
+        border-radius: 8 * $size-factor;
+        padding: 22px 24px;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .error-box .error-title {
+        font-size: 8 * $size-factor;
+        color: #ff8a8a;
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
+
+      .error-box .error-text {
+        width: 100%;
+        font-size: 5.2 * $size-factor;
+        color: #ffe2e2;
       }
 
       .donor-group {
@@ -409,7 +521,7 @@
         flex-direction: row;
         justify-content: center;
         align-items: center;
-        padding: 40px 0;
+        padding: 14px 0;
 
         .empty-text {
           font-size: 6 * $size-factor;
@@ -426,7 +538,7 @@
           color: $light-gray;
           margin-top: 20px;
           margin-bottom: 20px;
-          font-size: 4.4 * $size-factor;
+          font-size: 4.6 * $size-factor;
           text-align: center;
         }
 

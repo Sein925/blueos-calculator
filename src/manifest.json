@@ -13,6 +13,9 @@
     },
     {
       "name": "blueos.storage.storage"
+    },
+    {
+      "name": "blueos.network.fetch"
     }
   ],
   "deviceTypeList": [
