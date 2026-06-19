@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "engines": {
-    "node": "20.x"
-  },
   "description": "打赏名单管理后台：Vercel Serverless + Vercel KV",
   "scripts": {
     "dev": "vercel dev"
