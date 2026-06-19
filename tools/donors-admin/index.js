@@ -1,28 +1,28 @@
 /**
- * 统一 Express 入口
- *   GET  /                    → public/index.html
- *   GET  /app                 → public/app.js
- *   GET  /style               → public/style.css
- *   GET  /donors?all=1        → 名单（?all=1 拿全量）
- *   GET  /health              → 健康检查
- *   POST /auth                → 校验 token
- *   PUT  /donors              → 整体覆盖写入（需要 token）
+ * Vercel 入口（仓库根 index.js）
+ * Vercel 约定的 Serverless Function 入口文件名之一
+ *
+ * 路由表：
+ *   GET  /              → public/index.html
+ *   GET  /app           → public/app.js
+ *   GET  /style         → public/style.css
+ *   GET  /api/donors    → 名单（?all=1 拿全量）
+ *   GET  /api/health    → 健康检查
+ *   POST /api/auth      → 校验 token
+ *   PUT  /api/donors    → 整体覆盖写入（需要 token）
  *
  * 其它路径 → 404
- *
- * Serverless Function 入口：导出默认 app，Vercel @vercel/node runtime 会自动注入 (req, res)
  */
 import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
 
-// 存储与鉴权
-import { readDonors, writeDonors, getMeta, getStorageInfo } from '../lib/store.js'
-import { validateAndNormalize, sortAndFilterDonors } from '../lib/donors.js'
+import { readDonors, writeDonors, getMeta, getStorageInfo } from './lib/store.js'
+import { validateAndNormalize, sortAndFilterDonors } from './lib/donors.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const PUBLIC_DIR = path.resolve(__dirname, '..', 'public')
+const PUBLIC_DIR = path.join(__dirname, 'public')
 
 const app = express()
 app.use(express.json({ limit: '1mb' }))
@@ -55,14 +55,14 @@ function getAdminToken() {
 }
 function checkAdminToken(req) {
   const token = getAdminToken()
-  if (!token) return true // 本地开发模式：未设置则放行
+  if (!token) return true // 本地开发模式
   const headerToken = req.headers['x-token']
   const bodyToken = req.body && req.body.token
   return headerToken === token || bodyToken === token
 }
 
-// ── API：/health ───────────────────────────────
-app.get('/health', async (_req, res) => {
+// ── API：/api/health ───────────────────────────
+app.get('/api/health', async (_req, res) => {
   try {
     const meta = await getMeta()
     return res.status(200).json({
@@ -78,14 +78,12 @@ app.get('/health', async (_req, res) => {
   }
 })
 
-// ── API：/auth ─────────────────────────────────
-app.post('/auth', (req, res) => {
+// ── API：/api/auth ─────────────────────────────
+app.post('/api/auth', (req, res) => {
   const token = (req.body && req.body.token) || req.headers['x-token']
   const expected = getAdminToken()
   if (!expected) {
-    return res
-      .status(500)
-      .json({ ok: false, message: 'ADMIN_TOKEN 未配置' })
+    return res.status(500).json({ ok: false, message: 'ADMIN_TOKEN 未配置' })
   }
   if (token === expected) {
     return res.status(200).json({ ok: true, message: 'Token 验证通过' })
@@ -93,8 +91,8 @@ app.post('/auth', (req, res) => {
   return res.status(401).json({ ok: false, message: 'Token 无效' })
 })
 
-// ── API：/donors ───────────────────────────────
-app.get('/donors', async (req, res) => {
+// ── API：/api/donors ───────────────────────────
+app.get('/api/donors', async (req, res) => {
   try {
     const [raw, meta] = await Promise.all([readDonors(), getMeta()])
     const includeAll =
@@ -118,7 +116,7 @@ app.get('/donors', async (req, res) => {
   }
 })
 
-app.put('/donors', async (req, res) => {
+app.put('/api/donors', async (req, res) => {
   if (!checkAdminToken(req)) {
     return res.status(401).json({ ok: false, message: '未授权：Token 无效' })
   }
