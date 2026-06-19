@@ -135,9 +135,8 @@
       if (self.isLoading) return
       self.isLoading = true
       self.errInfo = ''
-      const url = 'https://' + API_BASE + '/api/donors'
+      const url = 'http://' + API_BASE + '/api/donors'
 
-      // 兜底：18 秒后还没有任何回调，强制重置 isLoading 并报日志
       let finished = false
       const watchdog = setTimeout(function () {
         if (!finished) {
