@@ -21,6 +21,29 @@ export function normalizeAmount(a) {
 }
 
 /**
+ * 排序 + 过滤
+ *  - 按金额（a）从大到小
+ *  - 过滤掉金额低于 minAmount 的条目
+ */
+export function sortAndFilterDonors(list, { minAmount = 1 } = {}) {
+  if (!Array.isArray(list)) return []
+  const threshold = Number(minAmount)
+  const hasThreshold = !isNaN(threshold)
+  return list
+    .filter((item) => {
+      if (!hasThreshold) return true
+      const a = parseFloat(item && item.a)
+      return !isNaN(a) && a >= threshold
+    })
+    .slice()
+    .sort((a, b) => {
+      const av = parseFloat(a && a.a) || 0
+      const bv = parseFloat(b && b.a) || 0
+      return bv - av
+    })
+}
+
+/**
  * 校验并归一化整个 donors 列表，返回 { ok, data, error }
  */
 export function validateAndNormalize(list) {

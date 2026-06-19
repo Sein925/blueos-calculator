@@ -6,15 +6,14 @@
   "engines": {
     "node": "20.x"
   },
-  "description": "打赏名单管理后台：Vercel KV + 可选 GitHub 同步",
-  "main": "server.js",
+  "description": "打赏名单管理后台：Vercel Serverless + Vercel KV",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "vercel dev"
   },
   "dependencies": {
-    "@octokit/rest": "^21.0.0",
-    "@vercel/kv": "^3.0.0",
-    "express": "^4.19.2"
+    "@vercel/kv": "^3.0.0"
+  },
+  "devDependencies": {
+    "vercel": "^39.0.0"
   }
 }

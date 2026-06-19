@@ -26,6 +26,10 @@
         <list-item class="list-header">
           <text class="list-title">打赏名单</text>
           <text class="list-desc">感谢以下支持者</text>
+          <div class="refresh-bar" onclick="fetchDonors">
+            <text class="refresh-btn">{{ isLoading ? '刷新中…' : '刷新数据' }}</text>
+            <text class="update-time">{{ updateTime }}</text>
+          </div>
         </list-item>
         <list-item for="group in donorList" style="padding: 0 10px;">
           <div class="donor-group">
@@ -49,17 +53,143 @@
 </template>
 
 <script>
-  import donorData from './../../../assets/data/donors.json'
+  // vivo watch 系统模块
+  import fetch from '@system.fetch'
+  import prompt from '@system.prompt'
+  import storage from '@system.storage'
+
+  // ★ 部署后请把这里替换成你的 Vercel 域名（不要带 https://，不要带尾部 /）
+  const API_BASE = 'donors.666-114514.eu.org'
+
+  // 本地缓存 key（手表的 @system.storage）
+  const STORAGE_KEY = 'donors_cache_v1'
 
   export default {
     data: {
-      donorList: donorData,
+      donorList: [],
+      updateTime: '点击刷新获取最新',
+      isLoading: false,
+    },
+
+    onInit() {
+      // 进入页面时从本地缓存加载上次的数据（如果有）
+      this.loadFromLocal()
+    },
+
+    loadFromLocal() {
+      // vivo watch @system.storage 的标准 API 是同步的：
+      //   storage.getItem(key) -> string
+      //   storage.setItem(key, value) -> boolean
+      // 部分版本的 callback 形式（{ key, success, fail }）不可用。
+      // 这里用 try-catch 兜底，避免 API 不匹配时崩溃。
+      try {
+        if (
+          typeof storage !== 'undefined' &&
+          storage &&
+          typeof storage.getItem === 'function'
+        ) {
+          const raw = storage.getItem(STORAGE_KEY)
+          if (raw) {
+            const parsed = JSON.parse(raw)
+            if (parsed && Array.isArray(parsed.data)) {
+              this.donorList = parsed.data
+              this.updateTime = parsed.updateTime || '本地缓存（未联网）'
+            }
+          }
+        }
+      } catch (e) {
+        // 存储不可用或 API 不兼容，静默忽略
+      }
+    },
+
+    saveToLocal() {
+      try {
+        if (
+          typeof storage !== 'undefined' &&
+          storage &&
+          typeof storage.setItem === 'function'
+        ) {
+          const cache = JSON.stringify({
+            data: this.donorList,
+            updateTime: this.updateTime,
+          })
+          storage.setItem(STORAGE_KEY, cache)
+        }
+      } catch (e) {
+        // 写入失败忽略
+      }
+    },
+
+    fetchDonors() {
+      const self = this
+      if (self.isLoading) return
+      self.isLoading = true
+      self.updateTime = '正在刷新...'
+
+      // 默认 GET /api/donors 已是「按金额降序 + 过滤 < 1 元」的数据
+      // 手表端不做任何二次过滤，直接展示
+      fetch.fetch({
+        url: 'https://' + API_BASE + '/api/donors',
+        method: 'GET',
+        success: function (response) {
+          self.isLoading = false
+          try {
+            const json = JSON.parse(response.data)
+            if (json.ok && Array.isArray(json.data)) {
+              self.donorList = json.data
+              if (json.meta && json.meta.updatedAt) {
+                self.updateTime =
+                  '数据更新于 ' + self.formatTime(json.meta.updatedAt)
+              } else {
+                self.updateTime =
+                  '已刷新 · ' + self.formatTime(new Date().toISOString())
+              }
+              // 拉到最新数据后，保存到本地缓存
+              self.saveToLocal()
+              prompt.showToast({
+                message: '已更新 ' + json.data.length + ' 条',
+                duration: 2000,
+              })
+            } else {
+              self.updateTime =
+                '刷新失败：' + (json.message || '数据格式错误')
+            }
+          } catch (e) {
+            self.updateTime = '解析失败：' + e.message
+          }
+        },
+        fail: function (data, code) {
+          self.isLoading = false
+          // data 是 vivo 返回的错误描述，code 是错误码
+          self.updateTime =
+            '网络错误（' + code + (data ? '：' + data : '') + '）'
+          prompt.showToast({ message: '网络错误' })
+        },
+      })
+    },
+
+    formatTime(iso) {
+      try {
+        const d = new Date(iso)
+        const pad = (n) => (n < 10 ? '0' + n : '' + n)
+        return (
+          d.getFullYear() +
+          '-' + pad(d.getMonth() + 1) +
+          '-' + pad(d.getDate()) +
+          ' ' + pad(d.getHours()) +
+          ':' + pad(d.getMinutes())
+        )
+      } catch (e) {
+        return iso
+      }
     },
 
     getTotalAmount() {
+      // 总金额 = 当前列表的累计
+      const data = this.donorList
       let amount = 0
-      for (let i = 0; i < this.donorList.length; i++) {
-        const item = this.donorList[i]
+      for (let i = 0; i < data.length; i++) {
+        const item = data[i]
         const a = parseFloat(item.a) || 0
         const c = (item.n && item.n.length) || 0
         amount += a * c
@@ -71,9 +201,10 @@
     },
 
     getTotalCount() {
+      const data = this.donorList
       let count = 0
-      for (let i = 0; i < this.donorList.length; i++) {
-        const names = this.donorList[i].n
+      for (let i = 0; i < data.length; i++) {
+        const names = data[i].n
         count += (names && names.length) || 0
       }
       return count
@@ -119,6 +250,32 @@
         .list-desc {
           font-size: 6 * $size-factor;
           color: $gray;
+        }
+
+        .refresh-bar {
+          width: 100%;
+          margin-top: 16px;
+          padding: 0 24px;
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .refresh-btn {
+          padding: 8px 22px;
+          background-color: $brand;
+          color: $white;
+          font-size: 6 * $size-factor;
+          font-weight: bold;
+          border-radius: 6 * $size-factor;
+        }
+
+        .update-time {
+          flex: 1;
+          margin-left: 16px;
+          color: $light-gray;
+          font-size: 4 * $size-factor;
+          text-align: right;
         }
       }
 

@@ -1,15 +1,10 @@
 # 打赏名单管理后台
 
-图形化编辑 `donors.json`，支持三种存储后端：
+图形化编辑打赏名单，**仅使用 Vercel KV**（基于 Upstash Redis）作为存储后端。
 
-- **Vercel KV**（推荐生产）：Vercel 自带 Redis 数据库，零配置 Token
-- **GitHub Contents API**（兼容）：仍然把数据写回仓库
-- **本地文件**（开发）：`pnpm start` 直接读写 `src/assets/data/donors.json`
-
-存储优先级：**Vercel KV → GitHub → 本地文件**
-（即：只要设了 `KV_REST_API_URL` / `KV_REST_API_TOKEN`，就走 KV）
-
-如果同时设置了 `KV_*` 与 `GITHUB_*`，保存时**既写 KV 也推 GitHub**（保持手环 app 那边的 `donors.json` 与云端 KV 一致）。
+- **Vercel KV**（唯一存储）：数据存于云端 KV，跨部署持久
+- 管理端：Vercel 上的 Serverless Functions + 静态前端
+- 手表 app：构建时打包本地 `donors.json` 作为兜底，运行时可通过 API 拉取最新
 
 ## 目录结构
 
@@ -22,117 +17,129 @@ tools/donors-admin/
 ├── lib/              # 共享逻辑（校验/鉴权/存储抽象）
 │   ├── auth.js
 │   ├── donors.js
-│   └── store.js
+│   └── store.js      # 仅 Vercel KV
 ├── public/           # 静态前端（已适配移动端）
 │   ├── app.js
 │   ├── index.html
 │   └── style.css
-├── server.js         # 本地开发用的 Express
-├── vercel.json       # Vercel 配置（不要修改）
+├── vercel.json       # Vercel 配置
 ├── .env.example      # 环境变量样例
 └── package.json
 ```
 
+KV 中的 key：
+
+| Key | 内容 |
+|-----|------|
+| `donors:data` | 主数据 `Array<{ a, n }>` |
+| `donors:meta` | 元信息 `{ updatedAt, count }` |
+
 ## 本地开发
+
+> ⚠️ 存储层只支持 Vercel KV，本地无法直接通过文件读写。
+> 推荐使用 Vercel CLI 在本地模拟：
 
 ```bash
 cd tools/donors-admin
 pnpm install
-pnpm start
+pnpm dlx vercel login              # 首次登录
+pnpm dlx vercel link                # 关联 Vercel 项目
+pnpm dlx vercel env pull .env.local # 拉取 KV 环境变量到本地
+pnpm dev                            # 启动 vercel dev（自带本地 KV）
 ```
 
-打开 http://localhost:4310，使用控制台打印的 Token 登录。默认读写 `src/assets/data/donors.json`。
+打开 http://localhost:3000，使用 `.env.local` 里的 `ADMIN_TOKEN` 登录。
 
-## 部署到 Vercel（推荐：Vercel KV）
+## 部署到 Vercel
 
 ### 1. 创建 Vercel KV 数据库
 
 1. 进入 Vercel 项目 → **Storage** 标签
-2. 点 **Create Database** → 选 **KV**（Upstash Redis）
+2. 点 **Create Database** → 选 **KV**
 3. 名字随意（例 `donors-kv`），区域选离你最近的
-4. 点 **Create**
-5. 切到 **`.env.local`** 标签，把里面的环境变量复制出来
-   - 至少要 `KV_REST_API_URL` 和 `KV_REST_API_TOKEN`
+4. 创建后 Vercel 会**自动注入** `KV_REST_API_URL` / `KV_REST_API_TOKEN` 三个环境
 
-> 创建后 Vercel 会**自动**把这些变量注入到项目的 **Production / Preview / Development** 三个环境，不需要你手动到 Settings 加。
-
-### 2. 在 Vercel 创建项目
+### 2. 创建项目（如尚未创建）
 
 1. 打开 https://vercel.com/new
-2. **Import** 你的 `blueos-calculator` 仓库
-3. **Root Directory** 点 Edit，改成 `tools/donors-admin`（关键：避免把整个手环 app 都上传）
+2. **Import** 你的仓库
+3. **Root Directory** 改成 `tools/donors-admin`（关键：避免把整个手环 app 都上传）
 4. **Framework Preset** 选 `Other`
 5. 点 **Deploy**
 
 ### 3. 配置登录 Token
 
-部署完成后到 **Project Settings → Environment Variables**，添加：
+**Project → Settings → Environment Variables**，添加：
 
 | 名称 | 值 | 说明 |
 |------|----|----|
-| `ADMIN_TOKEN` | 一个长随机字符串 | 前端登录用，自己定（如 `openssl rand -hex 16`） |
+| `ADMIN_TOKEN` | 一个长随机字符串 | 前端登录用，自己定（如 `openssl rand -hex 16`）|
 
-> `KV_*` 系列环境变量在第 1 步创建 KV 数据库后 Vercel 会自动注入，无需手动添加。
+`KV_*` 系列变量在第 1 步创建后 Vercel 已自动注入。
 
 保存后到 **Deployments** 重新部署一次让环境变量生效。
 
-### 4. （可选）启用 GitHub 同步
-
-如果你希望保存时也自动把 `donors.json` 推到 GitHub（让手环 app 的 `donors.json` 与云端保持同步），再多加几个环境变量：
-
-| 名称 | 值 | 说明 |
-|------|----|----|
-| `GITHUB_TOKEN` | Fine-grained PAT（Contents: R/W） | 见下 |
-| `GITHUB_REPO` | `你的用户名/blueos-calculator` | |
-| `GITHUB_BRANCH` | `main` | 可省略 |
-| `GITHUB_FILE_PATH` | `src/assets/data/donors.json` | 可省略 |
-| `COMMIT_MESSAGE` | `chore(donors): update donors list [skip ci]` | 可省略 |
-
-生成 Fine-grained PAT：
-1. 打开 https://github.com/settings/personal-access-tokens/new
-2. **Repository access** → **Only select repositories** → 选 `blueos-calculator`
-3. **Permissions → Repository permissions → Contents** → **Read and Write**
-4. 生成，复制
-
-### 5. 访问
+### 4. 访问
 
 打开 Vercel 给的域名，输入 `ADMIN_TOKEN` 登录。
 
-- 顶部会显示当前存储模式：
-  - `☁ Vercel KV`：纯 KV
-  - `☁ KV + GitHub`：KV 主存，同时推 GitHub
-  - `☁ your-name/repo@main`：纯 GitHub
-  - `💾 本地文件`：仅本地开发
-- 修改后点 **保存到 donors.json** → 数据进入 Vercel KV
-- 若启用了 GitHub 同步，仓库的 `src/assets/data/donors.json` 也会被 commit 一次
+- 顶栏显示 `☁ Vercel KV`
+- 修改后点 **保存到 donors.json** → 数据写入 KV，同时更新 `donors:meta.updatedAt`
 
 ## API 文档
 
 | 方法 | 路径 | 鉴权 | 说明 |
 |------|------|------|------|
-| GET  | `/api/donors`  | 否 | 读取完整名单（返回 `{ ok, data }`，`data` 即 donors.json 的数组内容）|
+| GET  | `/api/donors`  | 否 | 读取名单（**默认按金额降序 + 过滤 < 1 元**；?all=1 拿全量） |
 | PUT  | `/api/donors`  | **Admin Token** | 整体覆盖写入 |
 | POST | `/api/auth`    | 否 | 校验 Token |
 | GET  | `/api/health`  | 否 | 健康检查 + 当前存储信息 |
 
 PUT/POST 请求需在 Header `X-Token` 或 body `token` 中携带 `ADMIN_TOKEN`。
 
+### GET /api/donors 查询参数
+
+| 参数 | 默认 | 说明 |
+|------|------|------|
+| `?all=1` | — | 跳过排序与过滤，返回原始全量数据（管理端 / 手表 app 拉取用）|
+| `?minAmount=N` | `1` | 自定义金额阈值，仅返回 `a >= N` 的条目（与 `?all=1` 互斥）|
+
+响应体：
+
+```json
+{
+  "ok": true,
+  "data": [...],
+  "meta": {
+    "total": 15,
+    "returned": 12,
+    "filtered": 3,
+    "minAmount": 1,
+    "updatedAt": "2024-01-01T12:34:56.789Z"
+  }
+}
+```
+
+> 写入（PUT）**不应用任何过滤**，KV 中始终保留完整名单。
+
 ### curl 示例
 
 ```bash
-# 读取（返回与 donors.json 等价的数据）
+# 读取（默认：按金额降序，过滤 < 1 元）
 curl https://your-app.vercel.app/api/donors
-# => {"ok":true,"data":[{"a":"10.00","n":["*饭"]}, ...]}
+
+# 读取全量（手表 app 拉取用）
+curl https://your-app.vercel.app/api/donors?all=1
+
+# 健康检查
+curl https://your-app.vercel.app/api/health
+# => {"ok":true,"storage":{"mode":"kv","key":"donors:data","metaKey":"donors:meta"}}
 
 # 写入
 curl -X PUT https://your-app.vercel.app/api/donors \
   -H "Content-Type: application/json" \
   -H "X-Token: $ADMIN_TOKEN" \
-  -d '{"data":[{"a":"10.00","n":["*饭"]}]}'
-
-# 健康检查
-curl https://your-app.vercel.app/api/health
-# => {"ok":true,"storage":{"mode":"kv","key":"donors:data","githubSync":false}}
+  -d '{"data":[{"a":"10.00","n":["*饭"]}, {"a":"0.10","n":["小额支持者"]}]}'
 ```
 
 ## 数据格式
@@ -147,20 +154,26 @@ curl https://your-app.vercel.app/api/health
 - `a`：金额（数字字符串，保留 2 位小数）
 - `n`：该金额下的支持者数组（保存时会去空白/去空名/金额归一化）
 
+## 手表 app 集成
+
+`src/pages/About/Donate/index.ux` 已经改造：
+
+1. **首次进入页面**自动调用 `GET /api/donors?all=1` 拉取最新数据
+2. **页面右上角的「刷新数据」按钮**也可手动触发
+3. 拉取成功后显示 **「数据更新于 YYYY-MM-DD HH:MM」**（来自 KV meta）
+4. 网络失败时回退到构建时打包的 `src/assets/data/donors.json`
+
+需要在手表 app 顶部修改 `API_BASE` 常量为你的 Vercel 域名（参考 [index.ux](file:///e:/Code/BlueOSProjects/blueos-calculator/src/pages/About/Donate/index.ux) 第 60 行）：
+
+```js
+const API_BASE = 'https://donors-admin-xxx.vercel.app'  // ← 改成实际域名
+```
+
 ## 安全建议
 
-- **不要**把 `ADMIN_TOKEN` / `GITHUB_TOKEN` 提交到仓库（`tools/donors-admin/.env` 已在仓库根 `.gitignore` 范围之外）
+- **不要**把 `ADMIN_TOKEN` 提交到仓库
 - Vercel KV 凭据由 Vercel 自动注入，前端/浏览器**永远拿不到**
-- Fine-grained PAT 只授予 `blueos-calculator` 单仓库 + Contents 写入
-- 提交信息里的 `[skip ci]` 关键字可避免手环项目 CI 被频繁触发
-
-## 常见问题
-
-**Q: Vercel KV 里的数据会丢吗？**
-A: Vercel KV（基于 Upstash Redis）默认 256MB 持久存储，不会因为函数冷启动丢失。Vercel Hobby 计划有每月 30 万次请求额度，对本项目绰绰有余。
-
-**Q: 不启用 GitHub 同步，手环 app 怎么拿到最新名单？**
-A: 需要单独为手环 app 增加一个从 API 拉取名单的机制（带 Token）。或者保持 GitHub 同步开启，最简单。
-
-**Q: 想彻底用 KV 不再用 GitHub？**
-A: 不设 `GITHUB_TOKEN` 即可。前端标签会显示 `☁ Vercel KV`。
+- 由于手表 app 内置 `API_BASE` 是公开的，建议给 KV API 加一层只读保护：
+  - 当前 API 是**完全公开可读**（任何人拿到域名就能读到全量名单）
+  - 如果名单敏感，可以加一个 `?key=...` 参数，由 `READ_TOKEN` 环境变量控制
+  - 或者在 Vercel 项目里启用 **Vercel Authentication**（需要 Pro 计划）

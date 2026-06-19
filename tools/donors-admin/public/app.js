@@ -113,17 +113,28 @@
   // ─── 加载/渲染 ───────────────────────────────────
   async function loadData() {
     try {
+      // 管理端始终拿全量（?all=1 绕过 API 默认的金额阈值过滤）
       const [donorsJson, healthJson] = await Promise.all([
-        api('/api/donors'),
+        api('/api/donors?all=1'),
         api('/api/health').catch(() => null),
       ])
       data = donorsJson.data || []
       serverData = JSON.parse(JSON.stringify(data))
+      if (donorsJson.meta) {
+        // 记录被过滤的条目数，顶栏可显示
+        data.__hiddenCount = donorsJson.meta.filtered || 0
+      }
       if (healthJson && healthJson.storage) {
         renderStorageTag(healthJson.storage)
       }
       render()
-      showToast('已加载 ' + data.length + ' 个分组', 'success')
+      showToast(
+        '已加载 ' +
+          data.length +
+          ' 个分组' +
+          (data.__hiddenCount ? '（另有 ' + data.__hiddenCount + ' 条 < 1 元被隐藏）' : ''),
+        'success'
+      )
     } catch (e) {
       showToast('加载失败：' + e.message, 'error')
     }

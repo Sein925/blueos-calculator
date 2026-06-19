@@ -1,20 +1,39 @@
 /**
  * Vercel Serverless Function: /api/donors
- *   GET   - 读取 donors.json
- *   PUT   - 整体覆盖写入（需要 admin token）
+ *   GET   - 读取 KV 中的名单（默认按金额降序，并过滤 < 1 元的条目；
+ *           传 ?all=1 拿原始全量数据，供管理端 / 手表 app 用）
+ *   PUT   - 整体覆盖写入（需要 admin token；会同步更新 updatedAt）
  */
-import { readDonors, writeDonors } from '../lib/store.js'
+import { readDonors, writeDonors, getMeta } from '../lib/store.js'
 import { checkAdminToken } from '../lib/auth.js'
-import { validateAndNormalize } from '../lib/donors.js'
+import { validateAndNormalize, sortAndFilterDonors } from '../lib/donors.js'
 
 export default async function handler(req, res) {
-  // CORS / 通用头
   res.setHeader('Cache-Control', 'no-store')
 
   if (req.method === 'GET') {
     try {
-      const data = await readDonors()
-      return res.status(200).json({ ok: true, data })
+      const [raw, meta] = await Promise.all([readDonors(), getMeta()])
+      const includeAll =
+        req.query.all === '1' ||
+        req.query.all === 'true' ||
+        req.query.raw === '1'
+      const minAmount =
+        req.query.minAmount !== undefined
+          ? Number(req.query.minAmount)
+          : 1
+      const data = includeAll ? raw : sortAndFilterDonors(raw, { minAmount })
+      return res.status(200).json({
+        ok: true,
+        data,
+        meta: {
+          total: raw.length,
+          returned: data.length,
+          filtered: raw.length - data.length,
+          minAmount: includeAll ? 0 : minAmount,
+          updatedAt: meta.updatedAt || null,
+        },
+      })
     } catch (e) {
       return res
         .status(500)
