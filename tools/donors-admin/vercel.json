@@ -1,6 +1,8 @@
 {
+  "functions": {
+    "api/*.js": {}
+  },
   "routes": [
-    { "src": "/", "dest": "/index.html" },
-    { "src": "/api/(.*)", "dest": "/api/(.*).js" }
+    { "src": "/", "dest": "/index.html" }
   ]
 }
