@@ -60,9 +60,12 @@ app.listen(PORT, () => {
   const location =
     storage.mode === 'github'
       ? `${storage.repo}@${storage.branch}:${storage.path}`
-      : storage.path
+      : storage.mode === 'kv'
+        ? `Vercel KV (key: ${storage.key})` +
+          (storage.githubSync ? ' + GitHub 同步' : '')
+        : storage.path
   console.log('────────────────────────────────────────')
-  console.log('  打赏名单管理后台（本地模式）已启动')
+  console.log('  打赏名单管理后台已启动')
   console.log(`  访问地址: http://localhost:${PORT}`)
   console.log(`  存储模式: ${storage.mode}`)
   console.log(`  数据位置: ${location}`)

@@ -132,7 +132,12 @@
   function renderStorageTag(storage) {
     const el = $('storage-info')
     if (!el) return
-    if (storage.mode === 'github') {
+    if (storage.mode === 'kv') {
+      el.textContent = storage.githubSync ? '☁ KV + GitHub' : '☁ Vercel KV'
+      el.title = storage.key
+        ? `KV key: ${storage.key}` + (storage.githubSync ? ' · 同步至 GitHub' : '')
+        : ''
+    } else if (storage.mode === 'github') {
       el.textContent = `☁ ${storage.repo}@${storage.branch}`
       el.title = storage.path
     } else {
@@ -161,7 +166,7 @@
     card.innerHTML = `
       <div class="amount-wrap">
         <label>金额 (¥)</label>
-        <input class="amount-input" type="number" step="0.01" min="0" value="${escapeHtml(group.a)}" data-idx="${idx}" data-field="a" />
+        <input class="amount-input" type="number" inputmode="decimal" step="0.01" min="0" value="${escapeHtml(group.a)}" data-idx="${idx}" data-field="a" />
         <div class="donor-subtotal">小计: ¥${subtotal(group)}</div>
       </div>
       <div class="names-wrap">
@@ -169,7 +174,7 @@
           <span>支持者（每行一个）</span>
           <span class="name-count">${count} 人</span>
         </label>
-        <textarea class="names-input" data-idx="${idx}" data-field="n" placeholder="每行一个名字">${escapeHtml(namesText)}</textarea>
+        <textarea class="names-input" data-idx="${idx}" data-field="n" rows="${Math.max(2, count)}" placeholder="每行一个名字">${escapeHtml(namesText)}</textarea>
       </div>
       <button class="del-btn" data-idx="${idx}" title="删除该分组">✕</button>
     `

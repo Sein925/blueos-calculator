@@ -377,13 +377,132 @@ body {
 }
 
 @media (max-width: 640px) {
-  .donor-card {
-    grid-template-columns: 1fr 40px;
+  html,
+  body {
+    font-size: 15px;
+    /* 让底部 footer 避开 iPhone 小黑条 */
+    padding-bottom: env(safe-area-inset-bottom);
   }
-  .donor-card .amount-wrap {
+
+  /* ── 顶栏：紧凑 + 防止换行 ── */
+  .topbar {
+    padding: 10px 14px;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+  }
+  .topbar h1 {
+    font-size: 16px;
+  }
+  .topbar-right {
+    gap: 8px;
+    font-size: 12px;
+  }
+  .storage-tag {
+    padding: 3px 8px;
+    font-size: 11px;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── 统计：3 张卡依旧一行，但更紧凑 ── */
+  .stats {
+    grid-template-columns: repeat(3, 1fr);
+    padding: 12px 14px;
+    gap: 8px;
+  }
+  .stat-card {
+    padding: 10px 12px;
+  }
+  .stat-label {
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+  .stat-value {
+    font-size: 17px;
+  }
+
+  /* ── 工具栏：文字提示独占一行 ── */
+  .toolbar {
+    padding: 0 14px 12px;
+    gap: 8px;
+  }
+  .toolbar .muted {
+    width: 100%;
+    line-height: 1.5;
+  }
+  .toolbar button {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* ── 打赏卡：金额/名字都占满一行，删除按钮单独占右侧 ── */
+  .donor-list {
+    padding: 0 14px 90px;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+  }
+  .donor-card {
+    grid-template-columns: 1fr 36px;
+    gap: 10px;
+    padding: 12px 12px;
+  }
+  .donor-card .amount-wrap,
+  .donor-card .names-wrap {
     grid-column: 1 / -1;
   }
+  .donor-card .amount-input,
+  .donor-card .names-input {
+    /* 16px 防止 iOS 输入框聚焦时自动放大 */
+    font-size: 16px;
+  }
+  .donor-card .del-btn {
+    align-self: end;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  /* ── 底部：保存按钮更突出 ── */
+  .footer {
+    padding: 10px 14px;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .footer > div {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .footer > div button {
+    flex: 1;
+  }
+  .footer .btn-primary {
+    flex: 2;
+  }
+
+  /* ── Toast：贴近底部但避开小黑条 ── */
+  .toast {
+    bottom: calc(80px + env(safe-area-inset-bottom));
+    font-size: 13px;
+  }
+
+  /* ── 登录卡：贴近屏幕边缘 ── */
+  .login-card {
+    padding: 26px 22px;
+  }
+}
+
+/* ── 更窄屏幕（≤380px）：统计卡 2+1 布局 ── */
+@media (max-width: 380px) {
   .stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+  }
+  .stats .stat-card:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+  .stat-value {
+    font-size: 16px;
   }
 }
