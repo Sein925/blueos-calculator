@@ -342,6 +342,7 @@
       '" placeholder="每行一个名字">' +
       escapeHtml(namesText) +
       '</textarea>' +
+      '<div class="duplicate-tip" style="display:none;margin-top:8px;"></div>' +
       '</div>' +
       '<button class="del-btn" data-idx="' +
       idx +
@@ -429,6 +430,7 @@
     const confirmText = opts.confirmText || '确定'
     const cancelText = opts.cancelText || '取消'
     const onConfirm = opts.onConfirm || function () {}
+    const onCancel = opts.onCancel || null
     const showCancel = opts.showCancel !== false
 
     $('modal-title').textContent = title
@@ -449,6 +451,7 @@
     }
     const cancelHandler = function () {
       closeModal()
+      if (typeof onCancel === 'function') onCancel()
     }
     confirmBtn.onclick = confirmHandler
     cancelBtn.onclick = cancelHandler
@@ -462,8 +465,167 @@
     $('modal').classList.add('hidden')
   }
 
+  // ─── 重复姓名检测 & 合并 ────────────────────────
+  //
+  // 返回值: [{ name, groups: [{idx, a, countInGroup}] }]
+  // 其中 groups 长度 > 1 表示该姓名出现在多个分组。
+  function findDuplicates() {
+    const nameMap = new Map() // name → [{idx, a, countInGroup}]
+    data.forEach((g, idx) => {
+      if (!g || !Array.isArray(g.n)) return
+      const a = parseFloat(g.a)
+      g.n.forEach((name) => {
+        const clean = String(name).trim()
+        if (clean.length === 0) return
+        if (!nameMap.has(clean)) nameMap.set(clean, [])
+        nameMap.get(clean).push({ idx, a: isNaN(a) ? 0 : a, amount: String(g.a) })
+      })
+    })
+    const result = []
+    for (const [name, arr] of nameMap.entries()) {
+      if (arr.length > 1) {
+        result.push({ name, groups: arr })
+      }
+    }
+    return result
+  }
+
+  // 把姓名从低金额分组移动到高金额分组（合并），
+  // 如果高金额组和低金额组金额相同，则保留第一个出现的分组
+  // 返回: { moved: true/false, fromIdx, toIdx, name }
+  function mergeDuplicate(name, groups) {
+    if (!Array.isArray(groups) || groups.length < 2) return null
+
+    // 找到金额最高的分组（作为目标），其余的都是源
+    let toGroup = groups[0]
+    for (let i = 1; i < groups.length; i++) {
+      if (groups[i].a > toGroup.a) toGroup = groups[i]
+    }
+
+    const toIdx = toGroup.idx
+    const results = []
+    groups.forEach((g) => {
+      if (g.idx === toIdx) return
+      // 把姓名从 data[g.idx].n 中删除
+      const group = data[g.idx]
+      if (!group || !Array.isArray(group.n)) return
+      // 删除所有匹配这个姓名的条目（包括前后可能有空格）
+      const beforeLen = group.n.length
+      group.n = group.n.filter((n) => String(n).trim() !== name)
+      if (group.n.length < beforeLen) {
+        results.push({ fromIdx: g.idx, toIdx, name, fromAmount: g.amount, toAmount: toGroup.amount })
+      }
+    })
+
+    // 如果目标分组原本就有这个姓名，不需要再加（去重）
+    const targetGroup = data[toIdx]
+    if (targetGroup && Array.isArray(targetGroup.n)) {
+      if (!targetGroup.n.some((n) => String(n).trim() === name)) {
+        targetGroup.n.push(name)
+        // 如果上面 forEach 中没有实际移动的记录（例如本来目标分组已经有），
+        // 这里会手动补一条合并记录用于提示
+        if (results.length === 0) {
+          results.push({ fromIdx: -1, toIdx, name, fromAmount: '—', toAmount: toGroup.amount })
+        }
+      }
+    }
+
+    return results
+  }
+
+  // 合并后清理空分组
+  function cleanupEmptyGroups() {
+    const before = data.length
+    data = data.filter((g) => {
+      const a = parseFloat(g.a)
+      const hasPeople = Array.isArray(g.n) && g.n.length > 0
+      if (!hasPeople && (isNaN(a) || a <= 0)) return false // 金额 <= 0 且无人 → 删除
+      if (!hasPeople) return false
+      return true
+    })
+    return before - data.length
+  }
+
+  // 处理单个重复项：弹窗询问是否合并
+  function askAndMergeOne(item, onDone) {
+    const groupsHtml = item.groups
+      .map(
+        (g) =>
+          '<li>分组 #' +
+          (g.idx + 1) +
+          ' · 金额 ' +
+          escapeHtml(formatAmount(g.a)) +
+          '</li>'
+      )
+      .join('')
+
+    openModal({
+      title: '发现重复支持者：' + escapeHtml(item.name),
+      body:
+        '<p class="muted">该姓名出现在多个分组，是否合并到金额最高的那个分组？</p>' +
+        '<ul style="list-style:disc;margin:10px 0 10px 24px;line-height:1.8;">' +
+        groupsHtml +
+        '</ul>' +
+        '<p class="muted">选择「合并」后，空分组会自动删除；选择「保留」将保持不变。</p>',
+      confirmText: '合并到最高金额分组',
+      cancelText: '保留不合并',
+      onConfirm: function () {
+        const results = mergeDuplicate(item.name, item.groups)
+        if (results && results.length > 0) {
+          setDirty(true)
+          render()
+          showToast('已合并「' + item.name + '」', 'success')
+        } else {
+          showToast('没有需要合并的内容', 'warn')
+        }
+        if (onDone) onDone()
+      },
+      onCancel: onDone,
+    })
+  }
+
+  // 处理全部重复项（用于保存前预检）
+  function processAllDuplicates(onFinal) {
+    const dups = findDuplicates()
+    if (dups.length === 0) {
+      onFinal()
+      return
+    }
+
+    let i = 0
+    const step = () => {
+      if (i >= dups.length) {
+        onFinal()
+        return
+      }
+      const item = dups[i]
+      i++
+      // 检测当前这个名字是否还重复（可能因为前面的合并已经处理了）
+      const latest = findDuplicates()
+      const stillThere = latest.find((d) => d.name === item.name)
+      if (!stillThere) {
+        step()
+        return
+      }
+      askAndMergeOne(stillThere, step)
+    }
+    step()
+  }
+
+  // 检测某个分组当前刚输入的姓名是否已经存在别处
+  function detectDuplicateInName(name) {
+    const clean = String(name).trim()
+    if (clean.length === 0) return null
+    const dups = findDuplicates()
+    return dups.find((d) => d.name === clean) || null
+  }
+
   // ─── 事件委托：编辑 ─────────────────────────────────
   function bindCardEvents() {
+    // 避免每次输入都弹窗询问合并
+    let _modalOpen = false
+    function markModalOpen(v) { _modalOpen = v }
+
     listEl.addEventListener('input', (e) => {
       const t = e.target
       if (!(t instanceof HTMLElement)) return
@@ -515,12 +677,71 @@
             amountInput.classList.add('is-invalid')
           else amountInput.classList.remove('is-invalid')
         }
+
+        // 检测：当前分组中有哪些姓名和其他分组冲突
+        const dupTips = card && card.querySelector('.duplicate-tip')
+        if (dupTips) {
+          const dupsHere = []
+          const allDups = findDuplicates()
+          for (const d of allDups) {
+            if (d.groups.some((g) => g.idx === idx)) dupsHere.push(d)
+          }
+          if (dupsHere.length > 0) {
+            const namesHtml = dupsHere
+              .map((d) => {
+                const otherGroup = d.groups.find((g) => g.idx !== idx)
+                const otherAmount = otherGroup
+                  ? formatAmount(otherGroup.a)
+                  : ''
+                return (
+                  '<span class="chip warn" title="与 ' +
+                  escapeHtml(otherAmount) +
+                  ' 的分组冲突">' +
+                  escapeHtml(d.name) +
+                  '</span>'
+                )
+              })
+              .join('')
+            dupTips.innerHTML =
+              '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">' +
+              '<span style="color:var(--text-muted);font-size:12px;">检测到重复姓名：</span>' +
+              namesHtml +
+              '</div>'
+            dupTips.style.display = 'block'
+          } else {
+            dupTips.innerHTML = ''
+            dupTips.style.display = 'none'
+          }
+        }
       }
 
       updateStats()
       renderPreview()
       setDirty(true)
     })
+
+    // names-input 失焦时：如果刚输入的姓名有重复，弹窗询问是否合并
+    listEl.addEventListener('blur', (e) => {
+      if (_modalOpen) return
+      const t = e.target
+      if (!(t instanceof HTMLElement)) return
+      if (t.tagName !== 'TEXTAREA' || t.dataset.field !== 'n') return
+      const idx = parseInt(t.dataset.idx, 10)
+      if (isNaN(idx)) return
+
+      // 如果当前分组有新检测到的重复项，弹出一次合并询问（只处理第一个，避免过多弹窗）
+      const dups = findDuplicates()
+      const dupHere = dups.find((d) => d.groups.some((g) => g.idx === idx))
+      if (dupHere && dups.length > 0) {
+        _modalOpen = true
+        askAndMergeOne(dupHere, () => {
+          cleanupEmptyGroups()
+          setDirty(true)
+          render()
+          _modalOpen = false
+        })
+      }
+    }, true)
 
     listEl.addEventListener('click', (e) => {
       const btn = e.target.closest('.del-btn')
@@ -603,69 +824,118 @@
     })
 
     $('save-btn').addEventListener('click', () => {
-      // 预检：警告信息
-      const problemGroups = []
-      data.forEach((g, idx) => {
-        const a = parseFloat(g.a)
-        if (isNaN(a) || a < 0) problemGroups.push({ idx, reason: '金额非法', g })
-      })
+      // 预检 1：是否有重复姓名
+      const dups = findDuplicates()
       const doSave = function () {
-        // 清理：去除空名字
-        const cleaned = data
-          .map((g) => ({
-            a: g.a,
-            n: (g.n || [])
-              .map((n) => String(n).trim())
-              .filter((n) => n.length > 0),
-          }))
-          .filter((g) => {
-            const a = parseFloat(g.a)
-            return !isNaN(a) && a >= 0
-          })
-        // 提交
-        ;(async () => {
-          try {
-            await api('/api/donors', {
-              method: 'PUT',
-              body: { data: cleaned, token: TOKEN },
+        // 预检 2：非法金额
+        const problemGroups = []
+        data.forEach((g, idx) => {
+          const a = parseFloat(g.a)
+          if (isNaN(a) || a < 0) problemGroups.push({ idx, reason: '金额非法', g })
+        })
+
+        const commit = function () {
+          // 清理：去除空名字，移除空分组
+          const cleaned = data
+            .map((g) => ({
+              a: g.a,
+              n: (g.n || [])
+                .map((n) => String(n).trim())
+                .filter((n) => n.length > 0),
+            }))
+            .filter((g) => {
+              const a = parseFloat(g.a)
+              return !isNaN(a) && a >= 0
             })
-            data = cleaned
-            serverData = JSON.parse(JSON.stringify(data))
-            setDirty(false)
-            render()
-            showToast('保存成功！共 ' + cleaned.length + ' 个分组', 'success')
-          } catch (e) {
-            showToast('保存失败：' + e.message, 'error')
-          }
-        })()
+
+          ;(async () => {
+            try {
+              await api('/api/donors', {
+                method: 'PUT',
+                body: { data: cleaned, token: TOKEN },
+              })
+              data = cleaned
+              serverData = JSON.parse(JSON.stringify(data))
+              setDirty(false)
+              render()
+              showToast('保存成功！共 ' + cleaned.length + ' 个分组', 'success')
+            } catch (e) {
+              showToast('保存失败：' + e.message, 'error')
+            }
+          })()
+        }
+
+        if (problemGroups.length > 0) {
+          openModal({
+            title: '发现 ' + problemGroups.length + ' 条问题数据',
+            body:
+              '<p>以下分组将被丢弃（金额非法），是否仍继续保存？</p>' +
+              '<div style="max-height:180px;overflow:auto;margin-top:8px;padding:10px;' +
+              'background:var(--card);border:1px solid var(--border);border-radius:8px;">' +
+              problemGroups
+                .map((p) => {
+                  return (
+                    '<div style="font-size:13px;padding:4px 0;">' +
+                    '#{idx} 金额=<code>{a}</code>，{c} 人'
+                      .replace('{idx}', p.idx + 1)
+                      .replace('{a}', escapeHtml(String(p.g.a)))
+                      .replace('{c}', (p.g.n || []).length) +
+                    '</div>'
+                  )
+                })
+                .join('') +
+              '</div>',
+            confirmText: '仍然保存',
+            onConfirm: commit,
+          })
+        } else {
+          commit()
+        }
       }
 
-      if (problemGroups.length > 0) {
+      // 如果有重复，先询问合并
+      if (dups.length > 0) {
+        const summary = dups
+          .slice(0, 6)
+          .map((d) => {
+            const amounts = d.groups
+              .map((g) => formatAmount(g.a))
+              .join(' / ')
+            return (
+              '<li>' +
+              escapeHtml(d.name) +
+              '（出现在 ' +
+              d.groups.length +
+              ' 个分组：' +
+              escapeHtml(amounts) +
+              '）</li>'
+            )
+          })
+          .join('')
+        const more = dups.length > 6
+          ? '<p style="margin-top:6px;">…以及其他 ' + (dups.length - 6) + ' 个重复姓名</p>'
+          : ''
+
         openModal({
-          title: '发现 ' + problemGroups.length + ' 条问题数据',
+          title: '发现 ' + dups.length + ' 个重复支持者',
           body:
-            '<p>以下分组将被丢弃（金额非法），是否仍继续保存？</p>' +
-            '<div style="max-height:180px;overflow:auto;margin-top:8px;padding:10px;' +
-            'background:var(--card);border:1px solid var(--border);border-radius:8px;">' +
-            problemGroups
-              .map((p) => {
-                return (
-                  '<div style="font-size:13px;padding:4px 0;">' +
-                  '#{idx} 金额=<code>{a}</code>，{c} 人'
-                    .replace('{idx}', p.idx + 1)
-                    .replace('{a}', escapeHtml(String(p.g.a)))
-                    .replace('{c}', (p.g.n || []).length) +
-                  '</div>'
-                )
-              })
-              .join('') +
-            '</div>',
-          confirmText: '仍然保存',
-          onConfirm: doSave,
+            '<p class="muted">以下姓名出现在多个分组中。逐个询问是否合并到金额最高的分组？</p>' +
+            '<ul style="list-style:disc;margin:10px 0 10px 24px;line-height:1.8;">' +
+            summary +
+            '</ul>' +
+            more,
+          confirmText: '逐个询问并合并',
+          cancelText: '跳过，直接保存',
+          onConfirm: function () {
+            processAllDuplicates(doSave)
+          },
+          onCancel: doSave,
         })
-      } else {
-        doSave()
+        return
       }
+
+      // 没有重复，直接保存
+      doSave()
     })
 
     $('export-btn').addEventListener('click', () => {
