@@ -470,7 +470,7 @@
   // 通过模态框输入金额 + 姓名，系统自动判断：
   //   1. 若已有同金额分组 → 追加到该分组
   //   2. 若无 → 新建分组
-  //   3. 若姓名已存在于其他金额分组 → 询问是否合并到更高金额分组
+  //   3. 若姓名已存在于其他分组 → 询问是否合并（合并后金额=各分组金额之和+本次输入金额）
 
   function openAddModal() {
     openModal({
@@ -546,15 +546,12 @@
           }
         })
 
-        // 确定每个新姓名要放到哪个分组：
-        //   - 如果姓名已存在于金额 >= 新金额的分组 → 该分组就是目标
-        //   - 如果姓名只存在于金额 < 新金额的分组 → 目标是新金额分组
-        //   - 如果姓名全新 → 目标是新金额分组
-        // 对于那些需要合并到其他分组的姓名，先弹窗询问用户
-
-        const needAsk = [] // 需要询问的姓名
-        const addToSame = [] // 可以直接加到同金额分组的姓名（或新建）
-        const alreadyHigher = [] // 已在更高或相同金额分组
+        // 确定每个姓名如何处理：
+        //   - 全新姓名 → 直接加到同金额分组 / 新建分组
+        //   - 已存在于其他分组 → 询问是否合并（合并后金额=各分组金额之和+本次输入金额）
+        const needAsk = []
+        const addToSame = []
+        const alreadyInSame = [] // 已经在同金额分组中存在
 
         names.forEach((name) => {
           const ex = existing.find((e) => e.name === name)
@@ -562,12 +559,13 @@
             addToSame.push(name)
             return
           }
-          // 检查是否已有 >= 新金额的分组包含该姓名
-          const higherOrSame = ex.groups.some((g) => g.a >= aNum - 0.001)
-          if (higherOrSame) {
-            alreadyHigher.push(name)
+          // 检查是否已经在同金额分组中
+          const inSame = ex.groups.some((g) => Math.abs(g.a - aNum) < 0.001)
+          if (inSame && ex.groups.length === 1) {
+            // 只在同金额分组中有 → 跳过
+            alreadyInSame.push(name)
           } else {
-            // 只在更低金额分组中出现 → 询问是否移到新金额分组
+            // 在其他金额分组中出现 → 询问合并
             needAsk.push({ name, groups: ex.groups })
           }
         })
@@ -587,16 +585,16 @@
           let msg = '添加完成'
           if (totalAdded > 0) {
             msg = '成功添加 ' + totalAdded + ' 位支持者（金额 ¥' + a + '）'
-            if (alreadyHigher.length > 0) {
-              msg += '；' + alreadyHigher.length + ' 位已存在于更高金额分组，已跳过'
+            if (alreadyInSame.length > 0) {
+              msg += '；' + alreadyInSame.length + ' 位已存在于同金额分组，已跳过'
             }
-          } else if (alreadyHigher.length > 0) {
-            msg = alreadyHigher.length + ' 位支持者已在更高金额分组中，无需添加'
+          } else if (alreadyInSame.length > 0) {
+            msg = alreadyInSame.length + ' 位支持者已在同金额分组中，无需添加'
           }
           showToast(msg, 'success')
         }
 
-        // 如果有需要询问的姓名 → 逐个询问
+        // 如果有需要询问的姓名 → 逐个询问（合并后金额 = 现有分组金额之和 + 本次输入金额）
         if (needAsk.length > 0) {
           let i = 0
           const askNext = function () {
@@ -606,6 +604,11 @@
             }
             const item = needAsk[i]
             i++
+            // 计算现有分组金额之和 + 本次输入金额
+            let existingSum = 0
+            item.groups.forEach((g) => { existingSum += parseFloat(g.a) || 0 })
+            const sumNum = (existingSum + aNum)
+            const sumStr = sumNum.toFixed(2)
             const groupsHtml = item.groups
               .map(
                 (g) =>
@@ -619,58 +622,25 @@
             openModal({
               title: '「' + escapeHtml(item.name) + '」已在其他分组',
               body:
-                '<p class="muted">该姓名已出现在较低金额分组中。是否合并到新金额分组（¥' +
-                escapeHtml(a) +
-                '）？</p>' +
+                '<p class="muted">该姓名已出现在其他分组中。是否合并（合并后金额 = ' +
+                '各分组金额之和 + 本次输入 ¥' + escapeHtml(a) + ' = ¥' + escapeHtml(sumStr) + '）？</p>' +
                 '<ul style="list-style:disc;margin:10px 0 10px 24px;line-height:1.8;">' +
                 groupsHtml +
+                '<li>本次输入 · 金额 ' + escapeHtml(formatAmount(aNum)) + '</li>' +
                 '</ul>' +
-                '<p class="muted">选择「合并」后，该姓名将从以上分组移到新金额分组（¥' +
-                escapeHtml(a) +
-                '），空分组会自动删除；选择「保留」则跳过该姓名。</p>',
-              confirmText: '合并到 ¥' + a,
+                '<p class="muted">选择「合并」后，该姓名将从以上分组移除，放入金额为 ¥' +
+                escapeHtml(sumStr) +
+                ' 的新分组（如已有同金额分组则追加）；空分组会自动删除。选择「保留」则跳过该姓名。</p>',
+              confirmText: '合并（总 ¥' + sumStr + '）',
               cancelText: '保留不动',
               onConfirm: function () {
-                // 从原分组删除
-                item.groups.forEach((g) => {
-                  const grp = data[g.idx]
-                  if (grp && Array.isArray(grp.n)) {
-                    grp.n = grp.n.filter((n) => String(n).trim() !== item.name)
-                  }
-                })
-                // 加到目标分组（或新建）
-                if (sameAmountIdx >= 0) {
-                  if (!data[sameAmountIdx].n.some((n) => String(n).trim() === item.name)) {
-                    data[sameAmountIdx].n.push(item.name)
-                  }
-                } else {
-                  // 需要新建一个分组作为目标
-                  let targetIdx = data.length
-                  let found = data.find((g, idx) => {
-                    const ga = parseFloat(g.a)
-                    return !isNaN(ga) && Math.abs(ga - aNum) < 0.001
-                  })
-                  if (found) {
-                    // 重新找索引
-                    for (let j = 0; j < data.length; j++) {
-                      const ga = parseFloat(data[j].a)
-                      if (!isNaN(ga) && Math.abs(ga - aNum) < 0.001) {
-                        targetIdx = j
-                        break
-                      }
-                    }
-                    if (targetIdx < data.length && !data[targetIdx].n.some((n) => String(n).trim() === item.name)) {
-                      data[targetIdx].n.push(item.name)
-                    }
-                  } else {
-                    data.push({ a: a, n: [item.name] })
-                    sameAmountIdx = data.length - 1
-                  }
+                // 调用统一的 mergeDuplicateSum，传入本次输入金额作为 extraAmount
+                const result = mergeDuplicateSum(item.name, item.groups, aNum)
+                if (result) {
+                  setDirty(true)
+                  render()
+                  showToast('已合并「' + item.name + '」到 ¥' + result.sumAmount + ' 分组', 'success')
                 }
-                // 清理空分组
-                cleanupEmptyGroups()
-                setDirty(true)
-                showToast('已合并「' + item.name + '」到 ¥' + a + ' 分组', 'success')
                 askNext()
               },
               onCancel: askNext,
@@ -715,47 +685,67 @@
     return result
   }
 
+  // 合并重复姓名：金额相加模式
+  // 从所有包含该姓名的分组中移除，再放到一个金额=各分组金额之和的新分组
+  // 参数：
+  //   name: 重复姓名
+  //   groups: [{idx, a, amount}] 该姓名所在的现有分组
+  //   extraAmount: 可选，额外要加的金额（例如"添加模式"中用户输入的金额）
+  // 返回: {sumAmount: string, targetIdx: number}
+  function mergeDuplicateSum(name, groups, extraAmount) {
+    if (!name || !Array.isArray(groups) || groups.length < 1) return null
+    const clean = String(name).trim()
+    if (!clean) return null
+
+    // 1. 计算总金额 = 各分组金额之和 + 额外金额
+    let total = parseFloat(extraAmount) || 0
+    groups.forEach((g) => {
+      total += parseFloat(g.a) || 0
+    })
+    const sumAmount = total.toFixed(2)
+    const sumNum = parseFloat(sumAmount)
+
+    // 2. 从所有现有分组中移除该姓名
+    groups.forEach((g) => {
+      const grp = data[g.idx]
+      if (grp && Array.isArray(grp.n)) {
+        grp.n = grp.n.filter((n) => String(n).trim() !== clean)
+      }
+    })
+
+    // 3. 寻找是否已有同金额的分组（金额=sumAmount）
+    let targetIdx = -1
+    for (let j = 0; j < data.length; j++) {
+      const ga = parseFloat(data[j].a)
+      if (!isNaN(ga) && Math.abs(ga - sumNum) < 0.001) {
+        targetIdx = j
+        break
+      }
+    }
+
+    // 4. 将姓名追加到同金额分组，或新建分组
+    if (targetIdx >= 0) {
+      const target = data[targetIdx]
+      if (target && Array.isArray(target.n) && !target.n.some((n) => String(n).trim() === clean)) {
+        target.n.push(clean)
+      }
+    } else {
+      data.push({ a: sumAmount, n: [clean] })
+      targetIdx = data.length - 1
+    }
+
+    // 5. 清理空分组
+    cleanupEmptyGroups()
+
+    return { sumAmount: sumAmount, targetIdx: targetIdx, name: clean }
+  }
+
   // 把姓名从低金额分组移动到高金额分组（合并），
   // 如果高金额组和低金额组金额相同，则保留第一个出现的分组
   // 返回: { moved: true/false, fromIdx, toIdx, name }
   function mergeDuplicate(name, groups) {
-    if (!Array.isArray(groups) || groups.length < 2) return null
-
-    // 找到金额最高的分组（作为目标），其余的都是源
-    let toGroup = groups[0]
-    for (let i = 1; i < groups.length; i++) {
-      if (groups[i].a > toGroup.a) toGroup = groups[i]
-    }
-
-    const toIdx = toGroup.idx
-    const results = []
-    groups.forEach((g) => {
-      if (g.idx === toIdx) return
-      // 把姓名从 data[g.idx].n 中删除
-      const group = data[g.idx]
-      if (!group || !Array.isArray(group.n)) return
-      // 删除所有匹配这个姓名的条目（包括前后可能有空格）
-      const beforeLen = group.n.length
-      group.n = group.n.filter((n) => String(n).trim() !== name)
-      if (group.n.length < beforeLen) {
-        results.push({ fromIdx: g.idx, toIdx, name, fromAmount: g.amount, toAmount: toGroup.amount })
-      }
-    })
-
-    // 如果目标分组原本就有这个姓名，不需要再加（去重）
-    const targetGroup = data[toIdx]
-    if (targetGroup && Array.isArray(targetGroup.n)) {
-      if (!targetGroup.n.some((n) => String(n).trim() === name)) {
-        targetGroup.n.push(name)
-        // 如果上面 forEach 中没有实际移动的记录（例如本来目标分组已经有），
-        // 这里会手动补一条合并记录用于提示
-        if (results.length === 0) {
-          results.push({ fromIdx: -1, toIdx, name, fromAmount: '—', toAmount: toGroup.amount })
-        }
-      }
-    }
-
-    return results
+    // 改为金额相加模式：调用统一的 mergeDuplicateSum
+    return mergeDuplicateSum(name, groups, 0)
   }
 
   // 合并后清理空分组
@@ -771,7 +761,7 @@
     return before - data.length
   }
 
-  // 处理单个重复项：弹窗询问是否合并
+  // 处理单个重复项：弹窗询问是否合并（金额相加模式）
   function askAndMergeOne(item, onDone) {
     const groupsHtml = item.groups
       .map(
@@ -783,23 +773,31 @@
           '</li>'
       )
       .join('')
+    // 计算合并后的总金额
+    let total = 0
+    item.groups.forEach((g) => { total += parseFloat(g.a) || 0 })
+    const totalStr = total.toFixed(2)
 
     openModal({
       title: '发现重复支持者：' + escapeHtml(item.name),
       body:
-        '<p class="muted">该姓名出现在多个分组，是否合并到金额最高的那个分组？</p>' +
+        '<p class="muted">该姓名出现在多个分组中。是否合并到一个新分组（合并后金额 = ' +
+        escapeHtml(formatAmount(parseFloat(totalStr))) +
+        '，即各分组金额相加）？</p>' +
         '<ul style="list-style:disc;margin:10px 0 10px 24px;line-height:1.8;">' +
         groupsHtml +
         '</ul>' +
-        '<p class="muted">选择「合并」后，空分组会自动删除；选择「保留」将保持不变。</p>',
-      confirmText: '合并到最高金额分组',
+        '<p class="muted">选择「合并」后，该姓名会从以上分组移除，并放入金额为 ¥' +
+        escapeHtml(totalStr) +
+        ' 的新分组（如已有同金额分组则追加）；空分组会自动删除。选择「保留」则保持不变。</p>',
+      confirmText: '合并（金额相加 ¥' + totalStr + '）',
       cancelText: '保留不合并',
       onConfirm: function () {
-        const results = mergeDuplicate(item.name, item.groups)
-        if (results && results.length > 0) {
+        const result = mergeDuplicateSum(item.name, item.groups, 0)
+        if (result) {
           setDirty(true)
           render()
-          showToast('已合并「' + item.name + '」', 'success')
+          showToast('已合并「' + item.name + '」到 ¥' + result.sumAmount + ' 分组', 'success')
         } else {
           showToast('没有需要合并的内容', 'warn')
         }
@@ -1147,7 +1145,7 @@
         openModal({
           title: '发现 ' + dups.length + ' 个重复支持者',
           body:
-            '<p class="muted">以下姓名出现在多个分组中。逐个询问是否合并到金额最高的分组？</p>' +
+            '<p class="muted">以下姓名出现在多个分组中。逐个询问是否合并（合并后金额 = 各分组金额相加）？</p>' +
             '<ul style="list-style:disc;margin:10px 0 10px 24px;line-height:1.8;">' +
             summary +
             '</ul>' +
