@@ -143,8 +143,8 @@
           finished = true
           self.isLoading = false
           self.errInfo =
-            '请求 URL: ' + url + '\n' +
-            '请求超时（>18s），请检查手表网络或域名是否可达'
+            // '请求 URL: ' + url + '\n' +
+            '请求超时（>18s），请检查手表是否正确连接到网络'
         }
       }, 18000)
 
@@ -159,10 +159,11 @@
       function buildLog(title, details) {
         const parts = []
         parts.push('[' + title + ']')
-        parts.push('URL: ' + url)
+        // parts.push('URL: ' + url)
         if (details && details.length > 0) {
           for (let i = 0; i < details.length; i++) {
             parts.push(details[i])
+            parts.push('解决方案：请将手表连接到vivo健康并确保手机网络正常')
           }
         }
         return parts.join('\n')

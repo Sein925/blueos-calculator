@@ -270,6 +270,7 @@
     font-size: 6 * $size-factor;
     color: #00ff99;
     font-family: monospace;
+    margin-left: 16px;
   }
 
   .result-text {
