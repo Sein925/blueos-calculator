@@ -84,6 +84,7 @@
           </div>
           <div class="solution-item">
             <text class="result-label">x =</text>
+            <text if="{{ !xIsInteger && xIsNegative }}" class="fraction-sign">−</text>
             <text if="{{ xIsInteger }}" class="result-value">
               {{ xInteger }}
             </text>
@@ -95,6 +96,7 @@
           </div>
           <div class="solution-item">
             <text class="result-label">y =</text>
+            <text if="{{ !yIsInteger && yIsNegative }}" class="fraction-sign">−</text>
             <text if="{{ yIsInteger }}" class="result-value">
               {{ yInteger }}
             </text>
@@ -163,11 +165,13 @@
       showSolutions: false,
       dValue: '',
       xIsInteger: false,
+      xIsNegative: false,
       xInteger: '',
       xNumeratorStr: '',
       xDenominatorStr: '',
       xFractionLine: '',
       yIsInteger: false,
+      yIsNegative: false,
       yInteger: '',
       yNumeratorStr: '',
       yDenominatorStr: '',
@@ -268,10 +272,12 @@
       const xFrac = simplifyFraction(Dx, D)
       if (xFrac.den === 1) {
         this.xIsInteger = true
+        this.xIsNegative = false
         this.xInteger = xFrac.num.toString()
       } else {
         this.xIsInteger = false
-        this.xNumeratorStr = xFrac.num.toString()
+        this.xIsNegative = xFrac.num < 0
+        this.xNumeratorStr = Math.abs(xFrac.num).toString()
         this.xDenominatorStr = xFrac.den.toString()
         const xMaxLen = Math.max(
           this.xNumeratorStr.length,
@@ -283,10 +289,12 @@
       const yFrac = simplifyFraction(Dy, D)
       if (yFrac.den === 1) {
         this.yIsInteger = true
+        this.yIsNegative = false
         this.yInteger = yFrac.num.toString()
       } else {
         this.yIsInteger = false
-        this.yNumeratorStr = yFrac.num.toString()
+        this.yIsNegative = yFrac.num < 0
+        this.yNumeratorStr = Math.abs(yFrac.num).toString()
         this.yDenominatorStr = yFrac.den.toString()
         const yMaxLen = Math.max(
           this.yNumeratorStr.length,
@@ -403,6 +411,14 @@
     flex-direction: column;
     align-items: center;
     margin-left: 16px;
+  }
+
+  .fraction-sign {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+    margin-left: 16px;
+    margin-right: -8px;
   }
 
   .fraction-numerator {

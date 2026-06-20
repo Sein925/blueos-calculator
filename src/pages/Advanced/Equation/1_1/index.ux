@@ -53,6 +53,7 @@
         </div>
         <div else if="{{ showFraction }}" class="result-content">
           <text class="result-label">x =</text>
+          <text if="{{ showNegativeSign }}" class="fraction-sign">−</text>
           <div class="fraction-container">
             <text class="fraction-numerator">{{ numeratorStr }}</text>
             <text class="fraction-line">{{ fractionLine }}</text>
@@ -114,6 +115,7 @@
       showInteger: false,
       integerValue: '',
       showFraction: false,
+      showNegativeSign: false,
       numeratorStr: '',
       denominatorStr: '',
       fractionLine: '',
@@ -177,7 +179,8 @@
         this.integerValue = frac.num.toString()
       } else {
         this.showFraction = true
-        this.numeratorStr = frac.num.toString()
+        this.showNegativeSign = frac.num < 0
+        this.numeratorStr = Math.abs(frac.num).toString()
         this.denominatorStr = frac.den.toString()
         const maxLen = Math.max(
           this.numeratorStr.length,
@@ -280,6 +283,14 @@
     flex-direction: column;
     align-items: center;
     margin-left: 16px;
+  }
+
+  .fraction-sign {
+    font-size: 6 * $size-factor;
+    color: #00ff99;
+    font-family: monospace;
+    margin-left: 16px;
+    margin-right: -8px;
   }
 
   .fraction-numerator {
