@@ -228,6 +228,21 @@
             <text>编辑</text>
           </div>
         </div>
+
+        <div class="action-buttons">
+          <div class="action-btn" onclick="moveLeft">
+            <text class="iconfont" style="font-size: 36px">←</text>
+          </div>
+          <div class="action-btn" onclick="moveUp">
+            <text class="iconfont" style="font-size: 36px">↑</text>
+          </div>
+          <div class="action-btn" onclick="moveDown">
+            <text class="iconfont" style="font-size: 36px">↓</text>
+          </div>
+          <div class="action-btn" onclick="moveRight">
+            <text class="iconfont" style="font-size: 36px">→</text>
+          </div>
+        </div>
       </div>
     </list-item>
   </list>
@@ -245,6 +260,8 @@
       canvasWidth: 400,
       canvasHeight: 400,
       scale: 20,
+      offsetX: 0,
+      offsetY: 0,
       drawTimerId: 0,
       isLoading: false,
     },
@@ -561,32 +578,54 @@
 
       var width = this.canvasWidth
       var height = this.canvasHeight
-      var centerX = width / 2
-      var centerY = height / 2
+      var centerX = width / 2 + this.offsetX
+      var centerY = height / 2 + this.offsetY
       var scale = this.scale
 
       ctx.clearRect(0, 0, width, height)
 
-      var step = Math.max(1, Math.ceil(50 / scale))
+      var targetStep = 80 / scale
+      var pow10 = Math.pow(10, Math.floor(Math.log(targetStep) / Math.log(10)))
+      var raw = targetStep / pow10
+      var step
+      if (raw < 1.5) step = 1 * pow10
+      else if (raw < 3.5) step = 2 * pow10
+      else if (raw < 7.5) step = 5 * pow10
+      else step = 10 * pow10
+      var decimals = Math.max(0, -Math.floor(Math.log(step) / Math.log(10)))
+      var stepRound = Math.pow(10, -decimals)
+      var labelFormat = function (n) {
+        if (decimals === 0) return n.toString()
+        var rounded = Math.round(n / stepRound) * stepRound
+        var pow = Math.pow(10, decimals)
+        var absR = Math.abs(rounded)
+        var intPart = Math.floor(absR)
+        var fracPart = Math.round((absR - intPart) * pow)
+        if (fracPart === pow) { intPart += 1; fracPart = 0 }
+        var sign = rounded < 0 ? '-' : ''
+        var fracStr = String(fracPart)
+        while (fracStr.length < decimals) fracStr = '0' + fracStr
+        return sign + String(intPart) + '.' + fracStr
+      }
 
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'
       ctx.lineWidth = 1
 
-      var xLeft = Math.floor(-centerX / scale)
-      var xRight = Math.floor((width - centerX) / scale)
-      var yBottom = Math.floor(-(height - centerY) / scale)
-      var yTop = Math.floor(centerY / scale)
+      var xLeft = -centerX / scale
+      var xRight = (width - centerX) / scale
+      var yBottom = -(height - centerY) / scale
+      var yTop = centerY / scale
 
-      var xStart = Math.floor(xLeft / step) * step
-      for (var i = xStart; i <= xRight; i += step) {
+      var xStart = Math.ceil(xLeft / step) * step
+      for (var i = xStart; i <= xRight + 1e-9; i += step) {
         var xv = centerX + i * scale
         ctx.beginPath()
         ctx.moveTo(xv, 0)
         ctx.lineTo(xv, height)
         ctx.stroke()
       }
-      var yStart = Math.floor(yBottom / step) * step
-      for (var i = yStart; i <= yTop; i += step) {
+      var yStart = Math.ceil(yBottom / step) * step
+      for (var i = yStart; i <= yTop + 1e-9; i += step) {
         var yv = centerY - i * scale
         ctx.beginPath()
         ctx.moveTo(0, yv)
@@ -609,19 +648,19 @@
       ctx.font = '12px sans-serif'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'top'
-      for (var i = xStart; i <= xRight; i += step) {
-        if (i !== 0) {
+      for (var i = xStart; i <= xRight + 1e-9; i += step) {
+        if (Math.abs(i) > 1e-9) {
           var xv = centerX + i * scale
-          ctx.fillText(i.toString(), xv, centerY + 4)
+          ctx.fillText(labelFormat(i), xv, centerY + 4)
         }
       }
 
       ctx.textAlign = 'right'
       ctx.textBaseline = 'middle'
-      for (var i = yStart; i <= yTop; i += step) {
-        if (i !== 0) {
+      for (var i = yStart; i <= yTop + 1e-9; i += step) {
+        if (Math.abs(i) > 1e-9) {
           var yv = centerY - i * scale
-          ctx.fillText(i.toString(), centerX - 4, yv)
+          ctx.fillText(labelFormat(i), centerX - 4, yv)
         }
       }
 
@@ -660,19 +699,56 @@
 
     zoomIn() {
       this.isLoading = true
-      this.scale = this.scale * 1.5
+      var newScale = this.scale * 1.5
+      // 记录当前屏幕中心对应的数学坐标，缩放后保持中心不变
+      var cx = -this.offsetX / this.scale
+      var cy = this.offsetY / this.scale
+      this.scale = newScale
+      this.offsetX = -cx * newScale
+      this.offsetY = cy * newScale
       this.scheduleDraw()
     },
 
     zoomOut() {
       this.isLoading = true
-      this.scale = this.scale / 1.5
+      var newScale = this.scale / 1.5
+      var cx = -this.offsetX / this.scale
+      var cy = this.offsetY / this.scale
+      this.scale = newScale
+      this.offsetX = -cx * newScale
+      this.offsetY = cy * newScale
       this.scheduleDraw()
     },
 
     resetView() {
       this.isLoading = true
       this.scale = 20
+      this.offsetX = 0
+      this.offsetY = 0
+      this.scheduleDraw()
+    },
+
+    moveLeft() {
+      this.isLoading = true
+      this.offsetX += this.canvasWidth * 0.25
+      this.scheduleDraw()
+    },
+
+    moveRight() {
+      this.isLoading = true
+      this.offsetX -= this.canvasWidth * 0.25
+      this.scheduleDraw()
+    },
+
+    moveUp() {
+      this.isLoading = true
+      this.offsetY += this.canvasHeight * 0.25
+      this.scheduleDraw()
+    },
+
+    moveDown() {
+      this.isLoading = true
+      this.offsetY -= this.canvasHeight * 0.25
       this.scheduleDraw()
     },
   }
@@ -874,6 +950,7 @@
     display: flex;
     justify-content: space-around;
     gap: 3 * $size-factor;
+    margin-top: 8px;
 
     .action-btn {
       flex: 1;
