@@ -11,8 +11,7 @@
         type="date"
         start="1901-01-01"
         end="2100-12-31"
-        onchange="onDateChange">
-      </picker>
+        onchange="onDateChange"></picker>
     </div>
     <div class="footer">
       <div class="confirm-btn" onclick="confirm">
@@ -65,7 +64,7 @@
   .header {
     width: 100%;
     padding-top: 2 * $size-factor;
-    padding-bottom: 2 * $size-factor;
+    padding-bottom: 4 * $size-factor;
     padding-left: 0;
     padding-right: 0;
   }
@@ -76,15 +75,21 @@
 
   .date-picker {
     width: 466px;
-    height: 280px;
+    height: 260px;
     linecolor: $brand;
-    font-size: 46px;
-    selected-font-size: 60px;
+    font-size: 44px;
+    selected-font-size: 56px;
+
+    @media (device: watch-round) {
+      height: 210px;
+      font-size: 40px;
+      selected-font-size: 50px;
+    }
   }
 
   .footer {
     width: 100%;
-    margin-top: 40px;
+    margin-top: 44px;
     padding-left: 10px;
     padding-right: 10px;
   }

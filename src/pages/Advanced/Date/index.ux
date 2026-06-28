@@ -7,7 +7,7 @@
       <d-back value="日期计算"></d-back>
     </list-item>
 
-    <list-item type="card" class="content">
+    <list-item class="content">
       <text class="section-title" style="margin-top: 10px">计算类型</text>
       <div class="btn-row">
         <div
@@ -58,13 +58,13 @@
       </div>
       <div if="{{ currentTab === 'add' }}" class="btn-row">
         <div
-          class="btn-card"
+          class="btn-card opacity"
           style="background-color: {{ addType === 'add' ? 'rgba(0, 255, 153, 0.3)' : 'rgba(0, 255, 153, 0.15)' }}; margin-right: 20px;"
           onclick="setAddType('add')">
           <text style="color: {{ addType === 'add' ? '#00ff99' : '#ffffff' }};">往后</text>
         </div>
         <div
-          class="btn-card"
+          class="btn-card opacity"
           style="background-color: {{ addType === 'sub' ? 'rgba(0, 255, 153, 0.3)' : 'rgba(0, 255, 153, 0.15)' }};"
           onclick="setAddType('sub')">
           <text style="color: {{ addType === 'sub' ? '#00ff99' : '#ffffff' }};">往前</text>
@@ -334,14 +334,14 @@
     justify-content: center;
     background-color: rgba(0, 255, 153, 0.15);
 
-    &:active {
-      opacity: 0.4;
-    }
-
     text {
       font-size: 8 * $size-factor;
       font-weight: 700;
     }
+  }
+
+  .opacity:active {
+    opacity: 0.4;
   }
 
   .input-card {
