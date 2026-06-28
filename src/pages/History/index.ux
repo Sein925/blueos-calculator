@@ -18,7 +18,7 @@
         </div>
       </div>
       <div for="item in historyList" type="card">
-        <div class="history-card" style="margin-top: 18px">
+        <div class="history-card" style="margin-top: 18px" onclick="continueCalculate(item)">
           <text class="history-expression">{{ item.expression }}</text>
           <text class="history-result">= {{ item.result }}</text>
         </div>
@@ -56,6 +56,11 @@
       global.saveHistory()
       this.historyList = []
     },
+
+    continueCalculate(item) {
+      global.pendingHistoryItem = item
+      global.router.back()
+    },
   }
 </script>
 
@@ -71,6 +76,7 @@
       width: 100%;
       padding: 0 2 * $size-factor;
       @include flex-box-mixins(column, center, flex-start);
+      margin-bottom: 20px;
     }
 
     .history-content {

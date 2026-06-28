@@ -19,6 +19,7 @@ declare const global: {
   calculatorHistory: HistoryItem[];
   angleMode: 'deg' | 'rad';
   equationOutputMode: 'exact' | 'decimal';
+  pendingHistoryItem: HistoryItem | null;
   loadHistory: () => void;
   saveHistory: () => void;
   loadSettings: () => void;

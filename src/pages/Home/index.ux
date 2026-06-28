@@ -353,6 +353,18 @@
 
     onInit() {},
 
+    onShow() {
+      if (global.pendingHistoryItem) {
+        this.display = global.pendingHistoryItem.result
+        this.expression = [global.pendingHistoryItem.result]
+        this.waitingForOperand = true
+        this.history = global.pendingHistoryItem.expression + ' ='
+        this.error = false
+        this.pendingFunction = ''
+        global.pendingHistoryItem = null
+      }
+    },
+
     inputNumber(num) {
       if (this.error) {
         this.clearAll()
