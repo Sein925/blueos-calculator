@@ -235,9 +235,9 @@
 
       <div if="{{ currentStep === 'result' }}" class="result-container">
         <div class="equation-display">
-          <text class="equation-text" if="{{ expressions[0] }}" style="color: #00ff99;">f₁: {{ expressions[0] }}</text>
-          <text class="equation-text" if="{{ expressions[1] }}" style="color: #ff6b6b;">f₂: {{ expressions[1] }}</text>
-          <text class="equation-text" if="{{ expressions[2] }}" style="color: #4dabf7;">f₃: {{ expressions[2] }}</text>
+          <marquee class="equation-text" if="{{ expressions[0] }}" style="color: #00ff99;" double-ended-shadow-color="#002617">f₁: y={{ expressions[0] }}</marquee>
+          <marquee class="equation-text" if="{{ expressions[1] }}" style="color: #ff6b6b;" double-ended-shadow-color="#002617">f₂: y={{ expressions[1] }}</marquee>
+          <marquee class="equation-text" if="{{ expressions[2] }}" style="color: #4dabf7;" double-ended-shadow-color="#002617">f₃: y={{ expressions[2] }}</marquee>
         </div>
 
         <div class="canvas-container">
@@ -820,7 +820,7 @@
     flex-direction: column;
     padding: 0 2 * $size-factor 4 * $size-factor 2 * $size-factor;
     margin-top: 6px;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
 
     @media (device: watch-round) {
       margin-bottom: 50px;
@@ -969,17 +969,18 @@
 
   .expr-tabs {
     width: 100%;
+    margin-left: 10px;
     margin-bottom: 12px;
   }
 
   .expr-tab {
     padding: 8px 26px;
     background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 6 * $size-factor;
-    margin-right: 8px;
+    border-radius: 8 * $size-factor;
+    margin-right: 12px;
 
     text {
-      font-size: 6 * $size-factor;
+      font-size: 7 * $size-factor;
       font-weight: 700;
     }
 
