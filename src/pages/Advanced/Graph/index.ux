@@ -12,10 +12,38 @@
         <text style="color: white; font-size: 38px; margin-top: 16px">请稍等</text>
       </div>
       <div show="{{ currentStep === 'input' }}" class="input-container">
+        <div class="expr-tabs">
+          <div
+            class="expr-tab {{ activeExprIndex === 0 ? 'expr-tab-active' : '' }}"
+            style="border-left-color: #00ff99; background-color: {{ activeExprIndex === 0 ? 'rgba(0, 255, 153, 0.3)' : 'rgba(0, 255, 153, 0.15)' }};"
+            onclick="switchExpr(0)">
+            <text style="color: {{ activeExprIndex === 0 ? '#00ff99' : '#ffffff' }};">f₁</text>
+          </div>
+          <div
+            class="expr-tab {{ activeExprIndex === 1 ? 'expr-tab-active' : '' }}"
+            show="{{ exprCount > 1 }}"
+            style="border-left-color: #ff6b6b; background-color: {{ activeExprIndex === 1 ? 'rgba(255, 107, 107, 0.3)' : 'rgba(255, 107, 107, 0.15)' }};"
+            onclick="switchExpr(1)">
+            <text style="color: {{ activeExprIndex === 1 ? '#ff6b6b' : '#ffffff' }};">f₂</text>
+          </div>
+          <div
+            class="expr-tab {{ activeExprIndex === 2 ? 'expr-tab-active' : '' }}"
+            show="{{ exprCount > 2 }}"
+            style="border-left-color: #4dabf7; background-color: {{ activeExprIndex === 2 ? 'rgba(77, 171, 247, 0.3)' : 'rgba(77, 171, 247, 0.15)' }};"
+            onclick="switchExpr(2)">
+            <text style="color: {{ activeExprIndex === 2 ? '#4dabf7' : '#ffffff' }};">f₃</text>
+          </div>
+          <div
+            class="expr-tab expr-tab-add"
+            show="{{ exprCount < 3 }}"
+            onclick="addExpr">
+            <text>+</text>
+          </div>
+        </div>
         <div class="input-display">
-          <text class="y-label">y =</text>
+          <text class="y-label" style="color: {{ activeExprIndex === 0 ? '#00ff99' : (activeExprIndex === 1 ? '#ff6b6b' : '#4dabf7') }};">y =</text>
           <marquee class="expression-text">
-            {{ expression || '输入函数' }}
+            {{ expressions[activeExprIndex] || '输入函数' }}
           </marquee>
         </div>
 
@@ -207,7 +235,9 @@
 
       <div if="{{ currentStep === 'result' }}" class="result-container">
         <div class="equation-display">
-          <text class="equation-text">y = {{ expression }}</text>
+          <text class="equation-text" if="{{ expressions[0] }}" style="color: #00ff99;">f₁: {{ expressions[0] }}</text>
+          <text class="equation-text" if="{{ expressions[1] }}" style="color: #ff6b6b;">f₂: {{ expressions[1] }}</text>
+          <text class="equation-text" if="{{ expressions[2] }}" style="color: #4dabf7;">f₃: {{ expressions[2] }}</text>
         </div>
 
         <div class="canvas-container">
@@ -255,7 +285,9 @@
   export default {
     data: {
       currentStep: 'input',
-      expression: '',
+      expressions: ['', '', ''],
+      activeExprIndex: 0,
+      exprCount: 1,
       showAdvanced: false,
       canvasWidth: 400,
       canvasHeight: 400,
@@ -291,21 +323,32 @@
     },
 
     inputPreset(preset) {
-      this.expression += preset
+      this.expressions[this.activeExprIndex] += preset
     },
 
     inputChar(char) {
-      this.expression += char
+      this.expressions[this.activeExprIndex] += char
     },
 
     deleteChar() {
-      if (this.expression.length > 0) {
-        this.expression = this.expression.slice(0, -1)
+      if (this.expressions[this.activeExprIndex].length > 0) {
+        this.expressions[this.activeExprIndex] = this.expressions[this.activeExprIndex].slice(0, -1)
       }
     },
 
     clearExpression() {
-      this.expression = ''
+      this.expressions[this.activeExprIndex] = ''
+    },
+
+    switchExpr(index) {
+      this.activeExprIndex = index
+    },
+
+    addExpr() {
+      if (this.exprCount < 3) {
+        this.exprCount++
+        this.activeExprIndex = this.exprCount - 1
+      }
     },
 
     toggleAdvanced() {
@@ -549,7 +592,11 @@
     },
 
     drawGraph() {
-      if (!this.expression) return
+      var hasExpr = false
+      for (var i = 0; i < this.expressions.length; i++) {
+        if (this.expressions[i]) hasExpr = true
+      }
+      if (!hasExpr) return
       this.clearTimer()
       this.isLoading = true
       this.currentStep = 'result'
@@ -664,36 +711,43 @@
         }
       }
 
-      ctx.strokeStyle = '#00ff99'
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      var started = false
+      var colors = ['#00ff99', '#ff6b6b', '#4dabf7']
 
-      for (var px = 0; px < width; px++) {
-        var cx = (px - centerX) / scale
-        var y = this.evalExpr(this.expression, cx)
+      for (var ei = 0; ei < this.expressions.length; ei++) {
+        var expr = this.expressions[ei]
+        if (!expr) continue
 
-        if (y !== y || y === 1 / 0 || y === -1 / 0) {
-          started = false
-          continue
+        ctx.strokeStyle = colors[ei]
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        var started = false
+
+        for (var px = 0; px < width; px++) {
+          var cx = (px - centerX) / scale
+          var y = this.evalExpr(expr, cx)
+
+          if (y !== y || y === 1 / 0 || y === -1 / 0) {
+            started = false
+            continue
+          }
+
+          var screenY = centerY - y * scale
+
+          if (screenY < -100 || screenY > height + 100) {
+            started = false
+            continue
+          }
+
+          if (!started) {
+            ctx.moveTo(px, screenY)
+            started = true
+          } else {
+            ctx.lineTo(px, screenY)
+          }
         }
 
-        var screenY = centerY - y * scale
-
-        if (screenY < -100 || screenY > height + 100) {
-          started = false
-          continue
-        }
-
-        if (!started) {
-          ctx.moveTo(px, screenY)
-          started = true
-        } else {
-          ctx.lineTo(px, screenY)
-        }
+        ctx.stroke()
       }
-
-      ctx.stroke()
       this.isLoading = false
     },
 
@@ -913,20 +967,62 @@
     flex-direction: column;
   }
 
+  .expr-tabs {
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  .expr-tab {
+    padding: 8px 26px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 6 * $size-factor;
+    margin-right: 8px;
+
+    text {
+      font-size: 6 * $size-factor;
+      font-weight: 700;
+    }
+
+    &:active {
+      opacity: 0.4;
+    }
+  }
+
+  .expr-tab-active {
+    background-color: rgba(0, 255, 153, 0.3);
+
+    text {
+      color: #00ff99;
+    }
+  }
+
+  .expr-tab-add {
+    padding: 8px 18px;
+    background-color: rgba(0, 255, 153, 0.2);
+    border-radius: 6 * $size-factor;
+    margin-right: 8px;
+
+    text {
+      font-size: 6 * $size-factor;
+      font-weight: 700;
+      color: #00ff99;
+    }
+
+    &:active {
+      opacity: 0.4;
+    }
+  }
+
   .equation-display {
     width: 100%;
-    padding: 4 * $size-factor;
+    padding: 20px 36px;
     background-color: rgba(0, 255, 153, 0.15);
     border-radius: 8 * $size-factor;
-    border-left-width: 3px;
-    border-left-color: #00ff99;
     margin-bottom: 20px;
-    text-align: center;
+    flex-direction: column;
 
     .equation-text {
       font-size: 8 * $size-factor;
-      color: #00ff99;
-      margin-left: 10px;
     }
   }
 
@@ -947,20 +1043,17 @@
 
   .action-buttons {
     width: 100%;
-    display: flex;
-    justify-content: space-around;
-    gap: 3 * $size-factor;
+    justify-content: space-between;
     margin-top: 8px;
 
     .action-btn {
-      flex: 1;
       padding: 3 * $size-factor 0;
       background-color: rgba(255, 255, 255, 0.1);
       border-radius: 8 * $size-factor;
-      display: flex;
       align-items: center;
       justify-content: center;
       height: 70px;
+      width: 106px;
 
       &:active {
         opacity: 0.4;

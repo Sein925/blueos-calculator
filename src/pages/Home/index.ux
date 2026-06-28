@@ -394,13 +394,12 @@
 
       if (this.pendingFunction) {
         const funcInput = this.display
+        const funcName = this.pendingFunction
         this.executePendingFunction()
-        const funcResult = this.display
-        this.expression.push(funcResult)
         this.expression.push(op)
         this.operator = op
         this.waitingForOperand = true
-        this.history = `${this.pendingFunction}(${funcInput}) ${this.getOperatorSymbol(op)} `
+        this.history = `${funcName}(${funcInput}) ${this.getOperatorSymbol(op)} `
         this.pendingFunction = ''
         return
       }
