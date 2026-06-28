@@ -20,6 +20,7 @@ declare const global: {
   angleMode: 'deg' | 'rad';
   equationOutputMode: 'exact' | 'decimal';
   pendingHistoryItem: HistoryItem | null;
+  pendingDateValue: string;
   loadHistory: () => void;
   saveHistory: () => void;
   loadSettings: () => void;

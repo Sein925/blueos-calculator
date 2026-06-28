@@ -1,165 +1,111 @@
 <import name="d-back" src="./../../../components/d-back"></import>
+<import name="d-number-input" src="./../../../components/d-number-input"></import>
 
 <template>
   <list class="wrapper" title="true">
     <list-item>
-      <d-back value="日期计算器"></d-back>
+      <d-back value="日期计算"></d-back>
     </list-item>
 
-    <list-item class="content">
-      <div class="tab-container">
+    <list-item type="card" class="content">
+      <text class="section-title" style="margin-top: 10px">计算类型</text>
+      <div class="btn-row">
         <div
-          class="tab {{ currentTab === 'diff' ? 'active' : '' }}"
+          class="btn-card"
+          style="background-color: {{ currentTab === 'diff' ? 'rgba(0, 255, 153, 0.3)' : 'rgba(0, 255, 153, 0.15)' }}; margin-right: 20px;"
           onclick="switchTab('diff')">
-          <text class="tab-text">日期差</text>
+          <text style="color: {{ currentTab === 'diff' ? '#00ff99' : '#ffffff' }};">日期差</text>
         </div>
         <div
-          class="tab {{ currentTab === 'add' ? 'active' : '' }}"
+          class="btn-card"
+          style="background-color: {{ currentTab === 'add' ? 'rgba(0, 255, 153, 0.3)' : 'rgba(0, 255, 153, 0.15)' }};"
           onclick="switchTab('add')">
-          <text class="tab-text">日期推算</text>
+          <text style="color: {{ currentTab === 'add' ? '#00ff99' : '#ffffff' }};">日期推算</text>
         </div>
       </div>
-    </list-item>
 
-    <list-item if="{{ currentTab === 'diff' }}">
-      <text class="label">开始日期: {{ startDateText }}</text>
-    </list-item>
-
-    <list-item if="{{ currentTab === 'diff' }}">
-      <picker
-        class="picker-full"
-        type="date"
-        start="1901-01-01"
-        end="2100-12-31"
-        selected="{{ startDateText }}"
-        onchange="onStartDateChange"></picker>
-    </list-item>
-
-    <list-item if="{{ currentTab === 'diff' }}">
-      <text class="label">结束日期: {{ endDateText }}</text>
-    </list-item>
-
-    <list-item if="{{ currentTab === 'diff' }}">
-      <picker
-        class="picker-full"
-        type="date"
-        start="1901-01-01"
-        end="2100-12-31"
-        selected="{{ endDateText }}"
-        onchange="onEndDateChange"></picker>
-    </list-item>
-
-    <list-item if="{{ currentTab === 'diff' }}" class="content">
-      <div class="calc-btn" onclick="calculateDiff">
+      <text if="{{ currentTab === 'diff' }}" class="section-title">日期选择</text>
+      <div if="{{ currentTab === 'diff' }}" class="input-card" onclick="openDatePicker('start')">
+        <text class="input-label">开始日期</text>
+        <text class="input-value {{ !startDateText ? 'placeholder' : '' }}">{{ startDateText || '选择日期' }}</text>
+      </div>
+      <div if="{{ currentTab === 'diff' }}" class="input-card" onclick="openDatePicker('end')">
+        <text class="input-label">结束日期</text>
+        <text class="input-value {{ !endDateText ? 'placeholder' : '' }}">{{ endDateText || '选择日期' }}</text>
+      </div>
+      <div if="{{ currentTab === 'diff' }}" class="calc-btn" onclick="calculateDiff">
         <text class="calc-btn-text">计算</text>
       </div>
-    </list-item>
 
-    <list-item
-      if="{{ currentTab === 'diff' && diffResult.days !== null }}"
-      class="content">
-      <div class="result-section">
-        <text class="result-title">计算结果</text>
-        <div class="result-item">
-          <text class="result-label">相差天数</text>
-          <text class="result-value">{{ diffResult.days }} 天</text>
-        </div>
-        <div class="result-item">
-          <text class="result-label">相差周数</text>
-          <text class="result-value">
-            {{ diffResult.weeks }} 周 {{ diffResult.remainDays }} 天
-          </text>
-        </div>
-        <div class="result-item">
-          <text class="result-label">相差月数</text>
-          <text class="result-value">
-            {{ diffResult.months }} 月 {{ diffResult.remainDaysAfterMonths }} 天
-          </text>
-        </div>
+      <text if="{{ currentTab === 'diff' && diffResult.days !== null }}" class="section-title" style="margin-top: 32px; margin-bottom: 12px;">计算结果</text>
+      <div if="{{ currentTab === 'diff' && diffResult.days !== null }}" class="result-item">
+        <text class="result-label">相差天数</text>
+        <text class="result-value">{{ diffResult.days }} 天</text>
       </div>
-    </list-item>
+      <div if="{{ currentTab === 'diff' && diffResult.days !== null }}" class="result-item">
+        <text class="result-label">相差周数</text>
+        <text class="result-value">{{ diffResult.weeks }} 周 {{ diffResult.remainDays }} 天</text>
+      </div>
+      <div if="{{ currentTab === 'diff' && diffResult.days !== null }}" class="result-item">
+        <text class="result-label">相差月数</text>
+        <text class="result-value">{{ diffResult.months }} 月 {{ diffResult.remainDaysAfterMonths }} 天</text>
+      </div>
 
-    <list-item if="{{ currentTab === 'add' }}">
-      <text class="label">基准日期: {{ baseDateText }}</text>
-    </list-item>
-
-    <list-item if="{{ currentTab === 'add' }}">
-      <picker
-        class="picker-full"
-        type="date"
-        start="1901-01-01"
-        end="2100-12-31"
-        selected="{{ baseDateText }}"
-        onchange="onBaseDateChange"></picker>
-    </list-item>
-
-    <list-item if="{{ currentTab === 'add' }}" class="content">
-      <div class="add-type-row">
+      <text if="{{ currentTab === 'add' }}" class="section-title">日期推算</text>
+      <div if="{{ currentTab === 'add' }}" class="input-card" onclick="openDatePicker('base')">
+        <text class="input-label">基准日期</text>
+        <text class="input-value {{ !baseDateText ? 'placeholder' : '' }}">{{ baseDateText || '选择日期' }}</text>
+      </div>
+      <div if="{{ currentTab === 'add' }}" class="btn-row">
         <div
-          class="add-type-btn {{ addType === 'add' ? 'active' : '' }}"
+          class="btn-card"
+          style="background-color: {{ addType === 'add' ? 'rgba(0, 255, 153, 0.3)' : 'rgba(0, 255, 153, 0.15)' }}; margin-right: 20px;"
           onclick="setAddType('add')">
-          <text class="add-type-text">往后</text>
+          <text style="color: {{ addType === 'add' ? '#00ff99' : '#ffffff' }};">往后</text>
         </div>
         <div
-          class="add-type-btn {{ addType === 'sub' ? 'active' : '' }}"
+          class="btn-card"
+          style="background-color: {{ addType === 'sub' ? 'rgba(0, 255, 153, 0.3)' : 'rgba(0, 255, 153, 0.15)' }};"
           onclick="setAddType('sub')">
-          <text class="add-type-text">往前</text>
+          <text style="color: {{ addType === 'sub' ? '#00ff99' : '#ffffff' }};">往前</text>
         </div>
       </div>
-    </list-item>
-
-    <list-item if="{{ currentTab === 'add' }}" class="content">
-      <div class="input-row">
-        <text class="label">天数</text>
-        <input
-          class="number-input"
-          type="number"
+      <div if="{{ currentTab === 'add' }}" class="input-card">
+        <text class="input-label">天数</text>
+        <d-number-input
+          label="输入天数"
+          placeholder="0"
           value="{{ addDays }}"
           onchange="onAddDaysChange" />
       </div>
-    </list-item>
-
-    <list-item if="{{ currentTab === 'add' }}" class="content">
-      <div class="input-row">
-        <text class="label">周数</text>
-        <input
-          class="number-input"
-          type="number"
+      <div if="{{ currentTab === 'add' }}" class="input-card">
+        <text class="input-label">周数</text>
+        <d-number-input
+          label="输入周数"
+          placeholder="0"
           value="{{ addWeeks }}"
           onchange="onAddWeeksChange" />
       </div>
-    </list-item>
-
-    <list-item if="{{ currentTab === 'add' }}" class="content">
-      <div class="input-row">
-        <text class="label">月数</text>
-        <input
-          class="number-input"
-          type="number"
+      <div if="{{ currentTab === 'add' }}" class="input-card">
+        <text class="input-label">月数</text>
+        <d-number-input
+          label="输入月数"
+          placeholder="0"
           value="{{ addMonths }}"
           onchange="onAddMonthsChange" />
       </div>
-    </list-item>
-
-    <list-item if="{{ currentTab === 'add' }}" class="content">
-      <div class="calc-btn" onclick="calculateDate">
+      <div if="{{ currentTab === 'add' }}" class="calc-btn" onclick="calculateDate">
         <text class="calc-btn-text">计算</text>
       </div>
-    </list-item>
 
-    <list-item
-      if="{{ currentTab === 'add' && addResult.date }}"
-      class="content">
-      <div class="result-section">
-        <text class="result-title">计算结果</text>
-        <div class="result-item">
-          <text class="result-label">目标日期</text>
-          <text class="result-value">{{ addResult.dateText }}</text>
-        </div>
-        <div class="result-item">
-          <text class="result-label">星期</text>
-          <text class="result-value">{{ addResult.weekDay }}</text>
-        </div>
+      <text if="{{ currentTab === 'add' && addResult.dateText }}" class="section-title" style="margin-top: 32px; margin-bottom: 12px;">计算结果</text>
+      <div if="{{ currentTab === 'add' && addResult.dateText }}" class="result-item">
+        <text class="result-label">目标日期</text>
+        <text class="result-value">{{ addResult.dateText }}</text>
+      </div>
+      <div if="{{ currentTab === 'add' && addResult.dateText }}" class="result-item">
+        <text class="result-label">星期</text>
+        <text class="result-value">{{ addResult.weekDay }}</text>
       </div>
     </list-item>
   </list>
@@ -173,13 +119,12 @@
       startDateText: '',
       endDateText: '',
       baseDateText: '',
+      pendingDateField: '',
 
       addType: 'add',
-      addDays: 0,
-      addWeeks: 0,
-      addMonths: 0,
-
-      showPickerType: '',
+      addDays: '',
+      addWeeks: '',
+      addMonths: '',
 
       diffResult: {
         days: null,
@@ -190,7 +135,6 @@
       },
 
       addResult: {
-        date: null,
         dateText: '',
         weekDay: '',
       },
@@ -198,6 +142,20 @@
 
     onInit() {
       this.initDates()
+    },
+
+    onShow() {
+      if (global.pendingDateValue) {
+        if (this.pendingDateField === 'start') {
+          this.startDateText = global.pendingDateValue
+        } else if (this.pendingDateField === 'end') {
+          this.endDateText = global.pendingDateValue
+        } else if (this.pendingDateField === 'base') {
+          this.baseDateText = global.pendingDateValue
+        }
+        global.pendingDateValue = ''
+        this.pendingDateField = ''
+      }
     },
 
     initDates() {
@@ -212,6 +170,20 @@
       this.currentTab = tab
     },
 
+    openDatePicker(field) {
+      this.pendingDateField = field
+      if (field === 'start') {
+        global.pendingDateValue = this.startDateText
+      } else if (field === 'end') {
+        global.pendingDateValue = this.endDateText
+      } else if (field === 'base') {
+        global.pendingDateValue = this.baseDateText
+      }
+      global.router.push({
+        uri: 'pages/Advanced/Date/DatePicker',
+      })
+    },
+
     formatDate(date) {
       const d = new Date(date)
       const year = d.getFullYear()
@@ -220,22 +192,23 @@
       return `${year}-${month}-${day}`
     },
 
-    onStartDateChange(evt) {
-      const { year, month, day } = evt
-      this.startDateText = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    },
-
-    onEndDateChange(evt) {
-      const { year, month, day } = evt
-      this.endDateText = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    },
-
-    onBaseDateChange(evt) {
-      const { year, month, day } = evt
-      this.baseDateText = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    validateDate(dateStr) {
+      const regex = /^\d{4}-\d{2}-\d{2}$/
+      if (!regex.test(dateStr)) return false
+      const date = new Date(dateStr)
+      const [year, month, day] = dateStr.split('-').map(Number)
+      return (
+        date.getFullYear() === year &&
+        date.getMonth() + 1 === month &&
+        date.getDate() === day
+      )
     },
 
     calculateDiff() {
+      if (!this.validateDate(this.startDateText) || !this.validateDate(this.endDateText)) {
+        return
+      }
+
       const start = new Date(this.startDateText)
       const end = new Date(this.endDateText)
 
@@ -262,8 +235,6 @@
         months: totalMonths,
         remainDaysAfterMonths: remainDaysAfterMonths,
       }
-
-      this.showPickerType = ''
     },
 
     setAddType(type) {
@@ -283,16 +254,23 @@
     },
 
     calculateDate() {
+      if (!this.validateDate(this.baseDateText)) {
+        return
+      }
+
       const base = new Date(this.baseDateText)
       const result = new Date(base)
 
-      const totalDays = this.addDays + this.addWeeks * 7
+      const days = parseInt(this.addDays) || 0
+      const weeks = parseInt(this.addWeeks) || 0
+      const months = parseInt(this.addMonths) || 0
+      const totalDays = days + weeks * 7
 
       if (this.addType === 'add') {
-        result.setMonth(result.getMonth() + this.addMonths)
+        result.setMonth(result.getMonth() + months)
         result.setDate(result.getDate() + totalDays)
       } else {
-        result.setMonth(result.getMonth() - this.addMonths)
+        result.setMonth(result.getMonth() - months)
         result.setDate(result.getDate() - totalDays)
       }
 
@@ -307,12 +285,9 @@
       ]
 
       this.addResult = {
-        date: result,
         dateText: this.formatDate(result),
         weekDay: weekDays[result.getDay()],
       }
-
-      this.showPickerType = ''
     },
   }
 </script>
@@ -322,136 +297,125 @@
 
   .wrapper {
     width: 100%;
-    height: 100%;
   }
 
   .content {
     width: 100%;
-    padding: 0 5 * $size-factor;
+    padding: 6px 10px 30px 10px;
+    flex-direction: column;
   }
 
-  .tab-container {
+  .section-title {
+    font-size: 8 * $size-factor;
+    color: $white;
+    font-weight: bold;
+    margin-left: 12px;
+    margin-top: 24px;
+
+    @media (device: watch-round) {
+      text-align: center;
+      margin-left: 0;
+    }
+  }
+
+  .btn-row {
     width: 100%;
-    @include flex-box-mixins(row, space-between, center);
-    margin-bottom: 2 * $size-factor;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 20px;
+    margin-bottom: 6px;
   }
 
-  .tab {
+  .btn-card {
     flex: 1;
-    padding: 3 * $size-factor 0;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 6 * $size-factor;
-    margin: 0 1 * $size-factor;
-    @include flex-box-mixins(row, center, center);
+    padding: 15px 0;
+    border-radius: 8 * $size-factor;
+    flex-direction: row;
+    justify-content: center;
+    background-color: rgba(0, 255, 153, 0.15);
+
+    &:active {
+      opacity: 0.4;
+    }
+
+    text {
+      font-size: 8 * $size-factor;
+      font-weight: 700;
+    }
   }
 
-  .tab.active {
-    background-color: $brand;
-  }
-
-  .tab-text {
-    font-size: 5 * $size-factor;
-    color: $white;
-  }
-
-  .picker-full {
+  .input-card {
     width: 100%;
-    height: 280px;
-  }
-
-  .label {
-    font-size: 5 * $size-factor;
-    color: $white;
-    padding: 0 5 * $size-factor;
-  }
-
-  .add-type-row {
-    width: 100%;
-    @include flex-box-mixins(row, space-between, center);
-    margin-bottom: 2 * $size-factor;
-  }
-
-  .add-type-btn {
-    flex: 1;
-    padding: 3 * $size-factor 0;
     background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 6 * $size-factor;
-    margin: 0 1 * $size-factor;
-    @include flex-box-mixins(row, center, center);
+    border-radius: 8 * $size-factor;
+    padding: 24px 30px;
+    margin-top: 14px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    &:active {
+      opacity: 0.4;
+    }
   }
 
-  .add-type-btn.active {
-    background-color: $brand;
+  .input-label {
+    font-size: 7 * $size-factor;
+    color: $light-gray;
+    margin-right: 16px;
   }
 
-  .add-type-text {
-    font-size: 5 * $size-factor;
-    color: $white;
+  .input-value {
+    font-size: 7 * $size-factor;
+    color: $brand;
+    font-weight: bold;
   }
 
-  .input-row {
-    width: 100%;
-    @include flex-box-mixins(row, space-between, center);
-    margin-bottom: 2 * $size-factor;
-  }
-
-  .number-input {
-    width: 40%;
-    padding: 3 * $size-factor;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 6 * $size-factor;
-    color: $white;
-    font-size: 5 * $size-factor;
+  .input-value.placeholder {
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: normal;
   }
 
   .calc-btn {
     width: 100%;
-    padding: 4 * $size-factor 0;
+    padding: 3 * $size-factor 0;
     background-color: $brand;
     border-radius: 8 * $size-factor;
-    margin: 2 * $size-factor 0;
-    @include flex-box-mixins(row, center, center);
+    margin-top: 20px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    &:active {
+      opacity: 0.4;
+    }
   }
 
   .calc-btn-text {
-    font-size: 6 * $size-factor;
-    font-weight: 600;
+    font-size: 8 * $size-factor;
     color: $white;
-  }
-
-  .result-section {
-    width: 100%;
-    padding: 4 * $size-factor;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 8 * $size-factor;
-  }
-
-  .result-title {
-    font-size: 6 * $size-factor;
-    font-weight: 600;
-    color: $white;
-    margin-bottom: 3 * $size-factor;
+    font-weight: bold;
   }
 
   .result-item {
     width: 100%;
-    @include flex-box-mixins(row, space-between, center);
-    padding: 2 * $size-factor 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .result-item:last-child {
-    border-bottom: none;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8 * $size-factor;
+    padding: 24px 30px;
+    margin-bottom: 12px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .result-label {
-    font-size: 5 * $size-factor;
-    color: $gray;
+    font-size: 7 * $size-factor;
+    color: $light-gray;
   }
 
   .result-value {
-    font-size: 5 * $size-factor;
-    font-weight: 600;
+    font-size: 7 * $size-factor;
     color: $brand;
+    font-weight: bold;
   }
 </style>

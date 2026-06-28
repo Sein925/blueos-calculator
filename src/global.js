@@ -14,6 +14,7 @@ global.calculatorHistory = []
 global.angleMode = 'deg'
 global.equationOutputMode = 'exact'
 global.pendingHistoryItem = null
+global.pendingDateValue = ''
 
 const HISTORY_STORAGE_KEY = 'calculator_history'
 const SETTINGS_STORAGE_KEY = 'calculator_settings'
