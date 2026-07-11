@@ -42,9 +42,12 @@
         </div>
         <div class="input-display">
           <text class="y-label" style="color: {{ activeExprIndex === 0 ? '#00ff99' : (activeExprIndex === 1 ? '#ff6b6b' : '#4dabf7') }};">y =</text>
-          <marquee class="expression-text">
+          <marquee if="{{ inputDisplayMode === 'marquee' }}" class="expression-text">
             {{ expressions[activeExprIndex] || '输入函数' }}
           </marquee>
+          <text if="{{ inputDisplayMode === 'static' }}" class="expression-static" lines="1">
+            {{ displayExpr }}
+          </text>
         </div>
 
         <div class="buttons-container">
@@ -315,15 +318,23 @@
       drawTimerId: 0,
       isLoading: false,
       compiledFns: [null, null, null],
+      inputDisplayMode: 'static',
+      displayExpr: '输入函数',
+      maxDisplayLen: 12,
     },
 
-    onInit() {},
+    onInit() {
+      this.inputDisplayMode = global.inputDisplayMode || 'marquee'
+      this.updateDisplayExpr()
+    },
 
     onDestroy() {
       this.clearTimer()
     },
 
     onShow() {
+      this.inputDisplayMode = global.inputDisplayMode || 'marquee'
+      this.updateDisplayExpr()
       if (this.currentStep === 'result') {
         this.scheduleDraw()
       }
@@ -343,10 +354,12 @@
 
     inputPreset(preset) {
       this.expressions[this.activeExprIndex] += preset
+      this.updateDisplayExpr()
     },
 
     inputChar(char) {
       this.expressions[this.activeExprIndex] += char
+      this.updateDisplayExpr()
     },
 
     deleteChar() {
@@ -355,21 +368,71 @@
           this.activeExprIndex
         ].slice(0, -1)
       }
+      this.updateDisplayExpr()
     },
 
     clearExpression() {
       this.expressions[this.activeExprIndex] = ''
+      this.updateDisplayExpr()
     },
 
     switchExpr(index) {
       this.activeExprIndex = index
+      this.updateDisplayExpr()
     },
 
     addExpr() {
       if (this.exprCount < 3) {
         this.exprCount++
         this.activeExprIndex = this.exprCount - 1
+        this.updateDisplayExpr()
       }
+    },
+
+    // 静态文本模式下的显示字符串：保留末尾 token 完整性 + 前导省略号
+    // 关键：不能把 cos/log/sin 这类函数名截成 "co" + "s"，要么完整保留要么整体删除
+    updateDisplayExpr() {
+      var expr = this.expressions[this.activeExprIndex] || ''
+      if (expr.length === 0) {
+        this.displayExpr = '输入函数'
+        return
+      }
+      var maxLen = this.maxDisplayLen
+      if (expr.length <= maxLen) {
+        this.displayExpr = expr
+        return
+      }
+
+      var tailLen = maxLen - 1
+      var cutStart = expr.length - tailLen
+      if (cutStart < 0) cutStart = 0
+
+      var isLetter = function (c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+      }
+
+      // 步骤 1：如果截断点落在字母-字母中间（函数名/变量名内部），
+      //        往前跳到该 token 的开始位置
+      while (cutStart > 0 && cutStart < expr.length) {
+        if (isLetter(expr[cutStart]) && isLetter(expr[cutStart - 1])) {
+          cutStart--
+        } else {
+          break
+        }
+      }
+
+      // 步骤 2：如果跳到位置 0 仍在字母 token 内部（首 token 必然被部分截），
+      //        直接跳到首 token 之后，让该 token 整体被省略号代替
+      if (cutStart === 0 && isLetter(expr[0])) {
+        for (var i = 1; i < expr.length; i++) {
+          if (!isLetter(expr[i])) {
+            cutStart = i
+            break
+          }
+        }
+      }
+
+      this.displayExpr = '…' + expr.slice(cutStart)
     },
 
     toggleAdvanced() {
@@ -974,6 +1037,16 @@
       font-size: 8 * $size-factor;
       color: $white;
       font-family: monospace;
+    }
+
+    .expression-static {
+      // 静态显示：JS 已截取末尾 N 个字符 + 前导省略号
+      // 这里用 text-align: left 让省略号在左、完整内容在右
+      flex: 1;
+      font-size: 8 * $size-factor;
+      color: $white;
+      font-family: monospace;
+      text-align: left;
     }
   }
 

@@ -6,6 +6,12 @@ $light-gray: #ccc;
 
 $size-factor: 5px;
 
+.hr {
+  height: 1px;
+  background-color: #333;
+  margin: 30px 15px 0 15px;
+}
+
 @mixin flex-box-mixins(
   $direction: row,
   $justify: center,

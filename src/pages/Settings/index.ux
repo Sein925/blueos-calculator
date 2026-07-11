@@ -13,6 +13,9 @@
             {{ angleMode === 'deg' ? 'DEG' : 'RAD' }}
           </text>
         </div>
+
+        <div class="hr"></div>
+
         <text class="section-title">方程求解</text>
         <div class="option-card" onclick="toggleEquationOutputMode">
           <text class="card-label">方程解输出</text>
@@ -20,7 +23,18 @@
             {{ equationOutputMode === 'exact' ? '精确形式' : '小数' }}
           </text>
         </div>
-        <text class="description" style="margin-bottom: 30px">精确模式会增加求解时间，请避免输入过大数字以防设备卡顿</text>
+        <text class="description">精确模式会增加求解时间，请避免输入过大数字以防设备卡顿</text>
+
+        <div class="hr"></div>
+
+        <text class="section-title">函数绘图</text>
+        <div class="option-card" onclick="toggleInputDisplayMode">
+          <text class="card-label">输入显示</text>
+          <text class="card-value">
+            {{ inputDisplayMode === 'marquee' ? '跑马灯' : '静态文本' }}
+          </text>
+        </div>
+        <text class="description" style="margin-bottom: 30px">静态文本模式下长表达式靠右显示，便于查看末尾输入</text>
       </div>
     </list-item>
   </list>
@@ -31,16 +45,19 @@
     data: {
       angleMode: 'deg',
       equationOutputMode: 'exact',
+      inputDisplayMode: 'static',
     },
 
     onInit() {
       this.angleMode = global.angleMode || 'deg'
       this.equationOutputMode = global.equationOutputMode || 'exact'
+      this.inputDisplayMode = global.inputDisplayMode || 'marquee'
     },
 
     onShow() {
       this.angleMode = global.angleMode || 'deg'
       this.equationOutputMode = global.equationOutputMode || 'exact'
+      this.inputDisplayMode = global.inputDisplayMode || 'marquee'
     },
 
     toggleAngleMode() {
@@ -53,6 +70,13 @@
       this.equationOutputMode =
         this.equationOutputMode === 'exact' ? 'decimal' : 'exact'
       global.equationOutputMode = this.equationOutputMode
+      global.saveSettings()
+    },
+
+    toggleInputDisplayMode() {
+      this.inputDisplayMode =
+        this.inputDisplayMode === 'marquee' ? 'static' : 'marquee'
+      global.inputDisplayMode = this.inputDisplayMode
       global.saveSettings()
     },
   }

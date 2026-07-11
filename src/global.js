@@ -13,6 +13,7 @@ global.app = app
 global.calculatorHistory = []
 global.angleMode = 'deg'
 global.equationOutputMode = 'exact'
+global.inputDisplayMode = 'static'
 global.pendingHistoryItem = null
 global.pendingDateValue = ''
 
@@ -58,6 +59,11 @@ global.saveHistory = function () {
 }
 
 global.loadSettings = function () {
+  const applyDefaults = function () {
+    global.angleMode = 'deg'
+    global.equationOutputMode = 'exact'
+    global.inputDisplayMode = 'static'
+  }
   try {
     storage.get({
       key: SETTINGS_STORAGE_KEY,
@@ -67,23 +73,20 @@ global.loadSettings = function () {
             const settings = JSON.parse(data)
             global.angleMode = settings.angleMode || 'deg'
             global.equationOutputMode = settings.equationOutputMode || 'exact'
+            global.inputDisplayMode = settings.inputDisplayMode || 'marquee'
           } catch (e) {
-            global.angleMode = 'deg'
-            global.equationOutputMode = 'exact'
+            applyDefaults()
           }
         } else {
-          global.angleMode = 'deg'
-          global.equationOutputMode = 'exact'
+          applyDefaults()
         }
       },
       fail: function () {
-        global.angleMode = 'deg'
-        global.equationOutputMode = 'exact'
+        applyDefaults()
       },
     })
   } catch (e) {
-    global.angleMode = 'deg'
-    global.equationOutputMode = 'exact'
+    applyDefaults()
   }
 }
 
@@ -92,6 +95,7 @@ global.saveSettings = function () {
     const settings = {
       angleMode: global.angleMode || 'deg',
       equationOutputMode: global.equationOutputMode || 'exact',
+      inputDisplayMode: global.inputDisplayMode || 'marquee',
     }
     storage.set({
       key: SETTINGS_STORAGE_KEY,
