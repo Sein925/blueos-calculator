@@ -74,7 +74,7 @@
         <text class="input-label">天数</text>
         <d-number-input
           label="输入天数"
-          placeholder="0"
+          placeholder="点击输入"
           value="{{ addDays }}"
           onchange="onAddDaysChange" />
       </div>
@@ -82,7 +82,7 @@
         <text class="input-label">周数</text>
         <d-number-input
           label="输入周数"
-          placeholder="0"
+          placeholder="点击输入"
           value="{{ addWeeks }}"
           onchange="onAddWeeksChange" />
       </div>
@@ -90,7 +90,7 @@
         <text class="input-label">月数</text>
         <d-number-input
           label="输入月数"
-          placeholder="0"
+          placeholder="点击输入"
           value="{{ addMonths }}"
           onchange="onAddMonthsChange" />
       </div>
@@ -242,15 +242,15 @@
     },
 
     onAddDaysChange(evt) {
-      this.addDays = parseInt(evt.value) || 0
+      this.addDays = evt.value
     },
 
     onAddWeeksChange(evt) {
-      this.addWeeks = parseInt(evt.value) || 0
+      this.addWeeks = evt.value
     },
 
     onAddMonthsChange(evt) {
-      this.addMonths = parseInt(evt.value) || 0
+      this.addMonths = evt.value
     },
 
     calculateDate() {

@@ -30,7 +30,7 @@
         </div>
       </div>
       <div class="data-list" show="{{ dataList.length > 0 }}">
-        <text class="data-title">已输入数据:</text>
+        <text class="data-title">已输入数据：</text>
         <div class="data-items">
           <text
             for="(index, item) in dataList"
@@ -45,7 +45,7 @@
       <text class="section-title">统计结果</text>
       <div class="result-list" show="{{ dataList.length > 0 }}">
         <div class="result-item">
-          <text class="result-label">数据个数:</text>
+          <text class="result-label">数据个数</text>
           <marquee
             class="result-value"
             double-ended-shadow-color="#191919"
@@ -54,55 +54,55 @@
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">求和:</text>
+          <text class="result-label">求和</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.sum }}
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">平均数:</text>
+          <text class="result-label">平均数</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.mean }}
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">中位数:</text>
+          <text class="result-label">中位数</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.median }}
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">众数:</text>
+          <text class="result-label">众数</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.mode }}
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">最大值:</text>
+          <text class="result-label">最大值</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.max }}
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">最小值:</text>
+          <text class="result-label">最小值</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.min }}
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">极差:</text>
+          <text class="result-label">极差</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.range }}
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">方差:</text>
+          <text class="result-label">方差</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.variance }}
           </marquee>
         </div>
         <div class="result-item" style="margin-bottom: 50px;">
-          <text class="result-label">标准差:</text>
+          <text class="result-label">标准差</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.stdDev }}
           </marquee>
@@ -263,7 +263,7 @@
   }
 
   .input-label {
-    font-size: 6.4 * $size-factor;
+    font-size: 7 * $size-factor;
     color: white;
     width: 80px;
     margin: 0 2 * $size-factor;
@@ -367,7 +367,7 @@
   }
 
   .result-label {
-    font-size: 6 * $size-factor;
+    font-size: 7 * $size-factor;
     color: $light-gray;
   }
 
