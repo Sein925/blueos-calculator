@@ -235,9 +235,27 @@
 
       <div if="{{ currentStep === 'result' }}" class="result-container">
         <div class="equation-display">
-          <marquee class="equation-text" if="{{ expressions[0] }}" style="color: #00ff99;" double-ended-shadow-color="#002617">f₁: y={{ expressions[0] }}</marquee>
-          <marquee class="equation-text" if="{{ expressions[1] }}" style="color: #ff6b6b;" double-ended-shadow-color="#002617">f₂: y={{ expressions[1] }}</marquee>
-          <marquee class="equation-text" if="{{ expressions[2] }}" style="color: #4dabf7;" double-ended-shadow-color="#002617">f₃: y={{ expressions[2] }}</marquee>
+          <marquee
+            class="equation-text"
+            if="{{ expressions[0] }}"
+            style="color: #00ff99"
+            double-ended-shadow-color="#002617">
+            f₁: y={{ expressions[0] }}
+          </marquee>
+          <marquee
+            class="equation-text"
+            if="{{ expressions[1] }}"
+            style="color: #ff6b6b"
+            double-ended-shadow-color="#002617">
+            f₂: y={{ expressions[1] }}
+          </marquee>
+          <marquee
+            class="equation-text"
+            if="{{ expressions[2] }}"
+            style="color: #4dabf7"
+            double-ended-shadow-color="#002617">
+            f₃: y={{ expressions[2] }}
+          </marquee>
         </div>
 
         <div class="canvas-container">
@@ -296,6 +314,7 @@
       offsetY: 0,
       drawTimerId: 0,
       isLoading: false,
+      compiledFns: [null, null, null],
     },
 
     onInit() {},
@@ -332,7 +351,9 @@
 
     deleteChar() {
       if (this.expressions[this.activeExprIndex].length > 0) {
-        this.expressions[this.activeExprIndex] = this.expressions[this.activeExprIndex].slice(0, -1)
+        this.expressions[this.activeExprIndex] = this.expressions[
+          this.activeExprIndex
+        ].slice(0, -1)
       }
     },
 
@@ -582,13 +603,33 @@
     },
 
     evalExpr(expr, x) {
-      if (!expr) return 0 / 0
+      // 保留旧入口兼容：未编译时回退到旧实现
       var processed = this.preprocessExpression(expr)
       var tokens = this.tokenize(processed)
       if (tokens.length === 0) return 0 / 0
       var result = this.parseExpr(tokens, 0, x)
       if (result.err) return 0 / 0
       return result.value
+    },
+
+    // 预编译：把表达式解析为求值闭包，后续每像素只跑一次函数调用
+    compileExpr(expr) {
+      if (!expr) return null
+      var processed = this.preprocessExpression(expr)
+      var tokens = this.tokenize(processed)
+      if (tokens.length === 0) return null
+      var self = this
+      return function (x) {
+        var result = self.parseExpr(tokens, 0, x)
+        if (result.err) return 0 / 0
+        return result.value
+      }
+    },
+
+    compileAll() {
+      for (var i = 0; i < this.expressions.length; i++) {
+        this.compiledFns[i] = this.compileExpr(this.expressions[i])
+      }
     },
 
     drawGraph() {
@@ -600,6 +641,8 @@
       this.clearTimer()
       this.isLoading = true
       this.currentStep = 'result'
+      // 预编译所有表达式，避免每帧重复词法/语法分析
+      this.compileAll()
       this.scheduleDraw()
     },
 
@@ -616,12 +659,12 @@
       var canvas = this.$element('graphCanvas')
       if (!canvas) return
 
-      canvas.width = this.canvasWidth * 2
-      canvas.height = this.canvasHeight * 2
+      // 使用 1x 物理像素，避免快应用 webview 高 DPI canvas 不稳定 / 性能差
+      canvas.width = this.canvasWidth
+      canvas.height = this.canvasHeight
 
       var ctx = canvas.getContext('2d')
       if (!ctx) return
-      ctx.scale(2, 2)
 
       var width = this.canvasWidth
       var height = this.canvasHeight
@@ -631,6 +674,14 @@
 
       ctx.clearRect(0, 0, width, height)
 
+      this.drawGridAndAxes(ctx, width, height, centerX, centerY, scale)
+      this.drawCurves(ctx, width, height, centerX, centerY, scale)
+
+      this.isLoading = false
+    },
+
+    // 绘制网格、坐标轴、刻度文字（纯静态，可独立刷新区分）
+    drawGridAndAxes(ctx, width, height, centerX, centerY, scale) {
       var targetStep = 80 / scale
       var pow10 = Math.pow(10, Math.floor(Math.log(targetStep) / Math.log(10)))
       var raw = targetStep / pow10
@@ -648,7 +699,10 @@
         var absR = Math.abs(rounded)
         var intPart = Math.floor(absR)
         var fracPart = Math.round((absR - intPart) * pow)
-        if (fracPart === pow) { intPart += 1; fracPart = 0 }
+        if (fracPart === pow) {
+          intPart += 1
+          fracPart = 0
+        }
         var sign = rounded < 0 ? '-' : ''
         var fracStr = String(fracPart)
         while (fracStr.length < decimals) fracStr = '0' + fracStr
@@ -710,45 +764,100 @@
           ctx.fillText(labelFormat(i), centerX - 4, yv)
         }
       }
+    },
 
+    // 绘制函数曲线：使用预编译闭包，加入跳变检测与自适应降采样
+    drawCurves(ctx, width, height, centerX, centerY, scale) {
       var colors = ['#00ff99', '#ff6b6b', '#4dabf7']
+      var fns = this.compiledFns
+      // 跳变阈值：相邻样本 y 差超过半屏视为不连续
+      var jumpThreshold = (height / scale) * 0.5
 
-      for (var ei = 0; ei < this.expressions.length; ei++) {
-        var expr = this.expressions[ei]
-        if (!expr) continue
+      // 统计活动函数数量，决定采样步长：3 个函数时减半采样，避免主线程卡死
+      var activeCount = 0
+      for (var i = 0; i < fns.length; i++) {
+        if (fns[i]) activeCount++
+      }
+      var sampleStep = activeCount >= 3 ? 2 : 1
 
-        ctx.strokeStyle = colors[ei]
-        ctx.lineWidth = 2
-        ctx.beginPath()
-        var started = false
+      // 单条曲线失败不影响其他曲线与整体渲染
+      for (var ei = 0; ei < fns.length; ei++) {
+        var fn = fns[ei]
+        if (!fn) continue
+        try {
+          this.drawSingleCurve(
+            ctx,
+            width,
+            height,
+            centerX,
+            centerY,
+            scale,
+            fn,
+            colors[ei],
+            sampleStep,
+            jumpThreshold
+          )
+        } catch (e) {
+          // 静默跳过出错曲线
+        }
+      }
+    },
 
-        for (var px = 0; px < width; px++) {
-          var cx = (px - centerX) / scale
-          var y = this.evalExpr(expr, cx)
+    drawSingleCurve(
+      ctx,
+      width,
+      height,
+      centerX,
+      centerY,
+      scale,
+      fn,
+      color,
+      sampleStep,
+      jumpThreshold
+    ) {
+      ctx.strokeStyle = color
+      ctx.lineWidth = 2
+      ctx.beginPath()
 
-          if (y !== y || y === 1 / 0 || y === -1 / 0) {
-            started = false
-            continue
-          }
+      var started = false
+      var lastY = 0 / 0
+      var screenY
 
-          var screenY = centerY - y * scale
+      for (var px = 0; px < width; px += sampleStep) {
+        var cx = (px - centerX) / scale
+        var y = fn(cx)
 
-          if (screenY < -100 || screenY > height + 100) {
-            started = false
-            continue
-          }
-
-          if (!started) {
-            ctx.moveTo(px, screenY)
-            started = true
-          } else {
-            ctx.lineTo(px, screenY)
-          }
+        // 跳过 NaN / Infinity
+        if (y !== y || y === 1 / 0 || y === -1 / 0) {
+          started = false
+          lastY = 0 / 0
+          continue
         }
 
-        ctx.stroke()
+        screenY = centerY - y * scale
+
+        // 越界直接跳过
+        if (screenY < -100 || screenY > height + 100) {
+          started = false
+          lastY = 0 / 0
+          continue
+        }
+
+        // 跳变检测：y 值剧变说明函数不连续，抬笔重起一段
+        if (started && Math.abs(y - lastY) > jumpThreshold) {
+          started = false
+        }
+
+        if (!started) {
+          ctx.moveTo(px, screenY)
+          started = true
+        } else {
+          ctx.lineTo(px, screenY)
+        }
+        lastY = y
       }
-      this.isLoading = false
+
+      ctx.stroke()
     },
 
     zoomIn() {
