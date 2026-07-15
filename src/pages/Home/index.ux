@@ -205,12 +205,18 @@
               <text class="feature-name">统计分析</text>
             </div>
           </list-item>
-          <list-item
-            type="card"
-            style="margin-top: 3 * $size-factor; margin-bottom: 80px">
+          <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="openDateCalculator">
               <text class="feature-icon">&#xe645;</text>
               <text class="feature-name">日期计算</text>
+            </div>
+          </list-item>
+          <list-item
+            type="card"
+            style="margin-top: 3 * $size-factor; margin-bottom: 80px">
+            <div class="feature-card" onclick="openRandomPage">
+              <text class="feature-icon">&#xe620;</text>
+              <text class="feature-name">随机数</text>
             </div>
           </list-item>
         </list>
@@ -722,6 +728,12 @@
     openStatisticsPage() {
       global.router.push({
         uri: 'pages/Advanced/Statistics',
+      })
+    },
+
+    openRandomPage() {
+      global.router.push({
+        uri: 'pages/Advanced/Random',
       })
     },
   }

@@ -76,6 +76,9 @@
       },
       "pages/Advanced/Statistics": {
         "component": "index"
+      },
+      "pages/Advanced/Random": {
+        "component": "index"
       }
     }
   },
