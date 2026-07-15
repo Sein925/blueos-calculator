@@ -2,6 +2,7 @@
   <div class="wrapper">
     <image class="app-logo" src="/assets/images/logo.png"></image>
     <text class="app-name">科学计算器</text>
+    <text class="hint">如遇图标无法正常加载&#10;请尝试重启手表</text>
   </div>
 </template>
 
@@ -17,12 +18,20 @@
     .app-logo {
       width: 196px;
       height: 196px;
-      margin-bottom: 30px;
+      margin-bottom: 24px;
     }
 
     .app-name {
       font-size: 48px;
       color: $white;
+    }
+
+    .hint {
+      font-size: 28px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 8px;
+      text-align: center;
+      padding: 0 40px;
     }
   }
 </style>
