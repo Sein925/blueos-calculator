@@ -179,6 +179,48 @@
     return { num, den }
   }
 
+  // 浮点数转分数：1.5 → 3/2，0.25 → 1/4
+  // 处理浮点精度误差（先 round 到 12 位有效数字）
+  function numToFrac(n) {
+    if (isInteger(n)) return { num: n, den: 1 }
+    const rounded = parseFloat(n.toPrecision(12))
+    if (isInteger(rounded)) return { num: rounded, den: 1 }
+    const s = rounded.toString()
+    if (s.indexOf('.') === -1) {
+      return { num: Math.round(rounded), den: 1 }
+    }
+    const parts = s.split('.')
+    const sign = rounded < 0 ? -1 : 1
+    const integerPart = Math.abs(parseInt(parts[0])) || 0
+    const decimalPart = parts[1]
+    const den = Math.pow(10, decimalPart.length)
+    const num = integerPart * den + parseInt(decimalPart)
+    const g2 = gcd(num, den)
+    return { num: sign * (num / g2), den: den / g2 }
+  }
+
+  // 最小公倍数
+  function lcm(a, b) {
+    return (a * b) / gcd(a, b)
+  }
+
+  // 检查 delta 是否为完全平方分数 (p/q)²
+  // 返回 { p, q }；q 是使 sqrt(delta) * q 为整数的最小 q
+  // 例如 delta=6.25 → sqrt=2.5 → { p: 5, q: 2 }，即 √(25/4)
+  // delta=2.25 → sqrt=1.5 → { p: 3, q: 2 }
+  // delta=6（无理）→ null
+  function tryRationalSqrt(d) {
+    if (d < 0) return null
+    const sqrtD = Math.sqrt(d)
+    for (let q = 1; q <= 1000; q++) {
+      const p = sqrtD * q
+      if (Math.abs(p - Math.round(p)) < 1e-9) {
+        return { p: Math.round(p), q }
+      }
+    }
+    return null
+  }
+
   function getFractionLine(len) {
     len = Math.min(len, 11)
     let line = ''
@@ -443,6 +485,56 @@
         return
       }
 
+      // 分支 1.5：delta 是有理平方 (p/q)²（如 6.25 = (5/2)²、2.25 = (3/2)²）
+      // 把 -b 也按 q 整数化后用分数算根，避免落入根式分支后被错误 round
+      const rationalSqrt = tryRationalSqrt(delta)
+      if (rationalSqrt) {
+        const p = rationalSqrt.p
+        const q = rationalSqrt.q
+
+        // 把 a、b 用分数表示，对齐到联合分母
+        const bFrac = numToFrac(b)
+        const aFrac = numToFrac(a)
+        const commonDen = lcm(bFrac.den, q)
+
+        // 把所有项乘以 commonDen 转为整数
+        const bInt = bFrac.num * (commonDen / bFrac.den)
+        const pInt = p * (commonDen / q)
+        const twoAInt = 2 * aFrac.num * (commonDen / aFrac.den)
+
+        // x = (-b ± p/q) / (2a)，统一分母后：x = (-bInt ± pInt) / twoAInt
+        const x1 = simplifyFraction(-bInt + pInt, twoAInt)
+        const x2 = simplifyFraction(-bInt - pInt, twoAInt)
+
+        this.rootsLabel = '有两个不等实根：'
+        this.showX2 = true
+        this.isDoubleRoot = false
+
+        if (x1.den === 1) {
+          this.x1IsInt = true
+          this.x1IntValue = x1.num.toString()
+        } else {
+          this.x1IsFrac = true
+          this.x1Num = x1.num.toString()
+          this.x1Den = x1.den.toString()
+          const maxLen1 = Math.max(this.x1Num.length, this.x1Den.length)
+          this.x1Line = getFractionLine(maxLen1)
+        }
+
+        if (x2.den === 1) {
+          this.x2IsInt = true
+          this.x2IntValue = x2.num.toString()
+        } else {
+          this.x2IsFrac = true
+          this.x2Num = x2.num.toString()
+          this.x2Den = x2.den.toString()
+          const maxLen2 = Math.max(this.x2Num.length, this.x2Den.length)
+          this.x2Line = getFractionLine(maxLen2)
+        }
+
+        return
+      }
+
       const rad = simplifyRadical(delta)
       const k = rad.coeff
       const D = rad.radicand
@@ -609,6 +701,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-left: 8px;
   }
 
   .fraction-numerator {
