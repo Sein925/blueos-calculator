@@ -34,7 +34,18 @@
             {{ inputDisplayMode === 'marquee' ? '跑马灯' : '静态文本' }}
           </text>
         </div>
-        <text class="description" style="margin-bottom: 30px">静态文本模式下长表达式靠右显示，便于查看末尾输入</text>
+        <text class="description">静态文本模式下长表达式靠右显示，便于查看末尾输入</text>
+
+        <div class="hr"></div>
+
+        <text class="section-title">触感</text>
+        <div class="option-card">
+          <text class="card-label">振动反馈</text>
+          <switch
+            checked="{{ hapticEnabled }}"
+            onchange="toggleHaptic"></switch>
+        </div>
+        <text class="description" style="margin-bottom: 30px">开启后点击按钮会触发轻微振动</text>
       </div>
     </list-item>
   </list>
@@ -46,18 +57,21 @@
       angleMode: 'deg',
       equationOutputMode: 'exact',
       inputDisplayMode: 'static',
+      hapticEnabled: false,
     },
 
     onInit() {
       this.angleMode = global.angleMode || 'deg'
       this.equationOutputMode = global.equationOutputMode || 'exact'
       this.inputDisplayMode = global.inputDisplayMode || 'marquee'
+      this.hapticEnabled = global.hapticEnabled === true
     },
 
     onShow() {
       this.angleMode = global.angleMode || 'deg'
       this.equationOutputMode = global.equationOutputMode || 'exact'
       this.inputDisplayMode = global.inputDisplayMode || 'marquee'
+      this.hapticEnabled = global.hapticEnabled === true
     },
 
     toggleAngleMode() {
@@ -78,6 +92,15 @@
         this.inputDisplayMode === 'marquee' ? 'static' : 'marquee'
       global.inputDisplayMode = this.inputDisplayMode
       global.saveSettings()
+    },
+
+    toggleHaptic(e) {
+      var checked = e && e.checked === true
+      this.hapticEnabled = checked
+      global.hapticEnabled = checked
+      global.saveSettings()
+      // 开启时立即给一次振动反馈
+      if (checked) global.triggerHaptic()
     },
   }
 </script>

@@ -116,6 +116,7 @@
     stopPropagation() {},
 
     inputDigit(digit) {
+      global.triggerHaptic()
       if (this.inputValue === '0') {
         this.inputValue = digit
       } else {
@@ -124,6 +125,7 @@
     },
 
     inputDecimal() {
+      global.triggerHaptic()
       if (!this.hasDecimal) {
         this.inputValue += '.'
         this.hasDecimal = true
@@ -131,6 +133,7 @@
     },
 
     toggleSign() {
+      global.triggerHaptic()
       if (this.inputValue === '0') return
       if (this.isNegative) {
         this.inputValue = this.inputValue.substring(1)
@@ -142,6 +145,7 @@
     },
 
     backspace() {
+      global.triggerHaptic()
       if (this.inputValue.length === 1) {
         this.inputValue = '0'
         this.hasDecimal = false
@@ -162,12 +166,14 @@
     },
 
     clearAll() {
+      global.triggerHaptic()
       this.inputValue = '0'
       this.hasDecimal = false
       this.isNegative = false
     },
 
     confirmInput() {
+      global.triggerHaptic()
       this.$emit('change', { value: this.inputValue })
       this.displayValue = this.inputValue
       this.showKeypad = false

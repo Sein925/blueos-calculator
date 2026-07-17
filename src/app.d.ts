@@ -20,6 +20,9 @@ declare const global: {
   angleMode: 'deg' | 'rad';
   equationOutputMode: 'exact' | 'decimal';
   inputDisplayMode: 'marquee' | 'static';
+  hapticEnabled: boolean;
+  vibrator: typeof import('@blueos.hardware.vibrator.vibrator');
+  triggerHaptic: () => void;
   pendingHistoryItem: HistoryItem | null;
   pendingDateValue: string;
   loadHistory: () => void;
