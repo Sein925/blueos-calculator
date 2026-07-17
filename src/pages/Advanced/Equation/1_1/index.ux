@@ -94,6 +94,36 @@
     return { num, den }
   }
 
+  // 构造分数（自动约分，den 永远 > 0）
+  function makeFrac(n, d) {
+    d = d || 1
+    if (d === 0) return null
+    if (d < 0) {
+      n = -n
+      d = -d
+    }
+    const numInt = Math.round(n)
+    const denInt = Math.round(d)
+    if (denInt === 0) return null
+    const g = gcd(Math.abs(numInt), Math.abs(denInt))
+    return { num: numInt / g, den: denInt / g }
+  }
+
+  // 分数减法
+  function subF(a, b) {
+    return makeFrac(a.num * b.den - b.num * a.den, a.den * b.den)
+  }
+
+  // 分数除法
+  function divF(a, b) {
+    return makeFrac(a.num * b.den, a.den * b.num)
+  }
+
+  // 分数取负
+  function negF(a) {
+    return { num: -a.num, den: a.den }
+  }
+
   // 生成分数线
   function getFractionLine(len) {
     len = Math.min(len, 11)
@@ -109,6 +139,9 @@
       a: '',
       b: '',
       c: '',
+      aFrac: { num: 1, den: 1 },
+      bFrac: { num: 0, den: 1 },
+      cFrac: { num: 0, den: 1 },
       showResult: false,
       showSimpleText: false,
       simpleText: '',
@@ -125,12 +158,27 @@
 
     handleChangeA(evt) {
       this.a = evt.value
+      if (evt.isFraction) {
+        this.aFrac = { num: evt.num, den: evt.den }
+      } else {
+        this.aFrac = makeFrac(parseFloat(evt.value), 1) || { num: 1, den: 1 }
+      }
     },
     handleChangeB(evt) {
       this.b = evt.value
+      if (evt.isFraction) {
+        this.bFrac = { num: evt.num, den: evt.den }
+      } else {
+        this.bFrac = makeFrac(parseFloat(evt.value), 1) || { num: 0, den: 1 }
+      }
     },
     handleChangeC(evt) {
       this.c = evt.value
+      if (evt.isFraction) {
+        this.cFrac = { num: evt.num, den: evt.den }
+      } else {
+        this.cFrac = makeFrac(parseFloat(evt.value), 1) || { num: 0, den: 1 }
+      }
     },
 
     formatNumber(num) {
@@ -173,7 +221,11 @@
         return
       }
 
-      const frac = simplifyFraction(c - b, a)
+      // 用精确分数算 c - b（避免 1/3 - 1/3 = 0.0000000004 的浮点误差）
+      const num = subF(this.cFrac, this.bFrac)
+      // x = (c - b) / a
+      const frac = divF(num, this.aFrac)
+
       if (frac.den === 1) {
         this.showInteger = true
         this.integerValue = frac.num.toString()

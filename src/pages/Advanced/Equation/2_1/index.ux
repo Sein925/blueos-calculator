@@ -141,6 +141,41 @@
     return { num, den }
   }
 
+  // 构造分数（自动约分，den 永远 > 0）
+  function makeFrac(n, d) {
+    d = d || 1
+    if (d === 0) return null
+    if (d < 0) {
+      n = -n
+      d = -d
+    }
+    const numInt = Math.round(n)
+    const denInt = Math.round(d)
+    if (denInt === 0) return null
+    const g = gcd(Math.abs(numInt), Math.abs(denInt))
+    return { num: numInt / g, den: denInt / g }
+  }
+
+  // 分数加法
+  function addF(a, b) {
+    return makeFrac(a.num * b.den + b.num * a.den, a.den * b.den)
+  }
+
+  // 分数减法
+  function subF(a, b) {
+    return makeFrac(a.num * b.den - b.num * a.den, a.den * b.den)
+  }
+
+  // 分数乘法
+  function mulF(a, b) {
+    return makeFrac(a.num * b.num, a.den * b.den)
+  }
+
+  // 分数除法
+  function divF(a, b) {
+    return makeFrac(a.num * b.den, a.den * b.num)
+  }
+
   // 生成分数线
   function getFractionLine(len) {
     len = Math.min(len, 11)
@@ -159,6 +194,12 @@
       a2: '',
       b2: '',
       c2: '',
+      a1Frac: { num: 1, den: 1 },
+      b1Frac: { num: 1, den: 1 },
+      c1Frac: { num: 0, den: 1 },
+      a2Frac: { num: 1, den: 1 },
+      b2Frac: { num: 1, den: 1 },
+      c2Frac: { num: 0, den: 1 },
       showResult: false,
       showSimpleText: false,
       simpleText: '',
@@ -182,21 +223,51 @@
 
     handleChangeA1(evt) {
       this.a1 = evt.value
+      if (evt.isFraction) {
+        this.a1Frac = { num: evt.num, den: evt.den }
+      } else {
+        this.a1Frac = makeFrac(parseFloat(evt.value), 1) || { num: 1, den: 1 }
+      }
     },
     handleChangeB1(evt) {
       this.b1 = evt.value
+      if (evt.isFraction) {
+        this.b1Frac = { num: evt.num, den: evt.den }
+      } else {
+        this.b1Frac = makeFrac(parseFloat(evt.value), 1) || { num: 1, den: 1 }
+      }
     },
     handleChangeC1(evt) {
       this.c1 = evt.value
+      if (evt.isFraction) {
+        this.c1Frac = { num: evt.num, den: evt.den }
+      } else {
+        this.c1Frac = makeFrac(parseFloat(evt.value), 1) || { num: 0, den: 1 }
+      }
     },
     handleChangeA2(evt) {
       this.a2 = evt.value
+      if (evt.isFraction) {
+        this.a2Frac = { num: evt.num, den: evt.den }
+      } else {
+        this.a2Frac = makeFrac(parseFloat(evt.value), 1) || { num: 1, den: 1 }
+      }
     },
     handleChangeB2(evt) {
       this.b2 = evt.value
+      if (evt.isFraction) {
+        this.b2Frac = { num: evt.num, den: evt.den }
+      } else {
+        this.b2Frac = makeFrac(parseFloat(evt.value), 1) || { num: 1, den: 1 }
+      }
     },
     handleChangeC2(evt) {
       this.c2 = evt.value
+      if (evt.isFraction) {
+        this.c2Frac = { num: evt.num, den: evt.den }
+      } else {
+        this.c2Frac = makeFrac(parseFloat(evt.value), 1) || { num: 0, den: 1 }
+      }
     },
 
     formatNumber(num) {
@@ -207,44 +278,49 @@
     },
 
     solve() {
-      const a1 = parseFloat(this.a1)
-      const b1 = parseFloat(this.b1)
-      const c1 = parseFloat(this.c1)
-      const a2 = parseFloat(this.a2)
-      const b2 = parseFloat(this.b2)
-      const c2 = parseFloat(this.c2)
-
       // 重置所有显示
       this.showResult = true
       this.showSimpleText = false
       this.showSolutions = false
 
-      if (
-        isNaN(a1) ||
-        isNaN(b1) ||
-        isNaN(c1) ||
-        isNaN(a2) ||
-        isNaN(b2) ||
-        isNaN(c2)
-      ) {
+      // 有效性检查（用分数的 num/den）
+      const anyNaN = [
+        this.a1Frac,
+        this.b1Frac,
+        this.c1Frac,
+        this.a2Frac,
+        this.b2Frac,
+        this.c2Frac,
+      ].some((f) => !f || isNaN(f.num) || isNaN(f.den) || f.den === 0)
+      if (anyNaN) {
         this.showSimpleText = true
         this.simpleText = '请输入有效的数字'
         return
       }
 
-      const D = a1 * b2 - a2 * b1
-      const Dx = c1 * b2 - c2 * b1
-      const Dy = a1 * c2 - a2 * c1
+      // 克莱姆法则：用精确分数算 D, Dx, Dy
+      // D = a1*b2 - a2*b1
+      const D = subF(mulF(this.a1Frac, this.b2Frac), mulF(this.a2Frac, this.b1Frac))
+      // Dx = c1*b2 - c2*b1
+      const Dx = subF(mulF(this.c1Frac, this.b2Frac), mulF(this.c2Frac, this.b1Frac))
+      // Dy = a1*c2 - a2*c1
+      const Dy = subF(mulF(this.a1Frac, this.c2Frac), mulF(this.a2Frac, this.c1Frac))
 
-      if (D === 0) {
+      // D === 0 → 浮点比较用 D.num === 0
+      if (D.num === 0) {
         this.showSimpleText = true
-        if (a1 === 0 && b1 === 0 && a2 === 0 && b2 === 0) {
-          if (c1 === 0 && c2 === 0) {
+        const allZeroCoeff =
+          this.a1Frac.num === 0 &&
+          this.b1Frac.num === 0 &&
+          this.a2Frac.num === 0 &&
+          this.b2Frac.num === 0
+        if (allZeroCoeff) {
+          if (this.c1Frac.num === 0 && this.c2Frac.num === 0) {
             this.simpleText = '方程组有无穷多解'
           } else {
             this.simpleText = '方程组无解'
           }
-        } else if (Dx === 0 && Dy === 0) {
+        } else if (Dx.num === 0 && Dy.num === 0) {
           this.simpleText = '方程组有无穷多解'
         } else {
           this.simpleText = '方程组无解'
@@ -254,11 +330,11 @@
 
       if (global.equationOutputMode === 'decimal') {
         this.showSimpleText = true
-        const x = Dx / D
-        const y = Dy / D
+        const x = Dx.num / Dx.den / (D.num / D.den)
+        const y = Dy.num / Dy.den / (D.num / D.den)
         this.simpleText =
           'D = ' +
-          D +
+          (D.num / D.den).toString() +
           '\nx = ' +
           this.formatNumber(x) +
           '\ny = ' +
@@ -267,9 +343,10 @@
       }
 
       this.showSolutions = true
-      this.dValue = D.toString()
+      this.dValue = D.num / D.den + ''
 
-      const xFrac = simplifyFraction(Dx, D)
+      // x = Dx / D：用整数化结果传给 simplifyFraction
+      const xFrac = simplifyFraction(Dx.num * D.den, Dx.den * D.num)
       if (xFrac.den === 1) {
         this.xIsInteger = true
         this.xIsNegative = false
@@ -286,7 +363,7 @@
         this.xFractionLine = getFractionLine(xMaxLen)
       }
 
-      const yFrac = simplifyFraction(Dy, D)
+      const yFrac = simplifyFraction(Dy.num * D.den, Dy.den * D.num)
       if (yFrac.den === 1) {
         this.yIsInteger = true
         this.yIsNegative = false

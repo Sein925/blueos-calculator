@@ -36,7 +36,7 @@
             for="(index, item) in dataList"
             class="data-item"
             onclick="removeData(index)">
-            {{ item }} ×
+            {{ item.display }} ×
           </text>
         </div>
       </div>
@@ -116,25 +116,88 @@
 </template>
 
 <script>
-  function round(num, decimals = 4) {
-    const factor = Math.pow(10, decimals)
-    return Math.round(num * factor) / factor
+  // ===== 精确分数工具（与 Equation 共用同一套）=====
+  function gcd(a, b) {
+    a = Math.abs(a)
+    b = Math.abs(b)
+    while (b !== 0) {
+      const t = b
+      b = a % b
+      a = t
+    }
+    return a || 1
+  }
+
+  function makeFrac(num, den) {
+    if (!den || isNaN(num) || isNaN(den)) return { num: 0, den: 1 }
+    if (den < 0) {
+      num = -num
+      den = -den
+    }
+    const g = gcd(num, den)
+    return { num: num / g, den: den / g }
+  }
+
+  function addF(a, b) {
+    return makeFrac(a.num * b.den + b.num * a.den, a.den * b.den)
+  }
+
+  function subF(a, b) {
+    return makeFrac(a.num * b.den - b.num * a.den, a.den * b.den)
+  }
+
+  function mulF(a, b) {
+    return makeFrac(a.num * b.num, a.den * b.den)
+  }
+
+  function divF(a, b) {
+    if (b.num === 0) return { num: 0, den: 1 }
+    return makeFrac(a.num * b.den, a.den * b.num)
+  }
+
+  function negF(a) {
+    return { num: -a.num, den: a.den }
+  }
+
+  // 分数转显示字符串（den=1 → 整数；den<=100 → 分数；否则浮点 4 位）
+  function fracToDisplay(f) {
+    if (!f || f.den === 0) return '0'
+    if (f.den === 1) return f.num.toString()
+    if (Math.abs(f.den) <= 100 && Math.abs(f.num) <= 100000) {
+      return f.num + '/' + f.den
+    }
+    return (f.num / f.den).toFixed(4)
+  }
+
+  // 浮点转分数（限制 12 位精度，避免浮点垃圾）
+  function floatToFrac(v) {
+    if (!isFinite(v)) return { num: 0, den: 1 }
+    if (Number.isInteger(v)) return { num: v, den: 1 }
+    // 尝试简单浮点：1e-12 范围内
+    const s = v.toFixed(12).replace(/\.?0+$/, '')
+    const [intPart, decPart = ''] = s.split('.')
+    if (!decPart) return { num: parseInt(intPart), den: 1 }
+    const den = Math.pow(10, decPart.length)
+    const num = parseInt(intPart + decPart)
+    return makeFrac(num, den)
   }
 
   export default {
     data: {
       currentValue: '0',
+      currentFrac: { num: 0, den: 1 },
       dataList: [],
       results: {
         count: 0,
-        sum: 0,
-        mean: 0,
+        sum: '0',
+        mean: '-',
+        median: '-',
         mode: '-',
-        max: 0,
-        min: 0,
-        range: 0,
-        variance: 0,
-        stdDev: 0,
+        max: '-',
+        min: '-',
+        range: '-',
+        variance: '-',
+        stdDev: '-',
       },
     },
 
@@ -142,15 +205,24 @@
 
     handleInputChange(e) {
       this.currentValue = e.value
+      if (e.isFraction) {
+        this.currentFrac = { num: e.num, den: e.den }
+      } else {
+        this.currentFrac = floatToFrac(parseFloat(e.value))
+      }
     },
 
     addData() {
-      const value = parseFloat(this.currentValue)
-      if (isNaN(value)) {
-        return
-      }
-
-      this.dataList = [...this.dataList, this.currentValue]
+      if (!this.currentFrac || this.currentFrac.den === 0) return
+      this.dataList = [
+        ...this.dataList,
+        {
+          display: fracToDisplay(this.currentFrac),
+          frac: this.currentFrac,
+        },
+      ]
+      this.currentValue = '0'
+      this.currentFrac = { num: 0, den: 1 }
       this.calculate()
     },
 
@@ -162,6 +234,7 @@
     clearAll() {
       this.dataList = []
       this.currentValue = '0'
+      this.currentFrac = { num: 0, den: 1 }
       this.calculate()
     },
 
@@ -169,63 +242,91 @@
       if (this.dataList.length === 0) {
         this.results = {
           count: 0,
-          sum: 0,
-          mean: 0,
+          sum: '0',
+          mean: '-',
+          median: '-',
           mode: '-',
-          max: 0,
-          min: 0,
-          range: 0,
-          variance: 0,
-          stdDev: 0,
+          max: '-',
+          min: '-',
+          range: '-',
+          variance: '-',
+          stdDev: '-',
         }
         return
       }
 
-      const data = this.dataList.map((x) => parseFloat(x)).sort((a, b) => a - b)
-      const n = data.length
+      // 排序（按分数数值升序）
+      const sorted = [...this.dataList].sort(
+        (a, b) => a.frac.num / a.frac.den - b.frac.num / b.frac.den
+      )
+      const n = sorted.length
 
-      const sum = data.reduce((acc, val) => acc + val, 0)
-      const mean = sum / n
-      const max = data[n - 1]
-      const min = data[0]
-      const range = max - min
-
-      let median
-      if (n % 2 === 0) {
-        median = (data[n / 2 - 1] + data[n / 2]) / 2
-      } else {
-        median = data[Math.floor(n / 2)]
+      // 求和（Fraction 累加）
+      let sum = sorted[0].frac
+      for (let i = 1; i < n; i++) {
+        sum = addF(sum, sorted[i].frac)
       }
 
+      // 平均数
+      const mean = divF(sum, { num: n, den: 1 })
+
+      // 最大值 / 最小值 / 极差
+      const max = sorted[n - 1]
+      const min = sorted[0]
+      const range = subF(max.frac, min.frac)
+
+      // 中位数
+      let median
+      if (n % 2 === 0) {
+        median = divF(
+          addF(sorted[n / 2 - 1].frac, sorted[n / 2].frac),
+          { num: 2, den: 1 }
+        )
+      } else {
+        median = sorted[Math.floor(n / 2)].frac
+      }
+
+      // 众数（按分数值去重，显示分数形式）
       const frequency = {}
+      const fracToKey = (f) => `${f.num}/${f.den}`
       let maxFreq = 0
       let modes = []
-      data.forEach((num) => {
-        frequency[num] = (frequency[num] || 0) + 1
-        if (frequency[num] > maxFreq) {
-          maxFreq = frequency[num]
-          modes = [num]
-        } else if (frequency[num] === maxFreq && !modes.includes(num)) {
-          modes.push(num)
+      sorted.forEach((item) => {
+        const key = fracToKey(item.frac)
+        frequency[key] = (frequency[key] || 0) + 1
+        if (frequency[key] > maxFreq) {
+          maxFreq = frequency[key]
+          modes = [item.display]
+        } else if (frequency[key] === maxFreq && modes.indexOf(item.display) === -1) {
+          modes.push(item.display)
         }
       })
       const mode = modes.length === n ? '-' : modes.join(', ')
 
-      const variance =
-        data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n
-      const stdDev = Math.sqrt(variance)
+      // 方差 = Σ(x - mean)² / n（精确 Fraction 算）
+      let varianceSum = { num: 0, den: 1 }
+      for (let i = 0; i < n; i++) {
+        const diff = subF(sorted[i].frac, mean)
+        const diffSq = mulF(diff, diff)
+        varianceSum = addF(varianceSum, diffSq)
+      }
+      const variance = divF(varianceSum, { num: n, den: 1 })
+
+      // 标准差 = sqrt(方差) —— Fraction 不能精确开方，转浮点 + 4 位
+      const varianceFloat = variance.num / variance.den
+      const stdDev = Math.sqrt(Math.abs(varianceFloat)).toFixed(4)
 
       this.results = {
         count: n,
-        sum: round(sum),
-        mean: round(mean),
-        median: round(median),
+        sum: fracToDisplay(sum),
+        mean: fracToDisplay(mean),
+        median: fracToDisplay(median),
         mode: mode,
-        max: round(max),
-        min: round(min),
-        range: round(range),
-        variance: round(variance),
-        stdDev: round(stdDev),
+        max: max.display,
+        min: min.display,
+        range: fracToDisplay(range),
+        variance: fracToDisplay(variance),
+        stdDev: stdDev,
       }
     },
   }

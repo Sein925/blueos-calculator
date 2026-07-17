@@ -204,6 +204,79 @@
     return (a * b) / gcd(a, b)
   }
 
+  // 构造分数（自动约分，den 永远 > 0）
+  function makeFrac(n, d) {
+    d = d || 1
+    if (d === 0) return null
+    if (d < 0) {
+      n = -n
+      d = -d
+    }
+    const numInt = Math.round(n)
+    const denInt = Math.round(d)
+    if (denInt === 0) return null
+    const g = gcd(Math.abs(numInt), Math.abs(denInt))
+    return { num: numInt / g, den: denInt / g }
+  }
+
+  // 分数加法
+  function addF(a, b) {
+    return makeFrac(a.num * b.den + b.num * a.den, a.den * b.den)
+  }
+
+  // 分数减法
+  function subF(a, b) {
+    return makeFrac(a.num * b.den - b.num * a.den, a.den * b.den)
+  }
+
+  // 分数乘法
+  function mulF(a, b) {
+    return makeFrac(a.num * b.num, a.den * b.den)
+  }
+
+  // 提取 n 的最大完全平方因子，返回 {out, rest} 表示 n = out² * rest
+  function extractSquareFactor(n) {
+    let out = 1
+    let rest = Math.abs(Math.round(n))
+    for (let i = 2; i * i <= rest; i++) {
+      while (rest % (i * i) === 0) {
+        out *= i
+        rest /= i * i
+      }
+    }
+    return { out, rest }
+  }
+
+  // 化简 sqrt(num/den) = coeff * sqrt(radicand) / den
+  // 用公式 sqrt(a/b) = sqrt(a*b) / b
+  function simplifyRadicalFrac(num, den) {
+    if (num === 0) return { coeff: 0, radicand: 0, den: 1 }
+    const sign = num < 0 ? -1 : 1
+    const product = Math.abs(num) * Math.abs(den)
+    const f = extractSquareFactor(product)
+    return {
+      coeff: f.out * sign,
+      radicand: f.rest,
+      den: Math.abs(den),
+    }
+  }
+
+  // 分数取负
+  function negF(a) {
+    return { num: -a.num, den: a.den }
+  }
+
+  // 分数除法
+  function divF(a, b) {
+    return makeFrac(a.num * b.den, a.den * b.num)
+  }
+
+  // 分数转字符串（已约分）
+  function fracToStr(f) {
+    if (f.den === 1) return f.num.toString()
+    return f.num + '/' + f.den
+  }
+
   // 检查 delta 是否为完全平方分数 (p/q)²
   // 返回 { p, q }；q 是使 sqrt(delta) * q 为整数的最小 q
   // 例如 delta=6.25 → sqrt=2.5 → { p: 5, q: 2 }，即 √(25/4)
@@ -285,6 +358,9 @@
       a: '',
       b: '',
       c: '',
+      aFrac: { num: 1, den: 1 },
+      bFrac: { num: 0, den: 1 },
+      cFrac: { num: 0, den: 1 },
       showResult: false,
       showSimpleText: false,
       simpleText: '',
@@ -328,12 +404,27 @@
 
     handleChangeA(evt) {
       this.a = evt.value
+      if (evt.isFraction) {
+        this.aFrac = { num: evt.num, den: evt.den }
+      } else {
+        this.aFrac = makeFrac(parseFloat(evt.value), 1) || { num: 1, den: 1 }
+      }
     },
     handleChangeB(evt) {
       this.b = evt.value
+      if (evt.isFraction) {
+        this.bFrac = { num: evt.num, den: evt.den }
+      } else {
+        this.bFrac = makeFrac(parseFloat(evt.value), 1) || { num: 0, den: 1 }
+      }
     },
     handleChangeC(evt) {
       this.c = evt.value
+      if (evt.isFraction) {
+        this.cFrac = { num: evt.num, den: evt.den }
+      } else {
+        this.cFrac = makeFrac(parseFloat(evt.value), 1) || { num: 0, den: 1 }
+      }
     },
 
     formatNumber(num) {
@@ -347,9 +438,12 @@
     },
 
     solve() {
-      const a = parseFloat(this.a)
-      const b = parseFloat(this.b)
-      const c = parseFloat(this.c)
+      // 用精确分数算 delta（避免 88/3 平方的浮点误差）
+      // delta = b² - 4ac
+      const b2 = mulF(this.bFrac, this.bFrac)
+      const fourAc = mulF(mulF(this.aFrac, this.cFrac), { num: 4, den: 1 })
+      const deltaFrac = subF(b2, fourAc)
+      const delta = deltaFrac.num / deltaFrac.den  // rationalSqrt 仍要浮点
 
       this.showResult = true
       this.showSimpleText = false
@@ -363,29 +457,36 @@
       this.x2IsFrac = false
       this.x2IsRad = false
 
-      if (isNaN(a) || isNaN(b) || isNaN(c)) {
+      if (
+        isNaN(parseFloat(this.a)) ||
+        isNaN(parseFloat(this.b)) ||
+        isNaN(parseFloat(this.c))
+      ) {
         this.showSimpleText = true
         this.simpleText = '请输入有效的数字'
         return
       }
 
-      if (a === 0) {
+      // a === 0 时退化为一次方程（用 aFrac 判）
+      if (this.aFrac.num === 0) {
         this.showSimpleText = true
-        if (b === 0) {
-          if (c === 0) {
+        if (this.bFrac.num === 0) {
+          if (this.cFrac.num === 0) {
             this.simpleText = '方程有无穷多解'
           } else {
             this.simpleText = '方程无解'
           }
         } else {
-          this.simpleText = '化为一元一次方程：x = ' + this.formatNumber(-c / b)
+          // x = -c / b
+          const xFrac = divF(negF(this.cFrac), this.bFrac)
+          this.simpleText =
+            '化为一元一次方程：x = ' + fracToStr(xFrac)
         }
         return
       }
 
-      const delta = b * b - 4 * a * c
       this.showRoots = true
-      this.deltaText = 'Δ = ' + this.formatNumber(delta)
+      this.deltaText = 'Δ = ' + fracToStr(deltaFrac)
 
       const sqrtDelta = Math.sqrt(delta)
 
@@ -492,9 +593,10 @@
         const p = rationalSqrt.p
         const q = rationalSqrt.q
 
-        // 把 a、b 用分数表示，对齐到联合分母
-        const bFrac = numToFrac(b)
-        const aFrac = numToFrac(a)
+        // 直接用 handleChange 存的精确分数（this.bFrac/this.aFrac），
+        // 不再 numToFrac(b) 从浮点重建，避免二次误差
+        const bFrac = this.bFrac
+        const aFrac = this.aFrac
         const commonDen = lcm(bFrac.den, q)
 
         // 把所有项乘以 commonDen 转为整数
@@ -535,56 +637,95 @@
         return
       }
 
-      const rad = simplifyRadical(delta)
-      const k = rad.coeff
+      // 根式分支：用精确分数化简 sqrt(delta) = K*sqrt(D)/M
+      const rad = simplifyRadicalFrac(deltaFrac.num, deltaFrac.den)
+      const K = rad.coeff
       const D = rad.radicand
-      const bInt = Math.round(b)
-      const a2Int = Math.round(2 * a)
+      const M = rad.den
 
-      const g = gcd3(bInt, k, a2Int)
+      // 算 N = -b / (2a)（精确分数）
+      const negB = negF(this.bFrac)
+      const twoA = mulF(this.aFrac, { num: 2, den: 1 })
+      const N = divF(negB, twoA)
 
-      let N = -bInt / g
-      let tK = k / g
-      let Den = a2Int / g
+      // 算 x = N ± (K*sqrt(D)/M) / (2a)
+      //   = N.num/N.den ± (K*aFrac.den)*sqrt(D) / (M*2aFrac.num)
+      // 整体分子：N.num*M*2a.num ± K*aFrac.den*sqrt(D)*N.den
+      // 整体分母：N.den*M*2a.num
+      // numInt = N.num * M * 2a.num
+      // coefK  = K * aFrac.den * N.den
+      // denInt = N.den * M * 2a.num
+      const numInt = N.num * M * twoA.num
+      const coefK = K * this.aFrac.den * N.den
+      const denInt = N.den * M * twoA.num
 
-      if (Den < 0) {
-        N = -N
-        tK = -tK
-        Den = -Den
-      }
-
-      const x1K = tK
-      const x2K = -tK
-
-      const x1NumStr = formatRadicalNum(N, x1K, D)
-      const x2NumStr = formatRadicalNum(N, x2K, D)
+      // 整体化简：三者最大公因
+      const g = gcd3(Math.abs(numInt), Math.abs(coefK), Math.abs(denInt))
+      const N_out = numInt / g
+      const K_out = coefK / g
+      const Den_out = denInt / g
 
       this.rootsLabel = delta > 0 ? '有两个不等实根：' : '有两个相等实根：'
       this.isDoubleRoot = delta === 0
 
-      if (Den === 1) {
+      // x1 = N_out + K_out*sqrt(D),  x2 = N_out - K_out*sqrt(D)
+      // 共同根号部分：|K_out|*sqrt(D)
+      // x1 根式系数：+K_out
+      // x2 根式系数：-K_out
+      const x1K = K_out
+      const x2K = -K_out
+
+      // 共同 N 部分（K=0 时退化为纯整数或纯分数）
+      if (K_out === 0) {
+        // 退化为整数或分数（已经在 isInteger 路径覆盖，但保险起见）
+        if (Den_out === 1) {
+          this.x1IsInt = true
+          this.x1IntValue = N_out.toString()
+          this.x1IsRad = false
+        } else {
+          this.x1IsFrac = true
+          this.x1Num = N_out.toString()
+          this.x1Den = Den_out.toString()
+          this.x1Line = getFractionLine(
+            Math.max(this.x1Num.length, this.x1Den.length)
+          )
+        }
+        this.showX2 = delta > 0
+        if (this.showX2) {
+          // 双重根：x1 = x2
+        }
+        return
+      }
+
+      // 根式显示：N_out/Den_out ± K_out*sqrt(D)
+      // 当 Den_out == 1：N_out ± K_out*sqrt(D)
+      // 当 Den_out > 1：(N_out ± K_out*sqrt(D)) / Den_out
+      const x1NumStr = formatRadicalNum(N_out, x1K, D)
+      const x2NumStr = formatRadicalNum(N_out, x2K, D)
+
+      if (Den_out === 1) {
         this.x1IsRad = true
         this.x1RadNumStr = x1NumStr
         this.x1RadIsDenOne = true
       } else {
         this.x1IsRad = true
         this.x1RadNumStr = x1NumStr
-        this.x1RadDen = Den.toString()
-        const maxLen1 = Math.max(x1NumStr.length, Den.toString().length)
+        this.x1RadDen = Den_out.toString()
+        const maxLen1 = Math.max(x1NumStr.length, Den_out.toString().length)
         this.x1RadLine = getFractionLine(maxLen1)
       }
 
       if (delta > 0) {
         this.showX2 = true
-        if (Den === 1) {
+        if (Den_out === 1) {
           this.x2IsRad = true
           this.x2RadNumStr = x2NumStr
           this.x2RadIsDenOne = true
         } else {
           this.x2IsRad = true
           this.x2RadNumStr = x2NumStr
-          this.x2RadDen = Den.toString()
-          const maxLen2 = Math.max(x2NumStr.length, Den.toString().length)
+          this.x2RadDen = Den_out.toString()
+          const maxLen2 = Math.max(x2NumStr.length, Den_out.toString().length)
           this.x2RadLine = getFractionLine(maxLen2)
         }
       } else {
