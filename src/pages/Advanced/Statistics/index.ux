@@ -155,10 +155,6 @@
     return makeFrac(a.num * b.den, a.den * b.num)
   }
 
-  function negF(a) {
-    return { num: -a.num, den: a.den }
-  }
-
   // 分数转显示字符串（den=1 → 整数；den<=100 → 分数；否则浮点 4 位）
   function fracToDisplay(f) {
     if (!f || f.den === 0) return '0'
@@ -166,13 +162,13 @@
     if (Math.abs(f.den) <= 100 && Math.abs(f.num) <= 100000) {
       return f.num + '/' + f.den
     }
-    return (f.num / f.den).toFixed(4)
+    return String(Math.round((f.num / f.den) * 10000) / 10000)
   }
 
   // 浮点转分数（限制 12 位精度，避免浮点垃圾）
   function floatToFrac(v) {
     if (!isFinite(v)) return { num: 0, den: 1 }
-    if (Number.isInteger(v)) return { num: v, den: 1 }
+    if (Math.floor(v) === v) return { num: v, den: 1 }
     // 尝试简单浮点：1e-12 范围内
     const s = v.toFixed(12).replace(/\.?0+$/, '')
     const [intPart, decPart = ''] = s.split('.')
@@ -218,11 +214,9 @@
         ...this.dataList,
         {
           display: fracToDisplay(this.currentFrac),
-          frac: this.currentFrac,
+          frac: { num: this.currentFrac.num, den: this.currentFrac.den },
         },
       ]
-      this.currentValue = '0'
-      this.currentFrac = { num: 0, den: 1 }
       this.calculate()
     },
 
@@ -314,7 +308,7 @@
 
       // 标准差 = sqrt(方差) —— Fraction 不能精确开方，转浮点 + 4 位
       const varianceFloat = variance.num / variance.den
-      const stdDev = Math.sqrt(Math.abs(varianceFloat)).toFixed(4)
+      const stdDev = String(Math.round(Math.sqrt(Math.abs(varianceFloat)) * 10000) / 10000)
 
       this.results = {
         count: n,

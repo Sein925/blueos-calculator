@@ -78,22 +78,6 @@
     return a
   }
 
-  // 简化分数
-  function simplifyFraction(numerator, denominator) {
-    if (numerator === 0) return { num: 0, den: 1 }
-
-    const g = gcd(numerator, denominator)
-    let num = numerator / g
-    let den = denominator / g
-
-    if (den < 0) {
-      num = -num
-      den = -den
-    }
-
-    return { num, den }
-  }
-
   // 构造分数（自动约分，den 永远 > 0）
   function makeFrac(n, d) {
     d = d || 1
@@ -117,11 +101,6 @@
   // 分数除法
   function divF(a, b) {
     return makeFrac(a.num * b.den, a.den * b.num)
-  }
-
-  // 分数取负
-  function negF(a) {
-    return { num: -a.num, den: a.den }
   }
 
   // 生成分数线
@@ -225,6 +204,12 @@
       const num = subF(this.cFrac, this.bFrac)
       // x = (c - b) / a
       const frac = divF(num, this.aFrac)
+
+      if (!frac) {
+        this.showSimpleText = true
+        this.simpleText = '计算错误'
+        return
+      }
 
       if (frac.den === 1) {
         this.showInteger = true

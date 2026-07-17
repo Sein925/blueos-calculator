@@ -179,24 +179,17 @@
     return { num, den }
   }
 
-  // 浮点数转分数：1.5 → 3/2，0.25 → 1/4
-  // 处理浮点精度误差（先 round 到 12 位有效数字）
   function numToFrac(n) {
-    if (isInteger(n)) return { num: n, den: 1 }
-    const rounded = parseFloat(n.toPrecision(12))
-    if (isInteger(rounded)) return { num: rounded, den: 1 }
-    const s = rounded.toString()
-    if (s.indexOf('.') === -1) {
-      return { num: Math.round(rounded), den: 1 }
-    }
-    const parts = s.split('.')
-    const sign = rounded < 0 ? -1 : 1
-    const integerPart = Math.abs(parseInt(parts[0])) || 0
-    const decimalPart = parts[1]
-    const den = Math.pow(10, decimalPart.length)
-    const num = integerPart * den + parseInt(decimalPart)
-    const g2 = gcd(num, den)
-    return { num: sign * (num / g2), den: den / g2 }
+    if (!isFinite(n)) return { num: 0, den: 1 }
+    if (Math.floor(n) === n) return { num: n, den: 1 }
+    const s = n.toFixed(12).replace(/\.?0+$/, '')
+    const [intPart, decPart = ''] = s.split('.')
+    if (!decPart) return { num: parseInt(intPart), den: 1 }
+    const den = Math.pow(10, decPart.length)
+    const num = parseInt(intPart + decPart)
+    const g = gcd(Math.abs(num), den)
+    const sign = n < 0 ? -1 : 1
+    return { num: sign * (num / g), den: den / g }
   }
 
   // 最小公倍数
@@ -217,11 +210,6 @@
     if (denInt === 0) return null
     const g = gcd(Math.abs(numInt), Math.abs(denInt))
     return { num: numInt / g, den: denInt / g }
-  }
-
-  // 分数加法
-  function addF(a, b) {
-    return makeFrac(a.num * b.den + b.num * a.den, a.den * b.den)
   }
 
   // 分数减法
@@ -307,32 +295,6 @@
     return Math.abs(num - Math.round(num)) < 1e-10
   }
 
-  function simplifyRadical(n) {
-    let outside = 1
-    let inside = Math.abs(Math.round(n))
-
-    if (inside === 0 || inside === 1) {
-      return { coeff: outside, radicand: inside }
-    }
-
-    // 先处理 2
-    while (inside % 4 === 0) {
-      outside *= 2
-      inside /= 4
-    }
-
-    // 再处理奇数，从 3 开始，每次加 2
-    for (let i = 3; i * i <= inside; i += 2) {
-      const square = i * i
-      while (inside % square === 0) {
-        outside *= i
-        inside /= square
-      }
-    }
-
-    return { coeff: outside, radicand: inside }
-  }
-
   function formatRadicalNum(N, K, D) {
     let str = ''
     if (N !== 0) {
@@ -407,7 +369,7 @@
       if (evt.isFraction) {
         this.aFrac = { num: evt.num, den: evt.den }
       } else {
-        this.aFrac = makeFrac(parseFloat(evt.value), 1) || { num: 1, den: 1 }
+        this.aFrac = numToFrac(parseFloat(evt.value)) || { num: 1, den: 1 }
       }
     },
     handleChangeB(evt) {
@@ -415,7 +377,7 @@
       if (evt.isFraction) {
         this.bFrac = { num: evt.num, den: evt.den }
       } else {
-        this.bFrac = makeFrac(parseFloat(evt.value), 1) || { num: 0, den: 1 }
+        this.bFrac = numToFrac(parseFloat(evt.value)) || { num: 0, den: 1 }
       }
     },
     handleChangeC(evt) {
@@ -423,7 +385,7 @@
       if (evt.isFraction) {
         this.cFrac = { num: evt.num, den: evt.den }
       } else {
-        this.cFrac = makeFrac(parseFloat(evt.value), 1) || { num: 0, den: 1 }
+        this.cFrac = numToFrac(parseFloat(evt.value)) || { num: 0, den: 1 }
       }
     },
 
@@ -443,7 +405,15 @@
       const b2 = mulF(this.bFrac, this.bFrac)
       const fourAc = mulF(mulF(this.aFrac, this.cFrac), { num: 4, den: 1 })
       const deltaFrac = subF(b2, fourAc)
-      const delta = deltaFrac.num / deltaFrac.den  // rationalSqrt 仍要浮点
+      if (!deltaFrac) {
+        this.showResult = true
+        this.showSimpleText = true
+        this.simpleText = '计算错误'
+        return
+      }
+      const delta = deltaFrac.num / deltaFrac.den
+      const a = parseFloat(this.a)
+      const b = parseFloat(this.b)
 
       this.showResult = true
       this.showSimpleText = false
@@ -646,7 +616,18 @@
       // 算 N = -b / (2a)（精确分数）
       const negB = negF(this.bFrac)
       const twoA = mulF(this.aFrac, { num: 2, den: 1 })
+      if (!twoA) {
+        this.showSimpleText = true
+        this.simpleText = '计算错误'
+        return
+      }
       const N = divF(negB, twoA)
+
+      if (!N) {
+        this.showSimpleText = true
+        this.simpleText = '计算错误'
+        return
+      }
 
       // 算 x = N ± (K*sqrt(D)/M) / (2a)
       //   = N.num/N.den ± (K*aFrac.den)*sqrt(D) / (M*2aFrac.num)

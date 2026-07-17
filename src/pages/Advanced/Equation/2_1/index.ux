@@ -156,11 +156,6 @@
     return { num: numInt / g, den: denInt / g }
   }
 
-  // 分数加法
-  function addF(a, b) {
-    return makeFrac(a.num * b.den + b.num * a.den, a.den * b.den)
-  }
-
   // 分数减法
   function subF(a, b) {
     return makeFrac(a.num * b.den - b.num * a.den, a.den * b.den)
@@ -169,11 +164,6 @@
   // 分数乘法
   function mulF(a, b) {
     return makeFrac(a.num * b.num, a.den * b.den)
-  }
-
-  // 分数除法
-  function divF(a, b) {
-    return makeFrac(a.num * b.den, a.den * b.num)
   }
 
   // 生成分数线
@@ -305,6 +295,12 @@
       const Dx = subF(mulF(this.c1Frac, this.b2Frac), mulF(this.c2Frac, this.b1Frac))
       // Dy = a1*c2 - a2*c1
       const Dy = subF(mulF(this.a1Frac, this.c2Frac), mulF(this.a2Frac, this.c1Frac))
+
+      if (!D || !Dx || !Dy) {
+        this.showSimpleText = true
+        this.simpleText = '计算错误'
+        return
+      }
 
       // D === 0 → 浮点比较用 D.num === 0
       if (D.num === 0) {
