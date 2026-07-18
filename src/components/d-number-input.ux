@@ -205,6 +205,10 @@
     confirmInput() {
       global.triggerHaptic()
       var raw = this.inputValue
+      while (raw.endsWith('/') || raw.endsWith('.')) {
+        raw = raw.slice(0, -1)
+      }
+      if (raw === '') raw = '0'
       var result = { value: raw, raw: raw, isFraction: false }
       if (raw.indexOf('/') !== -1) {
         var parts = raw.split('/')

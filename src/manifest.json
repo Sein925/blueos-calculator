@@ -1,8 +1,8 @@
 {
   "package": "com.dasein.calculator",
   "name": "科学计算器",
-  "versionName": "1.1.12",
-  "versionCode": 260717,
+  "versionName": "1.1.13",
+  "versionCode": 260718,
   "appCategory": [
     "education"
   ],

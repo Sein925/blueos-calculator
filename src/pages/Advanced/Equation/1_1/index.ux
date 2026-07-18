@@ -300,7 +300,6 @@
     font-size: 6 * $size-factor;
     color: #00ff99;
     font-family: monospace;
-    white-space: nowrap;
   }
 
   .result-value {

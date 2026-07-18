@@ -52,70 +52,74 @@
         <text if="{{ showRoots }}" class="result-text">{{ deltaText }}</text>
         <text if="{{ showRoots }}" class="result-text">{{ rootsLabel }}</text>
 
-        <div if="{{ showRoots }}" class="result-row">
-          <text if="{{ !isDoubleRoot }}" class="result-label">x₁ =</text>
-          <text else class="result-label">x₁ = x₂ =</text>
-          <div if="{{ x1IsInt }}" class="result-content">
-            <text class="result-value">{{ x1IntValue }}</text>
-          </div>
-          <div else if="{{ x1IsFrac }}" class="result-content">
-            <div class="fraction-container">
-              <marquee double-ended-shadow="false" class="fraction-numerator">
-                {{ x1Num }}
-              </marquee>
-              <text class="fraction-line">{{ x1Line }}</text>
-              <marquee double-ended-shadow="false" class="fraction-denominator">
-                {{ x1Den }}
-              </marquee>
+        <list if="{{ showRoots }}" class="result-row">
+          <list-item>
+            <text if="{{ !isDoubleRoot }}" class="result-label">x₁ =</text>
+            <text else class="result-label">x₁ = x₂ =</text>
+            <div if="{{ x1IsInt }}" class="result-content">
+              <text class="result-value">{{ x1IntValue }}</text>
             </div>
-          </div>
-          <div else if="{{ x1IsRad }}" class="result-content">
-            <div if="{{ x1RadIsDenOne }}" class="result-content">
-              <text class="result-value">{{ x1RadNumStr }}</text>
+            <div else if="{{ x1IsFrac }}" class="result-content">
+              <div class="fraction-container">
+                <text class="fraction-numerator">
+                  {{ x1Num }}
+                </text>
+                <text class="fraction-line">{{ x1Line }}</text>
+                <text class="fraction-denominator">
+                  {{ x1Den }}
+                </text>
+              </div>
             </div>
-            <div else class="fraction-container">
-              <marquee double-ended-shadow="false" class="fraction-numerator">
-                {{ x1RadNumStr }}
-              </marquee>
-              <text class="fraction-line">{{ x1RadLine }}</text>
-              <marquee double-ended-shadow="false" class="fraction-denominator">
-                {{ x1RadDen }}
-              </marquee>
+            <div else if="{{ x1IsRad }}" class="result-content">
+              <div if="{{ x1RadIsDenOne }}" class="result-content">
+                <text class="result-value">{{ x1RadNumStr }}</text>
+              </div>
+              <div else class="fraction-container">
+                <text class="fraction-numerator">
+                  {{ x1RadNumStr }}
+                </text>
+                <text class="fraction-line">{{ x1RadLine }}</text>
+                <text class="fraction-denominator">
+                  {{ x1RadDen }}
+                </text>
+              </div>
             </div>
-          </div>
-        </div>
+          </list-item>
+        </list>
 
-        <div if="{{ showX2 }}" class="result-row">
-          <text class="result-label">x₂ =</text>
-          <div if="{{ x2IsInt }}" class="result-content">
-            <text class="result-value">{{ x2IntValue }}</text>
-          </div>
-          <div else if="{{ x2IsFrac }}" class="result-content">
-            <div class="fraction-container">
-              <marquee double-ended-shadow="false" class="fraction-numerator">
-                {{ x2Num }}
-              </marquee>
-              <text class="fraction-line">{{ x2Line }}</text>
-              <marquee double-ended-shadow="false" class="fraction-denominator">
-                {{ x2Den }}
-              </marquee>
+        <list if="{{ showX2 }}" class="result-row">
+          <list-item>
+            <text class="result-label">x₂ =</text>
+            <div if="{{ x2IsInt }}" class="result-content">
+              <text class="result-value">{{ x2IntValue }}</text>
             </div>
-          </div>
-          <div else if="{{ x2IsRad }}" class="result-content">
-            <div if="{{ x2RadIsDenOne }}" class="result-content">
-              <text class="result-value">{{ x2RadNumStr }}</text>
+            <div else if="{{ x2IsFrac }}" class="result-content">
+              <div class="fraction-container">
+                <text class="fraction-numerator">
+                  {{ x2Num }}
+                </text>
+                <text class="fraction-line">{{ x2Line }}</text>
+                <text class="fraction-denominator">
+                  {{ x2Den }}
+                </text>
+              </div>
             </div>
-            <div else class="fraction-container">
-              <marquee double-ended-shadow="false" class="fraction-numerator">
-                {{ x2RadNumStr }}
-              </marquee>
-              <text class="fraction-line">{{ x2RadLine }}</text>
-              <marquee double-ended-shadow="false" class="fraction-denominator">
-                {{ x2RadDen }}
-              </marquee>
+            <div else if="{{ x2IsRad }}" class="result-content">
+              <div if="{{ x2RadIsDenOne }}" class="result-content">
+                <text class="result-value">{{ x2RadNumStr }}</text>
+              </div>
+              <div else class="fraction-container">
+                <text class="fraction-numerator">
+                  {{ x2RadNumStr }}
+                </text>
+                <text class="fraction-line">{{ x2RadLine }}</text>
+                <text class="fraction-denominator">
+                  {{ x2RadDen }}
+                </text>
+              </div>
             </div>
-          </div>
-        </div>
+          </list-item>
+        </list>
       </div>
     </list-item>
   </list>
@@ -781,22 +785,21 @@
     padding: 4 * $size-factor;
     background-color: rgba(0, 255, 153, 0.15);
     border-radius: 8 * $size-factor;
-    border-left-width: 3px;
-    border-left-color: #00ff99;
     margin-bottom: 16px;
+    max-height: 350px;
   }
 
   .result-text {
     font-size: 6 * $size-factor;
     color: #00ff99;
     font-family: monospace;
-    line-height: 12 * $size-factor;
   }
 
   .result-row {
-    display: flex;
     align-items: center;
     margin-top: 8px;
+    flex-direction: row;
+    height: 90px;
   }
 
   .result-content {
@@ -809,7 +812,6 @@
     font-size: 6 * $size-factor;
     color: #00ff99;
     font-family: monospace;
-    white-space: nowrap;
   }
 
   .result-value {
