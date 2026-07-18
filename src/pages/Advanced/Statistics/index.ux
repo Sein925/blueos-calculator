@@ -43,7 +43,7 @@
     </list-item>
     <list-item type="card" class="content">
       <text class="section-title">统计结果</text>
-      <div class="result-list" show="{{ dataList.length > 0 }}">
+      <div class="result-list" show="{{ dataList.length > 0 }}" style="margin-bottom: 50px;">
         <div class="result-item">
           <text class="result-label">数据个数</text>
           <marquee
@@ -101,11 +101,26 @@
             {{ results.variance }}
           </marquee>
         </div>
-        <div class="result-item" style="margin-bottom: 50px;">
+        <div class="result-item">
           <text class="result-label">标准差</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.stdDev }}
           </marquee>
+        </div>
+        <div class="result-item percentile-item">
+          <div class="percentile-input">
+            <text class="result-label" style="margin-right: 5px">第</text>
+            <d-number-input
+              value="{{ percentileValue }}"
+              label="输入百分位数"
+              placeholder="50"
+              width="90%"
+              @change="handlePercentileChange"></d-number-input>
+            <text class="result-label" style="margin-left: 5px">百分位数</text>
+          </div>
+          <div class="percentile-result">
+            <text class="result-value">{{ results.percentile }}</text>
+          </div>
         </div>
       </div>
       <div class="empty-hint" show="{{ dataList.length === 0 }}">
@@ -183,6 +198,8 @@
       currentValue: '0',
       currentFrac: { num: 0, den: 1 },
       dataList: [],
+      percentileValue: '50',
+      percentileFrac: { num: 50, den: 1 },
       results: {
         count: 0,
         sum: '0',
@@ -194,6 +211,7 @@
         range: '-',
         variance: '-',
         stdDev: '-',
+        percentile: '-',
       },
     },
 
@@ -206,6 +224,44 @@
       } else {
         this.currentFrac = floatToFrac(parseFloat(e.value))
       }
+    },
+
+    handlePercentileChange(e) {
+      this.percentileValue = e.value
+      if (e.isFraction) {
+        this.percentileFrac = { num: e.num, den: e.den }
+      } else {
+        this.percentileFrac = floatToFrac(parseFloat(e.value))
+      }
+      this.calculatePercentile()
+    },
+
+    calculatePercentile() {
+      if (this.dataList.length === 0) return
+      const p = this.percentileFrac.num / this.percentileFrac.den
+      if (p < 0 || p > 100) {
+        this.results.percentile = '范围 0-100'
+        return
+      }
+      const sorted = [...this.dataList].sort(
+        (a, b) => a.frac.num / a.frac.den - b.frac.num / b.frac.den
+      )
+      const n = sorted.length
+      const pos = (p / 100) * (n - 1)
+      const lower = Math.floor(pos)
+      const upper = Math.min(lower + 1, n - 1)
+      const frac = pos - lower
+      let result
+      if (lower === upper) {
+        result = sorted[lower].frac
+      } else {
+        const lowerVal = sorted[lower].frac
+        const upperVal = sorted[upper].frac
+        const diff = subF(upperVal, lowerVal)
+        const fracPart = mulF(diff, makeFrac(frac, 1))
+        result = addF(lowerVal, fracPart)
+      }
+      this.results.percentile = fracToDisplay(result)
     },
 
     addData() {
@@ -321,7 +377,9 @@
         range: fracToDisplay(range),
         variance: fracToDisplay(variance),
         stdDev: stdDev,
+        percentile: '-',
       }
+      this.calculatePercentile()
     },
   }
 </script>
@@ -485,5 +543,29 @@
       font-size: 6 * $size-factor;
       color: $light-gray;
     }
+  }
+
+  .percentile-item {
+    flex-direction: column;
+    padding: 10px 30px;
+  }
+
+  .percentile-input {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .percentile-result {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
+  }
+
+  .percentile-result .result-value {
+    width: 100%;
+    text-align: right;
   }
 </style>

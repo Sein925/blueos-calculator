@@ -1,6 +1,6 @@
 <template>
   <div class="number-input-wrapper">
-    <div class="input-display" onclick="focusInput">
+    <div class="input-display" style="width: {{ width }}" onclick="focusInput">
       <div class="input-value">
         <marquee
           class="input-text {{ (value === '0' || value === '' || !value) && placeholder ? 'placeholder' : '' }}"
@@ -82,6 +82,7 @@
       placeholder: '',
       allowFraction: true,
       integerOnly: 'false',
+      width: '94%',
     },
 
     data: {
@@ -240,7 +241,6 @@
   }
 
   .input-display {
-    width: 94%;
     background-color: rgba(255, 255, 255, 0.15);
     border-radius: 8 * $size-factor;
     padding: 2 * $size-factor;

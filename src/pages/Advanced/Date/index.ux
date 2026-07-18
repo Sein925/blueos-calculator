@@ -77,7 +77,8 @@
           placeholder="点击输入"
           value="{{ addDays }}"
           onchange="onAddDaysChange"
-          integer-only="true" />
+          integer-only="true"
+          width="93%" />
       </div>
       <div if="{{ currentTab === 'add' }}" class="input-card">
         <text class="input-label">周数</text>
@@ -86,7 +87,8 @@
           placeholder="点击输入"
           value="{{ addWeeks }}"
           onchange="onAddWeeksChange"
-          integer-only="true" />
+          integer-only="true"
+          width="93%" />
       </div>
       <div if="{{ currentTab === 'add' }}" class="input-card">
         <text class="input-label">月数</text>
@@ -95,7 +97,8 @@
           placeholder="点击输入"
           value="{{ addMonths }}"
           onchange="onAddMonthsChange"
-          integer-only="true" />
+          integer-only="true"
+          width="93%" />
       </div>
       <div if="{{ currentTab === 'add' }}" class="calc-btn" onclick="calculateDate">
         <text class="calc-btn-text">计算</text>

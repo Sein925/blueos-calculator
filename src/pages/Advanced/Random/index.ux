@@ -33,7 +33,8 @@
           label="输入最小值"
           placeholder="点击输入"
           value="{{ min }}"
-          onchange="handleMinChange"></d-number-input>
+          onchange="handleMinChange"
+          width="92%"></d-number-input>
       </div>
       <div class="input-card">
         <text class="input-label">最大值</text>
@@ -41,7 +42,8 @@
           label="输入最大值"
           placeholder="点击输入"
           value="{{ max }}"
-          onchange="handleMaxChange"></d-number-input>
+          onchange="handleMaxChange"
+          width="92%"></d-number-input>
       </div>
       <div class="input-card">
         <text class="input-label">数量</text>
@@ -50,7 +52,8 @@
           placeholder="点击输入"
           value="{{ count }}"
           onchange="handleCountChange"
-          integer-only="true"></d-number-input>
+          integer-only="true"
+          width="93%"></d-number-input>
       </div>
 
       <div if="{{ mode === 'int' }}" class="input-card">
@@ -67,7 +70,8 @@
           placeholder="点击输入"
           value="{{ decimals }}"
           onchange="handleDecimalsChange"
-          integer-only="true"></d-number-input>
+          integer-only="true"
+          width="93%"></d-number-input>
       </div>
 
       <div class="calc-btn" onclick="generate">
