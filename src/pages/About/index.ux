@@ -26,6 +26,7 @@
       </div>
       <div>
         <div class="copyright">
+          <text class="app-desc">轻腕社区提供技术支持</text>
           <text class="app-desc">©2026 Dasein</text>
         </div>
       </div>
@@ -131,7 +132,7 @@
 
     .copyright {
       width: 100%;
-      @include flex-box-mixins(row, center, center);
+      @include flex-box-mixins(column, center, center);
       margin-bottom: 4 * $size-factor;
     }
   }

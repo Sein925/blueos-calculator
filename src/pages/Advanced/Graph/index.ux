@@ -353,16 +353,19 @@
     },
 
     inputPreset(preset) {
+      global.triggerHaptic()
       this.expressions[this.activeExprIndex] += preset
       this.updateDisplayExpr()
     },
 
     inputChar(char) {
+      global.triggerHaptic()
       this.expressions[this.activeExprIndex] += char
       this.updateDisplayExpr()
     },
 
     deleteChar() {
+      global.triggerHaptic()
       if (this.expressions[this.activeExprIndex].length > 0) {
         this.expressions[this.activeExprIndex] = this.expressions[
           this.activeExprIndex
@@ -372,6 +375,7 @@
     },
 
     clearExpression() {
+      global.triggerHaptic()
       this.expressions[this.activeExprIndex] = ''
       this.updateDisplayExpr()
     },
@@ -436,6 +440,7 @@
     },
 
     toggleAdvanced() {
+      global.triggerHaptic()
       this.showAdvanced = !this.showAdvanced
     },
 

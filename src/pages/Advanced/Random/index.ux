@@ -1,0 +1,339 @@
+<import name="d-back" src="./../../../components/d-back"></import>
+<import
+  name="d-number-input"
+  src="./../../../components/d-number-input"></import>
+
+<template>
+  <list class="wrapper" title="true">
+    <list-item>
+      <d-back value="随机数生成"></d-back>
+    </list-item>
+
+    <list-item class="content">
+      <text class="section-title">计算类型</text>
+      <div class="btn-row">
+        <div
+          class="btn-card"
+          style="background-color: {{ mode === 'int' ? 'rgba(0, 255, 153, 0.3)' : 'rgba(0, 255, 153, 0.15)' }}; margin-right: 20px;"
+          onclick="switchMode('int')">
+          <text style="color: {{ mode === 'int' ? '#00ff99' : '#ffffff' }};">整数</text>
+        </div>
+        <div
+          class="btn-card"
+          style="background-color: {{ mode === 'float' ? 'rgba(0, 255, 153, 0.3)' : 'rgba(0, 255, 153, 0.15)' }};"
+          onclick="switchMode('float')">
+          <text style="color: {{ mode === 'float' ? '#00ff99' : '#ffffff' }};">小数</text>
+        </div>
+      </div>
+
+      <text class="section-title">参数设置</text>
+      <div class="input-card">
+        <text class="input-label">最小值</text>
+        <d-number-input
+          label="输入最小值"
+          placeholder="点击输入"
+          value="{{ min }}"
+          onchange="handleMinChange"
+          width="92%"></d-number-input>
+      </div>
+      <div class="input-card">
+        <text class="input-label">最大值</text>
+        <d-number-input
+          label="输入最大值"
+          placeholder="点击输入"
+          value="{{ max }}"
+          onchange="handleMaxChange"
+          width="92%"></d-number-input>
+      </div>
+      <div class="input-card">
+        <text class="input-label">数量</text>
+        <d-number-input
+          label="输入数量"
+          placeholder="点击输入"
+          value="{{ count }}"
+          onchange="handleCountChange"
+          integer-only="true"
+          width="93%"></d-number-input>
+      </div>
+
+      <div if="{{ mode === 'int' }}" class="input-card">
+        <text class="input-label">不重复</text>
+        <switch
+          checked="{{ unique }}"
+          onchange="handleUniqueChange"></switch>
+      </div>
+
+      <div if="{{ mode === 'float' }}" class="input-card">
+        <text class="input-label">位数</text>
+        <d-number-input
+          label="输入小数位数"
+          placeholder="点击输入"
+          value="{{ decimals }}"
+          onchange="handleDecimalsChange"
+          integer-only="true"
+          width="93%"></d-number-input>
+      </div>
+
+      <div class="calc-btn" onclick="generate">
+        <text class="calc-btn-text">
+          {{ results.length > 0 ? '重新生成' : '生成' }}
+        </text>
+      </div>
+
+      <text
+        if="{{ errorMsg }}"
+        class="error-text">
+        {{ errorMsg }}
+      </text>
+
+      <text
+        if="{{ results.length > 0 }}"
+        class="section-title"
+        style="margin-top: 32px; margin-bottom: 12px;">
+        结果（{{ results.length }}个）
+      </text>
+      <div
+        if="{{ results.length > 0 }}"
+        class="result-card">
+        <text
+          for="(index, item) in results"
+          class="result-chip">
+          {{ item }}
+        </text>
+      </div>
+    </list-item>
+  </list>
+</template>
+
+<script>
+  // 整数 [min, max] 闭区间
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min
+  }
+
+  // 浮点 [min, max) 半开区间，按 decimals 位四舍五入
+  function randFloat(min, max, decimals) {
+    var v = Math.random() * (max - min) + min
+    return Number(v.toFixed(decimals))
+  }
+
+  // Fisher-Yates 洗牌（用于不重复采样）
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1))
+      var tmp = arr[i]
+      arr[i] = arr[j]
+      arr[j] = tmp
+    }
+    return arr
+  }
+
+  export default {
+    data: {
+      mode: 'int',
+      min: '1',
+      max: '100',
+      count: '10',
+      decimals: '2',
+      unique: false,
+      results: [],
+      errorMsg: '',
+    },
+
+    onInit() {},
+
+    switchMode(mode) {
+      this.mode = mode
+      this.errorMsg = ''
+    },
+
+    handleMinChange(e) {
+      this.min = e.value
+    },
+    handleMaxChange(e) {
+      this.max = e.value
+    },
+    handleCountChange(e) {
+      this.count = e.value
+    },
+    handleDecimalsChange(e) {
+      this.decimals = e.value
+    },
+    handleUniqueChange(e) {
+      this.unique = e.checked
+    },
+
+    generate() {
+      this.errorMsg = ''
+      var min = parseFloat(this.min)
+      var max = parseFloat(this.max)
+      var count = parseInt(this.count)
+
+      if (isNaN(min) || isNaN(max)) {
+        this.errorMsg = '请输入有效的数字'
+        return
+      }
+      if (isNaN(count) || count <= 0) {
+        this.errorMsg = '请输入有效的数量（>0）'
+        return
+      }
+      if (min > max) {
+        this.errorMsg = '最小值不能大于最大值'
+        return
+      }
+      if (count > 10000) {
+        this.errorMsg = '单次最多生成 10000 个'
+        return
+      }
+
+      var results = []
+      if (this.mode === 'int') {
+        var lo = Math.ceil(min)
+        var hi = Math.floor(max)
+        var range = hi - lo + 1
+        if (range <= 0) {
+          this.errorMsg = '整数范围无效'
+          return
+        }
+        if (this.unique && count > range) {
+          this.errorMsg = '不重复模式下，数量不能超过 ' + range
+          return
+        }
+        if (this.unique) {
+          var pool = []
+          for (var i = lo; i <= hi; i++) pool.push(i)
+          shuffle(pool)
+          for (var k = 0; k < count; k++) results.push(pool[k].toString())
+        } else {
+          for (var k2 = 0; k2 < count; k2++) {
+            results.push(randInt(lo, hi).toString())
+          }
+        }
+      } else {
+        var decimals = parseInt(this.decimals)
+        if (isNaN(decimals) || decimals < 0 || decimals > 10) {
+          this.errorMsg = '小数位数应在 0-10 之间'
+          return
+        }
+        for (var m = 0; m < count; m++) {
+          results.push(randFloat(min, max, decimals).toString())
+        }
+      }
+
+      this.results = results
+    },
+  }
+</script>
+
+<style lang="scss">
+  @import './../../../assets/styles/style.scss';
+
+  .wrapper {
+    width: 100%;
+  }
+
+  .content {
+    width: 100%;
+    padding: 6px 10px 30px 10px;
+    flex-direction: column;
+  }
+
+  .section-title {
+    font-size: 8 * $size-factor;
+    color: $white;
+    font-weight: bold;
+    margin-left: 12px;
+    margin-top: 24px;
+
+    @media (device: watch-round) {
+      text-align: center;
+      margin-left: 0;
+    }
+  }
+
+  .btn-row {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 20px;
+    margin-bottom: 6px;
+  }
+
+  .btn-card {
+    flex: 1;
+    padding: 15px 0;
+    border-radius: 8 * $size-factor;
+    flex-direction: row;
+    justify-content: center;
+    background-color: rgba(0, 255, 153, 0.15);
+
+    text {
+      font-size: 8 * $size-factor;
+      font-weight: 700;
+    }
+  }
+
+  .input-card {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8 * $size-factor;
+    padding: 24px 30px;
+    margin-top: 14px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .input-label {
+    font-size: 7 * $size-factor;
+    color: $light-gray;
+    margin-right: 16px;
+  }
+
+  .calc-btn {
+    width: 100%;
+    padding: 3 * $size-factor 0;
+    background-color: $brand;
+    border-radius: 8 * $size-factor;
+    margin-top: 20px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    &:active {
+      opacity: 0.4;
+    }
+  }
+
+  .calc-btn-text {
+    font-size: 8 * $size-factor;
+    color: $white;
+    font-weight: bold;
+  }
+
+  .error-text {
+    font-size: 6 * $size-factor;
+    color: #ff6464;
+    margin-top: 12px;
+    margin-left: 12px;
+  }
+
+  .result-card {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.06);
+    border-radius: 8 * $size-factor;
+    padding: 16px;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .result-chip {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-radius: 4 * $size-factor;
+    padding: 4 * $size-factor 3 * $size-factor;
+    font-size: 6 * $size-factor;
+    margin-right: 2 * $size-factor;
+    margin-bottom: 8px;
+    color: $white;
+  }
+</style>

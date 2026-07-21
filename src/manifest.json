@@ -1,8 +1,8 @@
 {
   "package": "com.dasein.calculator",
   "name": "科学计算器",
-  "versionName": "1.1.10",
-  "versionCode": 260711,
+  "versionName": "1.1.13",
+  "versionCode": 260718,
   "appCategory": [
     "education"
   ],
@@ -16,6 +16,9 @@
     },
     {
       "name": "blueos.network.fetch"
+    },
+    {
+      "name": "blueos.hardware.vibrator.vibrator"
     }
   ],
   "deviceTypeList": [
@@ -75,6 +78,9 @@
         "component": "index"
       },
       "pages/Advanced/Statistics": {
+        "component": "index"
+      },
+      "pages/Advanced/Random": {
         "component": "index"
       }
     }

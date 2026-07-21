@@ -52,70 +52,74 @@
         <text if="{{ showRoots }}" class="result-text">{{ deltaText }}</text>
         <text if="{{ showRoots }}" class="result-text">{{ rootsLabel }}</text>
 
-        <div if="{{ showRoots }}" class="result-row">
-          <text if="{{ !isDoubleRoot }}" class="result-label">x₁ =</text>
-          <text else class="result-label">x₁ = x₂ =</text>
-          <div if="{{ x1IsInt }}" class="result-content">
-            <text class="result-value">{{ x1IntValue }}</text>
-          </div>
-          <div else if="{{ x1IsFrac }}" class="result-content">
-            <div class="fraction-container">
-              <marquee double-ended-shadow="false" class="fraction-numerator">
-                {{ x1Num }}
-              </marquee>
-              <text class="fraction-line">{{ x1Line }}</text>
-              <marquee double-ended-shadow="false" class="fraction-denominator">
-                {{ x1Den }}
-              </marquee>
+        <list if="{{ showRoots }}" class="result-row">
+          <list-item>
+            <text if="{{ !isDoubleRoot }}" class="result-label">x₁ =</text>
+            <text else class="result-label">x₁ = x₂ =</text>
+            <div if="{{ x1IsInt }}" class="result-content">
+              <text class="result-value">{{ x1IntValue }}</text>
             </div>
-          </div>
-          <div else if="{{ x1IsRad }}" class="result-content">
-            <div if="{{ x1RadIsDenOne }}" class="result-content">
-              <text class="result-value">{{ x1RadNumStr }}</text>
+            <div else if="{{ x1IsFrac }}" class="result-content">
+              <div class="fraction-container">
+                <text class="fraction-numerator">
+                  {{ x1Num }}
+                </text>
+                <text class="fraction-line">{{ x1Line }}</text>
+                <text class="fraction-denominator">
+                  {{ x1Den }}
+                </text>
+              </div>
             </div>
-            <div else class="fraction-container">
-              <marquee double-ended-shadow="false" class="fraction-numerator">
-                {{ x1RadNumStr }}
-              </marquee>
-              <text class="fraction-line">{{ x1RadLine }}</text>
-              <marquee double-ended-shadow="false" class="fraction-denominator">
-                {{ x1RadDen }}
-              </marquee>
+            <div else if="{{ x1IsRad }}" class="result-content">
+              <div if="{{ x1RadIsDenOne }}" class="result-content">
+                <text class="result-value">{{ x1RadNumStr }}</text>
+              </div>
+              <div else class="fraction-container">
+                <text class="fraction-numerator">
+                  {{ x1RadNumStr }}
+                </text>
+                <text class="fraction-line">{{ x1RadLine }}</text>
+                <text class="fraction-denominator">
+                  {{ x1RadDen }}
+                </text>
+              </div>
             </div>
-          </div>
-        </div>
+          </list-item>
+        </list>
 
-        <div if="{{ showX2 }}" class="result-row">
-          <text class="result-label">x₂ =</text>
-          <div if="{{ x2IsInt }}" class="result-content">
-            <text class="result-value">{{ x2IntValue }}</text>
-          </div>
-          <div else if="{{ x2IsFrac }}" class="result-content">
-            <div class="fraction-container">
-              <marquee double-ended-shadow="false" class="fraction-numerator">
-                {{ x2Num }}
-              </marquee>
-              <text class="fraction-line">{{ x2Line }}</text>
-              <marquee double-ended-shadow="false" class="fraction-denominator">
-                {{ x2Den }}
-              </marquee>
+        <list if="{{ showX2 }}" class="result-row">
+          <list-item>
+            <text class="result-label">x₂ =</text>
+            <div if="{{ x2IsInt }}" class="result-content">
+              <text class="result-value">{{ x2IntValue }}</text>
             </div>
-          </div>
-          <div else if="{{ x2IsRad }}" class="result-content">
-            <div if="{{ x2RadIsDenOne }}" class="result-content">
-              <text class="result-value">{{ x2RadNumStr }}</text>
+            <div else if="{{ x2IsFrac }}" class="result-content">
+              <div class="fraction-container">
+                <text class="fraction-numerator">
+                  {{ x2Num }}
+                </text>
+                <text class="fraction-line">{{ x2Line }}</text>
+                <text class="fraction-denominator">
+                  {{ x2Den }}
+                </text>
+              </div>
             </div>
-            <div else class="fraction-container">
-              <marquee double-ended-shadow="false" class="fraction-numerator">
-                {{ x2RadNumStr }}
-              </marquee>
-              <text class="fraction-line">{{ x2RadLine }}</text>
-              <marquee double-ended-shadow="false" class="fraction-denominator">
-                {{ x2RadDen }}
-              </marquee>
+            <div else if="{{ x2IsRad }}" class="result-content">
+              <div if="{{ x2RadIsDenOne }}" class="result-content">
+                <text class="result-value">{{ x2RadNumStr }}</text>
+              </div>
+              <div else class="fraction-container">
+                <text class="fraction-numerator">
+                  {{ x2RadNumStr }}
+                </text>
+                <text class="fraction-line">{{ x2RadLine }}</text>
+                <text class="fraction-denominator">
+                  {{ x2RadDen }}
+                </text>
+              </div>
             </div>
-          </div>
-        </div>
+          </list-item>
+        </list>
       </div>
     </list-item>
   </list>
@@ -179,6 +183,109 @@
     return { num, den }
   }
 
+  function numToFrac(n) {
+    if (!isFinite(n)) return { num: 0, den: 1 }
+    if (Math.floor(n) === n) return { num: n, den: 1 }
+    const s = n.toFixed(12).replace(/\.?0+$/, '')
+    const [intPart, decPart = ''] = s.split('.')
+    if (!decPart) return { num: parseInt(intPart), den: 1 }
+    const den = Math.pow(10, decPart.length)
+    const num = parseInt(intPart + decPart)
+    const g = gcd(Math.abs(num), den)
+    const sign = n < 0 ? -1 : 1
+    return { num: sign * (num / g), den: den / g }
+  }
+
+  // 最小公倍数
+  function lcm(a, b) {
+    return (a * b) / gcd(a, b)
+  }
+
+  // 构造分数（自动约分，den 永远 > 0）
+  function makeFrac(n, d) {
+    d = d || 1
+    if (d === 0) return null
+    if (d < 0) {
+      n = -n
+      d = -d
+    }
+    const numInt = Math.round(n)
+    const denInt = Math.round(d)
+    if (denInt === 0) return null
+    const g = gcd(Math.abs(numInt), Math.abs(denInt))
+    return { num: numInt / g, den: denInt / g }
+  }
+
+  // 分数减法
+  function subF(a, b) {
+    return makeFrac(a.num * b.den - b.num * a.den, a.den * b.den)
+  }
+
+  // 分数乘法
+  function mulF(a, b) {
+    return makeFrac(a.num * b.num, a.den * b.den)
+  }
+
+  // 提取 n 的最大完全平方因子，返回 {out, rest} 表示 n = out² * rest
+  function extractSquareFactor(n) {
+    let out = 1
+    let rest = Math.abs(Math.round(n))
+    for (let i = 2; i * i <= rest; i++) {
+      while (rest % (i * i) === 0) {
+        out *= i
+        rest /= i * i
+      }
+    }
+    return { out, rest }
+  }
+
+  // 化简 sqrt(num/den) = coeff * sqrt(radicand) / den
+  // 用公式 sqrt(a/b) = sqrt(a*b) / b
+  function simplifyRadicalFrac(num, den) {
+    if (num === 0) return { coeff: 0, radicand: 0, den: 1 }
+    const sign = num < 0 ? -1 : 1
+    const product = Math.abs(num) * Math.abs(den)
+    const f = extractSquareFactor(product)
+    return {
+      coeff: f.out * sign,
+      radicand: f.rest,
+      den: Math.abs(den),
+    }
+  }
+
+  // 分数取负
+  function negF(a) {
+    return { num: -a.num, den: a.den }
+  }
+
+  // 分数除法
+  function divF(a, b) {
+    return makeFrac(a.num * b.den, a.den * b.num)
+  }
+
+  // 分数转字符串（已约分）
+  function fracToStr(f) {
+    if (f.den === 1) return f.num.toString()
+    return f.num + '/' + f.den
+  }
+
+  // 检查 delta 是否为完全平方分数 (p/q)²
+  // 返回 { p, q }；q 是使 sqrt(delta) * q 为整数的最小 q
+  // 例如 delta=6.25 → sqrt=2.5 → { p: 5, q: 2 }，即 √(25/4)
+  // delta=2.25 → sqrt=1.5 → { p: 3, q: 2 }
+  // delta=6（无理）→ null
+  function tryRationalSqrt(d) {
+    if (d < 0) return null
+    const sqrtD = Math.sqrt(d)
+    for (let q = 1; q <= 1000; q++) {
+      const p = sqrtD * q
+      if (Math.abs(p - Math.round(p)) < 1e-9) {
+        return { p: Math.round(p), q }
+      }
+    }
+    return null
+  }
+
   function getFractionLine(len) {
     len = Math.min(len, 11)
     let line = ''
@@ -190,32 +297,6 @@
 
   function isInteger(num) {
     return Math.abs(num - Math.round(num)) < 1e-10
-  }
-
-  function simplifyRadical(n) {
-    let outside = 1
-    let inside = Math.abs(Math.round(n))
-
-    if (inside === 0 || inside === 1) {
-      return { coeff: outside, radicand: inside }
-    }
-
-    // 先处理 2
-    while (inside % 4 === 0) {
-      outside *= 2
-      inside /= 4
-    }
-
-    // 再处理奇数，从 3 开始，每次加 2
-    for (let i = 3; i * i <= inside; i += 2) {
-      const square = i * i
-      while (inside % square === 0) {
-        outside *= i
-        inside /= square
-      }
-    }
-
-    return { coeff: outside, radicand: inside }
   }
 
   function formatRadicalNum(N, K, D) {
@@ -243,6 +324,9 @@
       a: '',
       b: '',
       c: '',
+      aFrac: { num: 1, den: 1 },
+      bFrac: { num: 0, den: 1 },
+      cFrac: { num: 0, den: 1 },
       showResult: false,
       showSimpleText: false,
       simpleText: '',
@@ -286,12 +370,27 @@
 
     handleChangeA(evt) {
       this.a = evt.value
+      if (evt.isFraction) {
+        this.aFrac = { num: evt.num, den: evt.den }
+      } else {
+        this.aFrac = numToFrac(parseFloat(evt.value)) || { num: 1, den: 1 }
+      }
     },
     handleChangeB(evt) {
       this.b = evt.value
+      if (evt.isFraction) {
+        this.bFrac = { num: evt.num, den: evt.den }
+      } else {
+        this.bFrac = numToFrac(parseFloat(evt.value)) || { num: 0, den: 1 }
+      }
     },
     handleChangeC(evt) {
       this.c = evt.value
+      if (evt.isFraction) {
+        this.cFrac = { num: evt.num, den: evt.den }
+      } else {
+        this.cFrac = numToFrac(parseFloat(evt.value)) || { num: 0, den: 1 }
+      }
     },
 
     formatNumber(num) {
@@ -305,9 +404,20 @@
     },
 
     solve() {
+      // 用精确分数算 delta（避免 88/3 平方的浮点误差）
+      // delta = b² - 4ac
+      const b2 = mulF(this.bFrac, this.bFrac)
+      const fourAc = mulF(mulF(this.aFrac, this.cFrac), { num: 4, den: 1 })
+      const deltaFrac = subF(b2, fourAc)
+      if (!deltaFrac) {
+        this.showResult = true
+        this.showSimpleText = true
+        this.simpleText = '计算错误'
+        return
+      }
+      const delta = deltaFrac.num / deltaFrac.den
       const a = parseFloat(this.a)
       const b = parseFloat(this.b)
-      const c = parseFloat(this.c)
 
       this.showResult = true
       this.showSimpleText = false
@@ -321,29 +431,36 @@
       this.x2IsFrac = false
       this.x2IsRad = false
 
-      if (isNaN(a) || isNaN(b) || isNaN(c)) {
+      if (
+        isNaN(parseFloat(this.a)) ||
+        isNaN(parseFloat(this.b)) ||
+        isNaN(parseFloat(this.c))
+      ) {
         this.showSimpleText = true
         this.simpleText = '请输入有效的数字'
         return
       }
 
-      if (a === 0) {
+      // a === 0 时退化为一次方程（用 aFrac 判）
+      if (this.aFrac.num === 0) {
         this.showSimpleText = true
-        if (b === 0) {
-          if (c === 0) {
+        if (this.bFrac.num === 0) {
+          if (this.cFrac.num === 0) {
             this.simpleText = '方程有无穷多解'
           } else {
             this.simpleText = '方程无解'
           }
         } else {
-          this.simpleText = '化为一元一次方程：x = ' + this.formatNumber(-c / b)
+          // x = -c / b
+          const xFrac = divF(negF(this.cFrac), this.bFrac)
+          this.simpleText =
+            '化为一元一次方程：x = ' + fracToStr(xFrac)
         }
         return
       }
 
-      const delta = b * b - 4 * a * c
       this.showRoots = true
-      this.deltaText = 'Δ = ' + this.formatNumber(delta)
+      this.deltaText = 'Δ = ' + fracToStr(deltaFrac)
 
       const sqrtDelta = Math.sqrt(delta)
 
@@ -443,56 +560,157 @@
         return
       }
 
-      const rad = simplifyRadical(delta)
-      const k = rad.coeff
-      const D = rad.radicand
-      const bInt = Math.round(b)
-      const a2Int = Math.round(2 * a)
+      // 分支 1.5：delta 是有理平方 (p/q)²（如 6.25 = (5/2)²、2.25 = (3/2)²）
+      // 把 -b 也按 q 整数化后用分数算根，避免落入根式分支后被错误 round
+      const rationalSqrt = tryRationalSqrt(delta)
+      if (rationalSqrt) {
+        const p = rationalSqrt.p
+        const q = rationalSqrt.q
 
-      const g = gcd3(bInt, k, a2Int)
+        // 直接用 handleChange 存的精确分数（this.bFrac/this.aFrac），
+        // 不再 numToFrac(b) 从浮点重建，避免二次误差
+        const bFrac = this.bFrac
+        const aFrac = this.aFrac
+        const commonDen = lcm(bFrac.den, q)
 
-      let N = -bInt / g
-      let tK = k / g
-      let Den = a2Int / g
+        // 把所有项乘以 commonDen 转为整数
+        const bInt = bFrac.num * (commonDen / bFrac.den)
+        const pInt = p * (commonDen / q)
+        const twoAInt = 2 * aFrac.num * (commonDen / aFrac.den)
 
-      if (Den < 0) {
-        N = -N
-        tK = -tK
-        Den = -Den
+        // x = (-b ± p/q) / (2a)，统一分母后：x = (-bInt ± pInt) / twoAInt
+        const x1 = simplifyFraction(-bInt + pInt, twoAInt)
+        const x2 = simplifyFraction(-bInt - pInt, twoAInt)
+
+        this.rootsLabel = '有两个不等实根：'
+        this.showX2 = true
+        this.isDoubleRoot = false
+
+        if (x1.den === 1) {
+          this.x1IsInt = true
+          this.x1IntValue = x1.num.toString()
+        } else {
+          this.x1IsFrac = true
+          this.x1Num = x1.num.toString()
+          this.x1Den = x1.den.toString()
+          const maxLen1 = Math.max(this.x1Num.length, this.x1Den.length)
+          this.x1Line = getFractionLine(maxLen1)
+        }
+
+        if (x2.den === 1) {
+          this.x2IsInt = true
+          this.x2IntValue = x2.num.toString()
+        } else {
+          this.x2IsFrac = true
+          this.x2Num = x2.num.toString()
+          this.x2Den = x2.den.toString()
+          const maxLen2 = Math.max(this.x2Num.length, this.x2Den.length)
+          this.x2Line = getFractionLine(maxLen2)
+        }
+
+        return
       }
 
-      const x1K = tK
-      const x2K = -tK
+      // 根式分支：用精确分数化简 sqrt(delta) = K*sqrt(D)/M
+      const rad = simplifyRadicalFrac(deltaFrac.num, deltaFrac.den)
+      const K = rad.coeff
+      const D = rad.radicand
+      const M = rad.den
 
-      const x1NumStr = formatRadicalNum(N, x1K, D)
-      const x2NumStr = formatRadicalNum(N, x2K, D)
+      // 算 N = -b / (2a)（精确分数）
+      const negB = negF(this.bFrac)
+      const twoA = mulF(this.aFrac, { num: 2, den: 1 })
+      if (!twoA) {
+        this.showSimpleText = true
+        this.simpleText = '计算错误'
+        return
+      }
+      const N = divF(negB, twoA)
+
+      if (!N) {
+        this.showSimpleText = true
+        this.simpleText = '计算错误'
+        return
+      }
+
+      // 算 x = N ± (K*sqrt(D)/M) / (2a)
+      //   = N.num/N.den ± (K*aFrac.den)*sqrt(D) / (M*2aFrac.num)
+      // 整体分子：N.num*M*2a.num ± K*aFrac.den*sqrt(D)*N.den
+      // 整体分母：N.den*M*2a.num
+      // numInt = N.num * M * 2a.num
+      // coefK  = K * aFrac.den * N.den
+      // denInt = N.den * M * 2a.num
+      const numInt = N.num * M * twoA.num
+      const coefK = K * this.aFrac.den * N.den
+      const denInt = N.den * M * twoA.num
+
+      // 整体化简：三者最大公因
+      const g = gcd3(Math.abs(numInt), Math.abs(coefK), Math.abs(denInt))
+      const N_out = numInt / g
+      const K_out = coefK / g
+      const Den_out = denInt / g
 
       this.rootsLabel = delta > 0 ? '有两个不等实根：' : '有两个相等实根：'
       this.isDoubleRoot = delta === 0
 
-      if (Den === 1) {
+      // x1 = N_out + K_out*sqrt(D),  x2 = N_out - K_out*sqrt(D)
+      // 共同根号部分：|K_out|*sqrt(D)
+      // x1 根式系数：+K_out
+      // x2 根式系数：-K_out
+      const x1K = K_out
+      const x2K = -K_out
+
+      // 共同 N 部分（K=0 时退化为纯整数或纯分数）
+      if (K_out === 0) {
+        // 退化为整数或分数（已经在 isInteger 路径覆盖，但保险起见）
+        if (Den_out === 1) {
+          this.x1IsInt = true
+          this.x1IntValue = N_out.toString()
+          this.x1IsRad = false
+        } else {
+          this.x1IsFrac = true
+          this.x1Num = N_out.toString()
+          this.x1Den = Den_out.toString()
+          this.x1Line = getFractionLine(
+            Math.max(this.x1Num.length, this.x1Den.length)
+          )
+        }
+        this.showX2 = delta > 0
+        if (this.showX2) {
+          // 双重根：x1 = x2
+        }
+        return
+      }
+
+      // 根式显示：N_out/Den_out ± K_out*sqrt(D)
+      // 当 Den_out == 1：N_out ± K_out*sqrt(D)
+      // 当 Den_out > 1：(N_out ± K_out*sqrt(D)) / Den_out
+      const x1NumStr = formatRadicalNum(N_out, x1K, D)
+      const x2NumStr = formatRadicalNum(N_out, x2K, D)
+
+      if (Den_out === 1) {
         this.x1IsRad = true
         this.x1RadNumStr = x1NumStr
         this.x1RadIsDenOne = true
       } else {
         this.x1IsRad = true
         this.x1RadNumStr = x1NumStr
-        this.x1RadDen = Den.toString()
-        const maxLen1 = Math.max(x1NumStr.length, Den.toString().length)
+        this.x1RadDen = Den_out.toString()
+        const maxLen1 = Math.max(x1NumStr.length, Den_out.toString().length)
         this.x1RadLine = getFractionLine(maxLen1)
       }
 
       if (delta > 0) {
         this.showX2 = true
-        if (Den === 1) {
+        if (Den_out === 1) {
           this.x2IsRad = true
           this.x2RadNumStr = x2NumStr
           this.x2RadIsDenOne = true
         } else {
           this.x2IsRad = true
           this.x2RadNumStr = x2NumStr
-          this.x2RadDen = Den.toString()
-          const maxLen2 = Math.max(x2NumStr.length, Den.toString().length)
+          this.x2RadDen = Den_out.toString()
+          const maxLen2 = Math.max(x2NumStr.length, Den_out.toString().length)
           this.x2RadLine = getFractionLine(maxLen2)
         }
       } else {
@@ -567,22 +785,21 @@
     padding: 4 * $size-factor;
     background-color: rgba(0, 255, 153, 0.15);
     border-radius: 8 * $size-factor;
-    border-left-width: 3px;
-    border-left-color: #00ff99;
     margin-bottom: 16px;
+    max-height: 350px;
   }
 
   .result-text {
     font-size: 6 * $size-factor;
     color: #00ff99;
     font-family: monospace;
-    line-height: 12 * $size-factor;
   }
 
   .result-row {
-    display: flex;
     align-items: center;
     margin-top: 8px;
+    flex-direction: row;
+    height: 90px;
   }
 
   .result-content {
@@ -595,7 +812,6 @@
     font-size: 6 * $size-factor;
     color: #00ff99;
     font-family: monospace;
-    white-space: nowrap;
   }
 
   .result-value {
@@ -609,6 +825,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-left: 8px;
   }
 
   .fraction-numerator {

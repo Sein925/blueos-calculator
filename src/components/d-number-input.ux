@@ -1,6 +1,6 @@
 <template>
   <div class="number-input-wrapper">
-    <div class="input-display" onclick="focusInput">
+    <div class="input-display" style="width: {{ width }}" onclick="focusInput">
       <div class="input-value">
         <marquee
           class="input-text {{ (value === '0' || value === '' || !value) && placeholder ? 'placeholder' : '' }}"
@@ -59,8 +59,11 @@
           <div class="keypad-btn" onclick="inputDigit('0')">
             <text>0</text>
           </div>
-          <div class="keypad-btn" onclick="inputDecimal">
+          <div class="keypad-btn {{ integerOnly === 'true' ? 'keypad-btn-disabled' : '' }}" onclick="inputDecimal">
             <text>.</text>
+          </div>
+          <div class="keypad-btn keypad-btn-fn {{ integerOnly === 'true' ? 'keypad-btn-disabled' : '' }}" onclick="inputFraction">
+            <text>1/x</text>
           </div>
           <div class="keypad-btn keypad-btn-confirm" onclick="confirmInput">
             <text>确定</text>
@@ -77,6 +80,9 @@
       value: '0',
       label: '',
       placeholder: '',
+      allowFraction: true,
+      integerOnly: 'false',
+      width: '94%',
     },
 
     data: {
@@ -84,13 +90,20 @@
       inputValue: '0',
       hasDecimal: false,
       isNegative: false,
+      hasFraction: false,
       displayValue: '0',
+      lastRaw: '',
+      hideDecimalFraction: false,
     },
 
+
     onInit() {
+      this.hideDecimalFraction =
+        this.integerOnly === true || this.integerOnly === 'true'
       this.inputValue = this.value || '0'
       this.hasDecimal = this.inputValue.indexOf('.') !== -1
       this.isNegative = this.inputValue.indexOf('-') !== -1
+      this.hasFraction = this.inputValue.indexOf('/') !== -1
       this.updateDisplayValue()
     },
 
@@ -101,14 +114,16 @@
       ) {
         this.displayValue = this.placeholder
       } else {
-        this.displayValue = this.value
+        this.displayValue = this.lastRaw || this.value
       }
     },
 
     focusInput() {
-      this.inputValue = this.value || '0'
+      global.triggerHaptic()
+      this.inputValue = this.lastRaw || this.value || '0'
       this.hasDecimal = this.inputValue.indexOf('.') !== -1
       this.isNegative = this.inputValue.indexOf('-') !== -1
+      this.hasFraction = this.inputValue.indexOf('/') !== -1
       this.displayValue = this.inputValue
       this.showKeypad = true
     },
@@ -116,6 +131,7 @@
     stopPropagation() {},
 
     inputDigit(digit) {
+      global.triggerHaptic()
       if (this.inputValue === '0') {
         this.inputValue = digit
       } else {
@@ -124,13 +140,25 @@
     },
 
     inputDecimal() {
-      if (!this.hasDecimal) {
+      global.triggerHaptic()
+      if (this.hideDecimalFraction) return
+      if (!this.hasDecimal && !this.hasFraction) {
         this.inputValue += '.'
         this.hasDecimal = true
       }
     },
 
+    inputFraction() {
+      global.triggerHaptic()
+      if (this.hideDecimalFraction) return
+      if (!this.hasDecimal && !this.hasFraction) {
+        this.inputValue = this.inputValue === '0' ? '1/' : this.inputValue + '/'
+        this.hasFraction = true
+      }
+    },
+
     toggleSign() {
+      global.triggerHaptic()
       if (this.inputValue === '0') return
       if (this.isNegative) {
         this.inputValue = this.inputValue.substring(1)
@@ -142,34 +170,63 @@
     },
 
     backspace() {
+      global.triggerHaptic()
       if (this.inputValue.length === 1) {
         this.inputValue = '0'
         this.hasDecimal = false
         this.isNegative = false
+        this.hasFraction = false
         return
       }
       if (this.inputValue.length === 2 && this.isNegative) {
         this.inputValue = '0'
         this.hasDecimal = false
         this.isNegative = false
+        this.hasFraction = false
         return
       }
       const lastChar = this.inputValue.charAt(this.inputValue.length - 1)
       if (lastChar === '.') {
         this.hasDecimal = false
       }
+      if (lastChar === '/') {
+        this.hasFraction = false
+      }
       this.inputValue = this.inputValue.slice(0, -1)
     },
 
     clearAll() {
+      global.triggerHaptic()
       this.inputValue = '0'
       this.hasDecimal = false
       this.isNegative = false
+      this.hasFraction = false
     },
 
     confirmInput() {
-      this.$emit('change', { value: this.inputValue })
-      this.displayValue = this.inputValue
+      global.triggerHaptic()
+      var raw = this.inputValue
+      while (raw.endsWith('/') || raw.endsWith('.')) {
+        raw = raw.slice(0, -1)
+      }
+      if (raw === '') raw = '0'
+      var result = { value: raw, raw: raw, isFraction: false }
+      if (raw.indexOf('/') !== -1) {
+        var parts = raw.split('/')
+        if (parts.length === 2) {
+          var n = parseFloat(parts[0])
+          var d = parseFloat(parts[1])
+          if (!isNaN(n) && !isNaN(d) && d !== 0) {
+            result.isFraction = true
+            result.num = n
+            result.den = d
+            result.value = String(n / d)
+          }
+        }
+      }
+      this.$emit('change', result)
+      this.lastRaw = result.raw
+      this.displayValue = result.raw
       this.showKeypad = false
     },
   }
@@ -184,7 +241,6 @@
   }
 
   .input-display {
-    width: 94%;
     background-color: rgba(255, 255, 255, 0.15);
     border-radius: 8 * $size-factor;
     padding: 2 * $size-factor;
@@ -309,12 +365,16 @@
   }
 
   .keypad-btn-confirm {
-    width: 50%;
     background-color: $brand;
   }
 
   .keypad-btn-confirm text {
     font-size: 8 * $size-factor;
     font-weight: 600;
+  }
+
+  .keypad-btn-disabled {
+    opacity: 0.3;
+    pointer-events: none;
   }
 </style>

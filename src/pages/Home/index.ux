@@ -3,7 +3,7 @@
     <swiper class="swiper-container" index="0" indicator="true">
       <div class="swiper-slide calculator-panel">
         <div class="calculator-card fullscreen">
-          <div class="display-card" onclick="openHistoryPage">
+          <div class="display-card" onclick="navigateTo('pages/History')">
             <div class="scroll-display">
               <marquee class="history-display" style="margin-bottom: 4px">
                 {{ history }}
@@ -188,29 +188,35 @@
             <text class="advanced-title">高级功能</text>
           </list-item>
           <list-item type="card" style="margin-top: 3 * $size-factor">
-            <div class="feature-card" onclick="openEquationPage">
+            <div class="feature-card" onclick="navigateTo('pages/Advanced/Equation')">
               <text class="feature-icon">&#xe66f;</text>
               <text class="feature-name">方程求解</text>
             </div>
           </list-item>
           <list-item type="card" style="margin-top: 3 * $size-factor">
-            <div class="feature-card" onclick="openGraphPage">
+            <div class="feature-card" onclick="navigateTo('pages/Advanced/Graph')">
               <text class="feature-icon">&#xe63f;</text>
               <text class="feature-name">函数绘图</text>
             </div>
           </list-item>
           <list-item type="card" style="margin-top: 3 * $size-factor">
-            <div class="feature-card" onclick="openStatisticsPage">
+            <div class="feature-card" onclick="navigateTo('pages/Advanced/Statistics')">
               <text class="feature-icon">&#xe644;</text>
               <text class="feature-name">统计分析</text>
+            </div>
+          </list-item>
+          <list-item type="card" style="margin-top: 3 * $size-factor">
+            <div class="feature-card" onclick="navigateTo('pages/Advanced/Date')">
+              <text class="feature-icon">&#xe645;</text>
+              <text class="feature-name">日期计算</text>
             </div>
           </list-item>
           <list-item
             type="card"
             style="margin-top: 3 * $size-factor; margin-bottom: 80px">
-            <div class="feature-card" onclick="openDateCalculator">
-              <text class="feature-icon">&#xe645;</text>
-              <text class="feature-name">日期计算</text>
+            <div class="feature-card" onclick="navigateTo('pages/Advanced/Random')">
+              <text class="feature-icon">&#xe7de;</text>
+              <text class="feature-name">随机数</text>
             </div>
           </list-item>
         </list>
@@ -222,7 +228,7 @@
             <text class="section-title">计算</text>
           </list-item>
           <list-item type="card" style="margin-top: 14px">
-            <div class="nav-card" onclick="openHistoryPage">
+            <div class="nav-card" onclick="navigateTo('pages/History')">
               <text class="nav-label">历史记录</text>
             </div>
           </list-item>
@@ -230,12 +236,12 @@
             <text class="section-title">其他</text>
           </list-item>
           <list-item type="card" style="margin-top: 14px">
-            <div class="nav-card" onclick="openSettingsPage">
+            <div class="nav-card" onclick="navigateTo('pages/Settings')">
               <text class="nav-label">设置</text>
             </div>
           </list-item>
           <list-item type="card" style="margin: 14px 0 88px 0">
-            <div class="nav-card" onclick="openAboutPage">
+            <div class="nav-card" onclick="navigateTo('pages/About')">
               <text class="nav-label">关于</text>
             </div>
           </list-item>
@@ -364,6 +370,7 @@
     },
 
     inputNumber(num) {
+      global.triggerHaptic()
       if (this.error) {
         this.clearAll()
       }
@@ -381,6 +388,7 @@
     },
 
     inputDecimal() {
+      global.triggerHaptic()
       if (this.error) {
         this.clearAll()
       }
@@ -398,6 +406,7 @@
     },
 
     inputOperator(op) {
+      global.triggerHaptic()
       if (this.error) {
         this.clearAll()
       }
@@ -472,6 +481,7 @@
     },
 
     calculate() {
+      global.triggerHaptic()
       if (this.error) {
         this.clearAll()
         return
@@ -524,6 +534,7 @@
     },
 
     clearAll() {
+      global.triggerHaptic()
       this.display = '0'
       this.history = ''
       this.operator = ''
@@ -534,6 +545,7 @@
     },
 
     backspace() {
+      global.triggerHaptic()
       if (this.error) return
       if (
         this.display.length === 1 ||
@@ -546,16 +558,19 @@
     },
 
     toggleSign() {
+      global.triggerHaptic()
       if (this.error) return
       const value = parseFloat(this.display)
       this.display = this.formatResult(-value)
     },
 
     toggleAdvanced() {
+      global.triggerHaptic()
       this.showAdvanced = !this.showAdvanced
     },
 
     scientificFunction(func) {
+      global.triggerHaptic()
       if (this.error) {
         this.clearAll()
       }
@@ -638,6 +653,7 @@
     },
 
     inputConstant(constant) {
+      global.triggerHaptic()
       if (this.error) {
         this.clearAll()
       }
@@ -667,6 +683,7 @@
     },
 
     inputPercent() {
+      global.triggerHaptic()
       if (this.error) return
       const value = parseFloat(this.display)
       this.display = this.formatResult(value / 100)
@@ -683,46 +700,8 @@
       global.saveHistory()
     },
 
-    openHistoryPage() {
-      global.router.push({
-        uri: 'pages/History',
-      })
-    },
-
-    openAboutPage() {
-      global.router.push({
-        uri: 'pages/About',
-      })
-    },
-
-    openSettingsPage() {
-      global.router.push({
-        uri: 'pages/Settings',
-      })
-    },
-
-    openDateCalculator() {
-      global.router.push({
-        uri: 'pages/Advanced/Date',
-      })
-    },
-
-    openEquationPage() {
-      global.router.push({
-        uri: 'pages/Advanced/Equation',
-      })
-    },
-
-    openGraphPage() {
-      global.router.push({
-        uri: 'pages/Advanced/Graph',
-      })
-    },
-
-    openStatisticsPage() {
-      global.router.push({
-        uri: 'pages/Advanced/Statistics',
-      })
+    navigateTo(uri) {
+      global.router.push({ uri: uri })
     },
   }
 </script>

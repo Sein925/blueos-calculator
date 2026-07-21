@@ -36,14 +36,14 @@
             for="(index, item) in dataList"
             class="data-item"
             onclick="removeData(index)">
-            {{ item }} ×
+            {{ item.display }} ×
           </text>
         </div>
       </div>
     </list-item>
     <list-item type="card" class="content">
       <text class="section-title">统计结果</text>
-      <div class="result-list" show="{{ dataList.length > 0 }}">
+      <div class="result-list" show="{{ dataList.length > 0 }}" style="margin-bottom: 50px;">
         <div class="result-item">
           <text class="result-label">数据个数</text>
           <marquee
@@ -101,11 +101,26 @@
             {{ results.variance }}
           </marquee>
         </div>
-        <div class="result-item" style="margin-bottom: 50px;">
+        <div class="result-item">
           <text class="result-label">标准差</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.stdDev }}
           </marquee>
+        </div>
+        <div class="result-item percentile-item">
+          <div class="percentile-input">
+            <text class="result-label" style="margin-right: 5px">第</text>
+            <d-number-input
+              value="{{ percentileValue }}"
+              label="输入百分位数"
+              placeholder="50"
+              width="90%"
+              @change="handlePercentileChange"></d-number-input>
+            <text class="result-label" style="margin-left: 5px">百分位数</text>
+          </div>
+          <div class="percentile-result">
+            <text class="result-value">{{ results.percentile }}</text>
+          </div>
         </div>
       </div>
       <div class="empty-hint" show="{{ dataList.length === 0 }}">
@@ -116,25 +131,87 @@
 </template>
 
 <script>
-  function round(num, decimals = 4) {
-    const factor = Math.pow(10, decimals)
-    return Math.round(num * factor) / factor
+  // ===== 精确分数工具（与 Equation 共用同一套）=====
+  function gcd(a, b) {
+    a = Math.abs(a)
+    b = Math.abs(b)
+    while (b !== 0) {
+      const t = b
+      b = a % b
+      a = t
+    }
+    return a || 1
+  }
+
+  function makeFrac(num, den) {
+    if (!den || isNaN(num) || isNaN(den)) return { num: 0, den: 1 }
+    if (den < 0) {
+      num = -num
+      den = -den
+    }
+    const g = gcd(num, den)
+    return { num: num / g, den: den / g }
+  }
+
+  function addF(a, b) {
+    return makeFrac(a.num * b.den + b.num * a.den, a.den * b.den)
+  }
+
+  function subF(a, b) {
+    return makeFrac(a.num * b.den - b.num * a.den, a.den * b.den)
+  }
+
+  function mulF(a, b) {
+    return makeFrac(a.num * b.num, a.den * b.den)
+  }
+
+  function divF(a, b) {
+    if (b.num === 0) return { num: 0, den: 1 }
+    return makeFrac(a.num * b.den, a.den * b.num)
+  }
+
+  // 分数转显示字符串（den=1 → 整数；den<=100 → 分数；否则浮点 4 位）
+  function fracToDisplay(f) {
+    if (!f || f.den === 0) return '0'
+    if (f.den === 1) return f.num.toString()
+    if (Math.abs(f.den) <= 100 && Math.abs(f.num) <= 100000) {
+      return f.num + '/' + f.den
+    }
+    return String(Math.round((f.num / f.den) * 10000) / 10000)
+  }
+
+  // 浮点转分数（限制 12 位精度，避免浮点垃圾）
+  function floatToFrac(v) {
+    if (!isFinite(v)) return { num: 0, den: 1 }
+    if (Math.floor(v) === v) return { num: v, den: 1 }
+    // 尝试简单浮点：1e-12 范围内
+    const s = v.toFixed(12).replace(/\.?0+$/, '')
+    const [intPart, decPart = ''] = s.split('.')
+    if (!decPart) return { num: parseInt(intPart), den: 1 }
+    const den = Math.pow(10, decPart.length)
+    const num = parseInt(intPart + decPart)
+    return makeFrac(num, den)
   }
 
   export default {
     data: {
       currentValue: '0',
+      currentFrac: { num: 0, den: 1 },
       dataList: [],
+      percentileValue: '50',
+      percentileFrac: { num: 50, den: 1 },
       results: {
         count: 0,
-        sum: 0,
-        mean: 0,
+        sum: '0',
+        mean: '-',
+        median: '-',
         mode: '-',
-        max: 0,
-        min: 0,
-        range: 0,
-        variance: 0,
-        stdDev: 0,
+        max: '-',
+        min: '-',
+        range: '-',
+        variance: '-',
+        stdDev: '-',
+        percentile: '-',
       },
     },
 
@@ -142,15 +219,60 @@
 
     handleInputChange(e) {
       this.currentValue = e.value
+      if (e.isFraction) {
+        this.currentFrac = { num: e.num, den: e.den }
+      } else {
+        this.currentFrac = floatToFrac(parseFloat(e.value))
+      }
+    },
+
+    handlePercentileChange(e) {
+      this.percentileValue = e.value
+      if (e.isFraction) {
+        this.percentileFrac = { num: e.num, den: e.den }
+      } else {
+        this.percentileFrac = floatToFrac(parseFloat(e.value))
+      }
+      this.calculatePercentile()
+    },
+
+    calculatePercentile() {
+      if (this.dataList.length === 0) return
+      const p = this.percentileFrac.num / this.percentileFrac.den
+      if (p < 0 || p > 100) {
+        this.results.percentile = '范围 0-100'
+        return
+      }
+      const sorted = [...this.dataList].sort(
+        (a, b) => a.frac.num / a.frac.den - b.frac.num / b.frac.den
+      )
+      const n = sorted.length
+      const pos = (p / 100) * (n - 1)
+      const lower = Math.floor(pos)
+      const upper = Math.min(lower + 1, n - 1)
+      const frac = pos - lower
+      let result
+      if (lower === upper) {
+        result = sorted[lower].frac
+      } else {
+        const lowerVal = sorted[lower].frac
+        const upperVal = sorted[upper].frac
+        const diff = subF(upperVal, lowerVal)
+        const fracPart = mulF(diff, makeFrac(frac, 1))
+        result = addF(lowerVal, fracPart)
+      }
+      this.results.percentile = fracToDisplay(result)
     },
 
     addData() {
-      const value = parseFloat(this.currentValue)
-      if (isNaN(value)) {
-        return
-      }
-
-      this.dataList = [...this.dataList, this.currentValue]
+      if (!this.currentFrac || this.currentFrac.den === 0) return
+      this.dataList = [
+        ...this.dataList,
+        {
+          display: fracToDisplay(this.currentFrac),
+          frac: { num: this.currentFrac.num, den: this.currentFrac.den },
+        },
+      ]
       this.calculate()
     },
 
@@ -162,6 +284,7 @@
     clearAll() {
       this.dataList = []
       this.currentValue = '0'
+      this.currentFrac = { num: 0, den: 1 }
       this.calculate()
     },
 
@@ -169,64 +292,94 @@
       if (this.dataList.length === 0) {
         this.results = {
           count: 0,
-          sum: 0,
-          mean: 0,
+          sum: '0',
+          mean: '-',
+          median: '-',
           mode: '-',
-          max: 0,
-          min: 0,
-          range: 0,
-          variance: 0,
-          stdDev: 0,
+          max: '-',
+          min: '-',
+          range: '-',
+          variance: '-',
+          stdDev: '-',
         }
         return
       }
 
-      const data = this.dataList.map((x) => parseFloat(x)).sort((a, b) => a - b)
-      const n = data.length
+      // 排序（按分数数值升序）
+      const sorted = [...this.dataList].sort(
+        (a, b) => a.frac.num / a.frac.den - b.frac.num / b.frac.den
+      )
+      const n = sorted.length
 
-      const sum = data.reduce((acc, val) => acc + val, 0)
-      const mean = sum / n
-      const max = data[n - 1]
-      const min = data[0]
-      const range = max - min
-
-      let median
-      if (n % 2 === 0) {
-        median = (data[n / 2 - 1] + data[n / 2]) / 2
-      } else {
-        median = data[Math.floor(n / 2)]
+      // 求和（Fraction 累加）
+      let sum = sorted[0].frac
+      for (let i = 1; i < n; i++) {
+        sum = addF(sum, sorted[i].frac)
       }
 
+      // 平均数
+      const mean = divF(sum, { num: n, den: 1 })
+
+      // 最大值 / 最小值 / 极差
+      const max = sorted[n - 1]
+      const min = sorted[0]
+      const range = subF(max.frac, min.frac)
+
+      // 中位数
+      let median
+      if (n % 2 === 0) {
+        median = divF(
+          addF(sorted[n / 2 - 1].frac, sorted[n / 2].frac),
+          { num: 2, den: 1 }
+        )
+      } else {
+        median = sorted[Math.floor(n / 2)].frac
+      }
+
+      // 众数（按分数值去重，显示分数形式）
       const frequency = {}
+      const fracToKey = (f) => `${f.num}/${f.den}`
       let maxFreq = 0
       let modes = []
-      data.forEach((num) => {
-        frequency[num] = (frequency[num] || 0) + 1
-        if (frequency[num] > maxFreq) {
-          maxFreq = frequency[num]
-          modes = [num]
-        } else if (frequency[num] === maxFreq && !modes.includes(num)) {
-          modes.push(num)
+      sorted.forEach((item) => {
+        const key = fracToKey(item.frac)
+        frequency[key] = (frequency[key] || 0) + 1
+        if (frequency[key] > maxFreq) {
+          maxFreq = frequency[key]
+          modes = [item.display]
+        } else if (frequency[key] === maxFreq && modes.indexOf(item.display) === -1) {
+          modes.push(item.display)
         }
       })
       const mode = modes.length === n ? '-' : modes.join(', ')
 
-      const variance =
-        data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n
-      const stdDev = Math.sqrt(variance)
+      // 方差 = Σ(x - mean)² / n（精确 Fraction 算）
+      let varianceSum = { num: 0, den: 1 }
+      for (let i = 0; i < n; i++) {
+        const diff = subF(sorted[i].frac, mean)
+        const diffSq = mulF(diff, diff)
+        varianceSum = addF(varianceSum, diffSq)
+      }
+      const variance = divF(varianceSum, { num: n, den: 1 })
+
+      // 标准差 = sqrt(方差) —— Fraction 不能精确开方，转浮点 + 4 位
+      const varianceFloat = variance.num / variance.den
+      const stdDev = String(Math.round(Math.sqrt(Math.abs(varianceFloat)) * 10000) / 10000)
 
       this.results = {
         count: n,
-        sum: round(sum),
-        mean: round(mean),
-        median: round(median),
+        sum: fracToDisplay(sum),
+        mean: fracToDisplay(mean),
+        median: fracToDisplay(median),
         mode: mode,
-        max: round(max),
-        min: round(min),
-        range: round(range),
-        variance: round(variance),
-        stdDev: round(stdDev),
+        max: max.display,
+        min: min.display,
+        range: fracToDisplay(range),
+        variance: fracToDisplay(variance),
+        stdDev: stdDev,
+        percentile: '-',
       }
+      this.calculatePercentile()
     },
   }
 </script>
@@ -390,5 +543,29 @@
       font-size: 6 * $size-factor;
       color: $light-gray;
     }
+  }
+
+  .percentile-item {
+    flex-direction: column;
+    padding: 10px 30px;
+  }
+
+  .percentile-input {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .percentile-result {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
+  }
+
+  .percentile-result .result-value {
+    width: 100%;
+    text-align: right;
   }
 </style>
