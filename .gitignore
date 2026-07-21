@@ -6,3 +6,5 @@
 /tools/donors-admin/node_modules
 /tools/donors-admin/.env
 blue-os.zip
+/sign/*
+!/sign/.gitkeep

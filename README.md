@@ -1,46 +1,99 @@
-# 应用示例模版
+# 科学计算器
 
-## 文件结构
+BlueOS 智能手表科学计算器应用
+
+## 功能特性
+
+- **基础计算**: 支持加减乘除、平方、开方、百分比等基础运算
+- **科学计算**: 三角函数、对数、指数、阶乘等科学函数
+- **方程求解**: 支持一元一次、一元二次方程求解
+- **图形计算**: 函数图像绘制
+- **统计计算**: 均值、方差、标准差等统计分析
+- **日期计算**: 日期选择和日期差计算
+- **随机数生成**: 支持多种随机数生成模式
+- **历史记录**: 自动保存计算历史
+- **触觉反馈**: 可选的操作振动反馈
+
+## 项目结构
 
 ```
-├── sign                # 存储 rpk 包签名模块(须自行生成);
-│   ├── certificate.pem # 证书文件
-│   └── private.pem     # 私钥文件
-└── src
-│   ├── assets          # 公用的资源(images/styles/字体...)
-│   │   ├──images       # 存储 png/jpg/svg 等公共图片资源
-│   │   └──styles       # 存放 less/css/sass 等公共样式资源
-│   ├── pages           # 统一存放项目页面级代码
-│   ├── app.ux          # 应用程序代码的人口文件
-│   ├── global.js       # 统一定义全局变量、常量；
-│   ├── app.d.ts        # 应用声明文件，声明全局变量、类型等；
-│   ├── manifest.json   # 配置蓝河应用基本信息
-│   └── components      # 存放蓝河应用组件
-└── tsconfig.json       # 为 JavaScript 语言服务提供配置选项；
-└── package.json        # 定义项目需要的各种模块及配置信息
+├── sign/              # 应用签名证书（须自行生成，已加入 .gitignore）
+├── src/
+│   ├── assets/        # 公共资源（图片、样式、字体）
+│   │   ├── images/    # 图片资源
+│   │   └── styles/    # 全局样式（SCSS）
+│   ├── components/    # 公共组件
+│   ├── pages/         # 页面级代码
+│   │   ├── Home/      # 计算器主页
+│   │   ├── History/   # 历史记录
+│   │   ├── Settings/  # 设置页面
+│   │   ├── About/     # 关于页面（包含捐赠、反馈）
+│   │   ├── Guide/     # 使用指南
+│   │   ├── Welcome/   # 欢迎页面
+│   │   └── Advanced/  # 高级功能
+│   │       ├── Date/      # 日期计算
+│   │       ├── Equation/  # 方程求解
+│   │       ├── Graph/     # 图形计算
+│   │       ├── Statistics/# 统计计算
+│   │       └── Random/    # 随机数生成
+│   ├── app.ux         # 应用入口文件
+│   ├── global.js      # 全局变量和工具函数
+│   ├── app.d.ts       # TypeScript 声明文件
+│   └── manifest.json  # 应用配置文件
+├── tools/             # 工具脚本
+│   └── donors-admin/  # 捐赠管理后台
+├── package.json       # 项目依赖配置
+├── tsconfig.json      # TypeScript 配置
+└── .gitignore         # Git 忽略配置
 ```
 
-### 模版说明
+## 技术栈
 
-- `Demo` 页面：示例页面；
-- `DemoDetail`页面：详情页面；
+- **框架**: BlueOS 应用开发框架
+- **样式**: SCSS (dart-sass)
+- **包管理**: pnpm
+- **语言**: TypeScript / JavaScript
 
+## 目标设备
 
-## 如何开始
+- watch
+- watch-square
+- watch-round
+
+## 快速开始
 
 ```bash
-# 安装依赖（或基于 Studio 图形化操作）
-pnpm i
+# 安装依赖
+pnpm install
 ```
 
-## 如何使用
+开发和构建请使用 BlueOS Studio 图形化操作：
+- 打开 BlueOS Studio
+- 导入项目
+- 点击「运行」按钮启动开发模式
+- 点击「构建」按钮生成生产版本
 
-- **内置样式处理方案**；「蓝河应用」支持 `sass` 的预编译；这里采取 [dart sass](https://sass-lang.com/documentation) 方案，并内置了部分变量，以及常用混合方法，使得可以轻松开启样式编写、复用、修改等；
-- **添加新增页面命令脚本**；如果需要新建页面，只需运行：`yarn gen YourPageName` ，当然，也可以根据需要，自行定定制模板：_/command/gen/template.ux_；
-- **集成 [Prettier](https://prettier.io/)**；在检测代码中潜在问题的同时，统一团队代码规范、风格（`js`，`less`，`scss`等），从而促使写出高质量代码，以提升工作效率(尤其针对团队开发)；
+## 配置说明
 
-## 内置命令
+### 签名证书
 
-|  命令 | 描述  | 备注 |
-|---|---|---|
-| `pnpm gen`  | 新增「 BlueOS 应用」页面 | [Studio 已内置，可通过图形化操作](https://studio.blueos.com.cn/write/create-page/) |
+应用签名证书存放在 `sign/` 目录下，包含：
+- `certificate.pem` - 证书文件
+- `private.pem` - 私钥文件
+
+**⚠️ 重要**: 这些文件包含敏感信息，已加入 `.gitignore`。开发者需要自行生成签名证书。
+
+### 环境变量
+
+捐赠管理后台使用以下环境变量：
+- `ADMIN_TOKEN` - 管理页登录 Token
+- `UPSTASH_REDIS_REST_URL` - Redis 服务地址
+- `UPSTASH_REDIS_REST_TOKEN` - Redis 访问 Token
+
+## 应用配置
+
+应用基本信息在 [manifest.json](src/manifest.json) 中配置：
+- **包名**: `com.dasein.calculator`
+- **版本**: `1.1.13`
+- **图标**: `/assets/images/logo.png`
+- **设计宽度**: `466px`
