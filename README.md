@@ -1,6 +1,6 @@
 # 科学计算器
 
-BlueOS 智能手表科学计算器应用
+一款功能强大、界面美观的手表端科学计算器，为用户提供全方位的计算功能，满足日常计算、科学计算和高级数学分析的各种需求。
 
 ## 功能特性
 
@@ -56,9 +56,10 @@ BlueOS 智能手表科学计算器应用
 
 ## 目标设备
 
-- watch
-- watch-square
-- watch-round
+- vivo Watch GT
+- vivo Watch GT 2
+- vivo Watch 3
+- vivo Watch 5
 
 ## 快速开始
 
@@ -97,3 +98,7 @@ pnpm install
 - **版本**: `1.1.13`
 - **图标**: `/assets/images/logo.png`
 - **设计宽度**: `466px`
+
+## 许可证
+
+GPL-3.0
