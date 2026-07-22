@@ -6,12 +6,12 @@
 <template>
   <list class="wrapper" title="true">
     <list-item>
-      <d-back value="统计分析"></d-back>
+      <d-back value="{{ $t('statistics.title') }}"></d-back>
     </list-item>
     <list-item type="card" class="content">
-      <text class="section-title">数据输入</text>
+      <text class="section-title">{{ $t('statistics.input') }}</text>
       <div class="input-row">
-        <text class="input-label">数据:</text>
+        <text class="input-label">{{ $t('statistics.data') }}</text>
         <d-number-input
           value="{{ currentValue }}"
           label="输入数据"
@@ -20,17 +20,17 @@
       </div>
       <div class="btn-row">
         <div class="add-btn" onclick="addData">
-          <text class="add-btn-text">添加</text>
+          <text class="add-btn-text">{{ $t('statistics.add') }}</text>
         </div>
         <div
           class="clear-btn"
           onclick="clearAll"
           style="background-color: rgba(255, 100, 100, 0.2)">
-          <text class="clear-btn-text">清空</text>
+          <text class="clear-btn-text">{{ $t('statistics.clear') }}</text>
         </div>
       </div>
       <div class="data-list" show="{{ dataList.length > 0 }}">
-        <text class="data-title">已输入数据：</text>
+        <text class="data-title">{{ $t('statistics.data_list') }}</text>
         <div class="data-items">
           <text
             for="(index, item) in dataList"
@@ -42,10 +42,10 @@
       </div>
     </list-item>
     <list-item type="card" class="content">
-      <text class="section-title">统计结果</text>
+      <text class="section-title">{{ $t('statistics.result') }}</text>
       <div class="result-list" show="{{ dataList.length > 0 }}" style="margin-bottom: 50px;">
         <div class="result-item">
-          <text class="result-label">数据个数</text>
+          <text class="result-label">{{ $t('statistics.count') }}</text>
           <marquee
             class="result-value"
             double-ended-shadow-color="#191919"
@@ -54,69 +54,69 @@
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">求和</text>
+          <text class="result-label">{{ $t('statistics.sum') }}</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.sum }}
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">平均数</text>
+          <text class="result-label">{{ $t('statistics.mean') }}</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.mean }}
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">中位数</text>
+          <text class="result-label">{{ $t('statistics.median') }}</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.median }}
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">众数</text>
+          <text class="result-label">{{ $t('statistics.mode') }}</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.mode }}
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">最大值</text>
+          <text class="result-label">{{ $t('statistics.max') }}</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.max }}
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">最小值</text>
+          <text class="result-label">{{ $t('statistics.min') }}</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.min }}
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">极差</text>
+          <text class="result-label">{{ $t('statistics.range') }}</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.range }}
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">方差</text>
+          <text class="result-label">{{ $t('statistics.variance') }}</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.variance }}
           </marquee>
         </div>
         <div class="result-item">
-          <text class="result-label">标准差</text>
+          <text class="result-label">{{ $t('statistics.std_dev') }}</text>
           <marquee class="result-value" double-ended-shadow-color="#191919">
             {{ results.stdDev }}
           </marquee>
         </div>
         <div class="result-item percentile-item">
           <div class="percentile-input">
-            <text class="result-label" style="margin-right: 5px">第</text>
+            <text class="result-label" style="margin-right: 5px">P</text>
             <d-number-input
               value="{{ percentileValue }}"
-              label="输入百分位数"
+              label="{{ $t('statistics.percentile') }}"
               placeholder="50"
               width="90%"
               @change="handlePercentileChange"></d-number-input>
-            <text class="result-label" style="margin-left: 5px">百分位数</text>
+            <text class="result-label" style="margin-left: 5px">{{ $t('statistics.percentile') }}</text>
           </div>
           <div class="percentile-result">
             <text class="result-value">{{ results.percentile }}</text>
@@ -124,7 +124,7 @@
         </div>
       </div>
       <div class="empty-hint" show="{{ dataList.length === 0 }}">
-        <text class="empty-text">请先输入数据</text>
+        <text class="empty-text">{{ $t('statistics.empty') }}</text>
       </div>
     </list-item>
   </list>
@@ -240,7 +240,7 @@
       if (this.dataList.length === 0) return
       const p = this.percentileFrac.num / this.percentileFrac.den
       if (p < 0 || p > 100) {
-        this.results.percentile = '范围 0-100'
+        this.results.percentile = this.$t('statistics.percentile_range')
         return
       }
       const sorted = [...this.dataList].sort(

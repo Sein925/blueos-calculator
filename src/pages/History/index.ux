@@ -3,18 +3,18 @@
 <template>
   <list class="wrapper" title="true">
     <list-item>
-      <d-back value="历史记录"></d-back>
+      <d-back value="{{ $t('history.title') }}"></d-back>
     </list-item>
     <list-item class="content">
       <div type="about">
         <div class="history-content">
-          <text class="page-title">历史记录</text>
-          <text class="page-desc">最近20条计算记录</text>
+          <text class="page-title">{{ $t('history.title') }}</text>
+          <text class="page-desc">{{ $t('history.desc') }}</text>
         </div>
       </div>
       <div type="card">
         <div class="option-card" style="margin-bottom: 0" @click="clearHistory">
-          <text class="card-label">清除历史</text>
+          <text class="card-label">{{ $t('history.clear') }}</text>
         </div>
       </div>
       <div for="item in historyList" type="card">
@@ -26,7 +26,7 @@
       <div style="height: 26px" show="{{ historyList.length !== 0 }}"></div>
       <div>
         <div class="empty-hint" show="{{ historyList.length === 0 }}">
-          <text class="app-desc">暂无历史记录</text>
+          <text class="app-desc">{{ $t('history.empty') }}</text>
         </div>
       </div>
     </list-item>

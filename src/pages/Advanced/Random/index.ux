@@ -6,50 +6,50 @@
 <template>
   <list class="wrapper" title="true">
     <list-item>
-      <d-back value="随机数生成"></d-back>
+      <d-back value="{{ $t('random.title') }}"></d-back>
     </list-item>
 
     <list-item class="content">
-      <text class="section-title">计算类型</text>
+      <text class="section-title">{{ $t('random.type') }}</text>
       <div class="btn-row">
         <div
           class="btn-card"
           style="background-color: {{ mode === 'int' ? 'rgba(0, 255, 153, 0.3)' : 'rgba(0, 255, 153, 0.15)' }}; margin-right: 20px;"
           onclick="switchMode('int')">
-          <text style="color: {{ mode === 'int' ? '#00ff99' : '#ffffff' }};">整数</text>
+          <text style="color: {{ mode === 'int' ? '#00ff99' : '#ffffff' }};">{{ $t('random.int') }}</text>
         </div>
         <div
           class="btn-card"
           style="background-color: {{ mode === 'float' ? 'rgba(0, 255, 153, 0.3)' : 'rgba(0, 255, 153, 0.15)' }};"
           onclick="switchMode('float')">
-          <text style="color: {{ mode === 'float' ? '#00ff99' : '#ffffff' }};">小数</text>
+          <text style="color: {{ mode === 'float' ? '#00ff99' : '#ffffff' }};">{{ $t('random.float') }}</text>
         </div>
       </div>
 
-      <text class="section-title">参数设置</text>
+      <text class="section-title">{{ $t('random.settings') }}</text>
       <div class="input-card">
-        <text class="input-label">最小值</text>
+        <text class="input-label">{{ $t('random.min') }}</text>
         <d-number-input
-          label="输入最小值"
-          placeholder="点击输入"
+          label="{{ $t('random.min') }}"
+          placeholder="{{ $t('random.min') }}"
           value="{{ min }}"
           onchange="handleMinChange"
           width="92%"></d-number-input>
       </div>
       <div class="input-card">
-        <text class="input-label">最大值</text>
+        <text class="input-label">{{ $t('random.max') }}</text>
         <d-number-input
-          label="输入最大值"
-          placeholder="点击输入"
+          label="{{ $t('random.max') }}"
+          placeholder="{{ $t('random.max') }}"
           value="{{ max }}"
           onchange="handleMaxChange"
           width="92%"></d-number-input>
       </div>
       <div class="input-card">
-        <text class="input-label">数量</text>
+        <text class="input-label">{{ $t('random.count') }}</text>
         <d-number-input
-          label="输入数量"
-          placeholder="点击输入"
+          label="{{ $t('random.count') }}"
+          placeholder="{{ $t('random.count') }}"
           value="{{ count }}"
           onchange="handleCountChange"
           integer-only="true"
@@ -57,17 +57,17 @@
       </div>
 
       <div if="{{ mode === 'int' }}" class="input-card">
-        <text class="input-label">不重复</text>
+        <text class="input-label">{{ $t('random.unique') }}</text>
         <switch
           checked="{{ unique }}"
           onchange="handleUniqueChange"></switch>
       </div>
 
       <div if="{{ mode === 'float' }}" class="input-card">
-        <text class="input-label">位数</text>
+        <text class="input-label">{{ $t('random.decimals') }}</text>
         <d-number-input
-          label="输入小数位数"
-          placeholder="点击输入"
+          label="{{ $t('random.decimals') }}"
+          placeholder="{{ $t('random.decimals') }}"
           value="{{ decimals }}"
           onchange="handleDecimalsChange"
           integer-only="true"
@@ -76,7 +76,7 @@
 
       <div class="calc-btn" onclick="generate">
         <text class="calc-btn-text">
-          {{ results.length > 0 ? '重新生成' : '生成' }}
+          {{ results.length > 0 ? $t('random.regenerate') : $t('random.generate') }}
         </text>
       </div>
 
@@ -90,7 +90,7 @@
         if="{{ results.length > 0 }}"
         class="section-title"
         style="margin-top: 32px; margin-bottom: 12px;">
-        结果（{{ results.length }}个）
+        {{ $t('random.result', { count: results.length }) }}
       </text>
       <div
         if="{{ results.length > 0 }}"
@@ -170,19 +170,19 @@
       var count = parseInt(this.count)
 
       if (isNaN(min) || isNaN(max)) {
-        this.errorMsg = '请输入有效的数字'
+        this.errorMsg = this.$t('random.invalid_input')
         return
       }
       if (isNaN(count) || count <= 0) {
-        this.errorMsg = '请输入有效的数量（>0）'
+        this.errorMsg = this.$t('random.invalid_count')
         return
       }
       if (min > max) {
-        this.errorMsg = '最小值不能大于最大值'
+        this.errorMsg = this.$t('random.min_gt_max')
         return
       }
       if (count > 10000) {
-        this.errorMsg = '单次最多生成 10000 个'
+        this.errorMsg = this.$t('random.max_count')
         return
       }
 
@@ -192,11 +192,11 @@
         var hi = Math.floor(max)
         var range = hi - lo + 1
         if (range <= 0) {
-          this.errorMsg = '整数范围无效'
+          this.errorMsg = this.$t('random.invalid_int_range')
           return
         }
         if (this.unique && count > range) {
-          this.errorMsg = '不重复模式下，数量不能超过 ' + range
+          this.errorMsg = this.$t('random.unique_limit', { range: range })
           return
         }
         if (this.unique) {
@@ -212,7 +212,7 @@
       } else {
         var decimals = parseInt(this.decimals)
         if (isNaN(decimals) || decimals < 0 || decimals > 10) {
-          this.errorMsg = '小数位数应在 0-10 之间'
+          this.errorMsg = this.$t('random.decimal_range')
           return
         }
         for (var m = 0; m < count; m++) {

@@ -3,31 +3,31 @@
 <template>
   <list class="wrapper" title="true">
     <list-item>
-      <d-back value="关于"></d-back>
+      <d-back value="{{ $t('about.title') }}"></d-back>
     </list-item>
     <list-item class="content">
       <div type="about">
         <div class="about-content">
           <text class="app-name">{{ appName }}</text>
-          <text class="app-version">版本: {{ appVersion }}</text>
+          <text class="app-version">{{ $t('about.version') }}: {{ appVersion }}</text>
           <image class="app-logo" src="/assets/images/logo.png"></image>
-          <text class="app-desc">一款强大的手表端科学计算器</text>
+          <text class="app-desc">{{ $t('about.desc') }}</text>
         </div>
       </div>
       <div type="card">
         <div class="option-card" style="margin-bottom: 0" @click="feedback">
-          <text class="card-label">意见反馈</text>
+          <text class="card-label">{{ $t('about.feedback') }}</text>
         </div>
       </div>
       <div type="card">
         <div class="option-card" style="margin-top: 18px" @click="donate">
-          <text class="card-label">打赏</text>
+          <text class="card-label">{{ $t('about.donate') }}</text>
         </div>
       </div>
       <div>
         <div class="copyright">
-          <text class="app-desc">轻腕社区提供技术支持</text>
-          <text class="app-desc">©2026 Dasein</text>
+          <text class="app-desc">{{ $t('about.support') }}</text>
+          <text class="app-desc">{{ $t('about.copyright') }}</text>
         </div>
       </div>
     </list-item>

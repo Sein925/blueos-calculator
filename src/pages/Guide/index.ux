@@ -9,8 +9,8 @@
           <image
             class="guide-icon"
             src="./../../assets/images/logo.png"></image>
-          <text class="guide-title">欢迎使用</text>
-          <text class="guide-desc">简单易用的科学计算器</text>
+          <text class="guide-title">{{ $t('guide.welcome') }}</text>
+            <text class="guide-desc">{{ $t('guide.welcome_desc') }}</text>
         </div>
       </div>
 
@@ -19,8 +19,8 @@
           <div class="icon-box">
             <text class="icon-text">÷×</text>
           </div>
-          <text class="guide-title">基础计算</text>
-          <text class="guide-desc">支持加减乘除四则运算</text>
+          <text class="guide-title">{{ $t('guide.basic') }}</text>
+          <text class="guide-desc">{{ $t('guide.basic_desc') }}</text>
         </div>
       </div>
 
@@ -29,8 +29,8 @@
           <div class="icon-box">
             <text class="icon-text">2nd</text>
           </div>
-          <text class="guide-title">科学计算</text>
-          <text class="guide-desc">点击2nd切换科学计算</text>
+          <text class="guide-title">{{ $t('guide.scientific') }}</text>
+          <text class="guide-desc">{{ $t('guide.scientific_desc') }}</text>
         </div>
       </div>
 
@@ -39,8 +39,8 @@
           <div class="icon-box">
             <text class="icon-text">📜</text>
           </div>
-          <text class="guide-title">历史记录</text>
-          <text class="guide-desc">点击结果框查看历史</text>
+          <text class="guide-title">{{ $t('guide.history') }}</text>
+          <text class="guide-desc">{{ $t('guide.history_desc') }}</text>
         </div>
       </div>
 
@@ -49,19 +49,19 @@
           <div class="icon-box">
             <text class="icon-text">←→</text>
           </div>
-          <text class="guide-title">滑动切换</text>
-          <text class="guide-desc">左右滑动查看更多功能</text>
+          <text class="guide-title">{{ $t('guide.swipe') }}</text>
+          <text class="guide-desc">{{ $t('guide.swipe_desc') }}</text>
         </div>
       </div>
 
       <div class="guide-slide">
         <div class="slide-content">
-          <text class="guide-title">开始使用</text>
-          <text class="guide-desc">愿计算变得简单愉快</text>
+          <text class="guide-title">{{ $t('guide.start') }}</text>
+          <text class="guide-desc">{{ $t('guide.start_desc') }}</text>
         </div>
         <div class="start-btn-wrapper" style="margin-top: 36px">
           <div class="start-btn" onclick="startUsing">
-            <text class="start-text">开始使用</text>
+            <text class="start-text">{{ $t('guide.start') }}</text>
           </div>
         </div>
       </div>

@@ -185,30 +185,30 @@
         <list class="content" title="true">
           <list-item class="title">
             <text class="title-icon">&#xe629;</text>
-            <text class="advanced-title">高级功能</text>
+            <text class="advanced-title">{{ $t('home.advanced_title') }}</text>
           </list-item>
           <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="navigateTo('pages/Advanced/Equation')">
               <text class="feature-icon">&#xe66f;</text>
-              <text class="feature-name">方程求解</text>
+              <text class="feature-name">{{ $t('home.equation') }}</text>
             </div>
           </list-item>
           <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="navigateTo('pages/Advanced/Graph')">
               <text class="feature-icon">&#xe63f;</text>
-              <text class="feature-name">函数绘图</text>
+              <text class="feature-name">{{ $t('home.graph') }}</text>
             </div>
           </list-item>
           <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="navigateTo('pages/Advanced/Statistics')">
               <text class="feature-icon">&#xe644;</text>
-              <text class="feature-name">统计分析</text>
+              <text class="feature-name">{{ $t('home.statistics') }}</text>
             </div>
           </list-item>
           <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="navigateTo('pages/Advanced/Date')">
               <text class="feature-icon">&#xe645;</text>
-              <text class="feature-name">日期计算</text>
+              <text class="feature-name">{{ $t('home.date') }}</text>
             </div>
           </list-item>
           <list-item
@@ -216,7 +216,7 @@
             style="margin-top: 3 * $size-factor; margin-bottom: 80px">
             <div class="feature-card" onclick="navigateTo('pages/Advanced/Random')">
               <text class="feature-icon">&#xe7de;</text>
-              <text class="feature-name">随机数</text>
+              <text class="feature-name">{{ $t('home.random') }}</text>
             </div>
           </list-item>
         </list>
@@ -225,24 +225,24 @@
       <div class="swiper-slide nav-panel">
         <list class="content">
           <list-item>
-            <text class="section-title">计算</text>
+            <text class="section-title">{{ $t('home.calculation') }}</text>
           </list-item>
           <list-item type="card" style="margin-top: 14px">
             <div class="nav-card" onclick="navigateTo('pages/History')">
-              <text class="nav-label">历史记录</text>
+              <text class="nav-label">{{ $t('home.history') }}</text>
             </div>
           </list-item>
           <list-item>
-            <text class="section-title">其他</text>
+            <text class="section-title">{{ $t('home.other') }}</text>
           </list-item>
           <list-item type="card" style="margin-top: 14px">
             <div class="nav-card" onclick="navigateTo('pages/Settings')">
-              <text class="nav-label">设置</text>
+              <text class="nav-label">{{ $t('home.settings') }}</text>
             </div>
           </list-item>
           <list-item type="card" style="margin: 14px 0 88px 0">
             <div class="nav-card" onclick="navigateTo('pages/About')">
-              <text class="nav-label">关于</text>
+              <text class="nav-label">{{ $t('home.about') }}</text>
             </div>
           </list-item>
         </list>

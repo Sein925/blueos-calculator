@@ -6,12 +6,12 @@
 <template>
   <list class="wrapper" title="true">
     <list-item>
-      <d-back value="一元二次方程"></d-back>
+      <d-back value="{{ $t('equation_1_2.title') }}"></d-back>
     </list-item>
 
     <list-item class="content">
       <text class="equation-form">ax² + bx + c = 0</text>
-      <text if="{{ showExactModeTip }}" class="description">您已开启精确模式，请避免输入过大数字以防设备卡顿</text>
+      <text if="{{ showExactModeTip }}" class="description">{{ $t('equation_1_2.exact_tip') }}</text>
 
       <div class="input-row">
         <text class="input-label">a =</text>
@@ -41,7 +41,7 @@
       </div>
 
       <div class="solve-btn" onclick="solve">
-        <text class="solve-btn-text">求解</text>
+        <text class="solve-btn-text">{{ $t('equation_1_2.solve') }}</text>
       </div>
 
       <div if="{{ showResult }}" class="result-box">
@@ -412,7 +412,7 @@
       if (!deltaFrac) {
         this.showResult = true
         this.showSimpleText = true
-        this.simpleText = '计算错误'
+        this.simpleText = this.$t('equation_1_2.error')
         return
       }
       const delta = deltaFrac.num / deltaFrac.den
@@ -437,7 +437,7 @@
         isNaN(parseFloat(this.c))
       ) {
         this.showSimpleText = true
-        this.simpleText = '请输入有效的数字'
+        this.simpleText = this.$t('equation_1_2.invalid_input')
         return
       }
 
@@ -446,15 +446,15 @@
         this.showSimpleText = true
         if (this.bFrac.num === 0) {
           if (this.cFrac.num === 0) {
-            this.simpleText = '方程有无穷多解'
+            this.simpleText = this.$t('equation_1_2.infinite_solutions')
           } else {
-            this.simpleText = '方程无解'
+            this.simpleText = this.$t('equation_1_2.no_solution')
           }
         } else {
           // x = -c / b
           const xFrac = divF(negF(this.cFrac), this.bFrac)
           this.simpleText =
-            '化为一元一次方程：x = ' + fracToStr(xFrac)
+            this.$t('equation_1_2.degenerate') + fracToStr(xFrac)
         }
         return
       }
@@ -472,7 +472,7 @@
         this.simpleText =
           'Δ = ' +
           this.formatNumber(delta) +
-          ' < 0\n无实根，有两个共轭复根：\nx₁ = ' +
+          ' < 0\n' + this.$t('equation_1_2.no_real_roots') + '\nx₁ = ' +
           this.formatNumber(realPart) +
           ' + ' +
           this.formatNumber(imagPart) +
@@ -491,14 +491,14 @@
           const x1 = (-b + sqrtDelta) / (2 * a)
           const x2 = (-b - sqrtDelta) / (2 * a)
           this.simpleText =
-            '有两个不等实根：\nx₁ = ' +
+            this.$t('equation_1_2.two_roots') + '\nx₁ = ' +
             this.formatNumber(x1) +
             '\nx₂ = ' +
             this.formatNumber(x2)
         } else {
           const x = -b / (2 * a)
           this.simpleText =
-            '有两个相等实根：\nx₁ = x₂ = ' + this.formatNumber(x)
+            this.$t('equation_1_2.double_root') + '\nx₁ = x₂ = ' + this.formatNumber(x)
         }
         return
       }
@@ -514,7 +514,7 @@
         const sqrtD = Math.round(sqrtDelta)
 
         if (delta > 0) {
-          this.rootsLabel = '有两个不等实根：'
+          this.rootsLabel = this.$t('equation_1_2.two_roots')
           this.showX2 = true
 
           const frac1 = simplifyFraction(-b + sqrtD, 2 * a)
@@ -541,7 +541,7 @@
             this.x2Line = getFractionLine(maxLen2)
           }
         } else {
-          this.rootsLabel = '有两个相等实根：'
+          this.rootsLabel = this.$t('equation_1_2.double_root')
           this.showX2 = false
           this.isDoubleRoot = true
 
@@ -582,7 +582,7 @@
         const x1 = simplifyFraction(-bInt + pInt, twoAInt)
         const x2 = simplifyFraction(-bInt - pInt, twoAInt)
 
-        this.rootsLabel = '有两个不等实根：'
+        this.rootsLabel = this.$t('equation_1_2.two_roots')
         this.showX2 = true
         this.isDoubleRoot = false
 
@@ -622,14 +622,14 @@
       const twoA = mulF(this.aFrac, { num: 2, den: 1 })
       if (!twoA) {
         this.showSimpleText = true
-        this.simpleText = '计算错误'
+        this.simpleText = this.$t('equation_1_2.error')
         return
       }
       const N = divF(negB, twoA)
 
       if (!N) {
         this.showSimpleText = true
-        this.simpleText = '计算错误'
+        this.simpleText = this.$t('equation_1_2.error')
         return
       }
 

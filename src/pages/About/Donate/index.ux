@@ -8,33 +8,33 @@
         <qrcode
           value="wxp://f2f0mNO7_JkaWQ0N7E0w4IfMNgbiO64MQRasJ6jB-Gu70DOZOnhfVZ0k1v8iFjZQfkX0"
           type="circle"></qrcode>
-        <text>微信打赏</text>
-        <text style="color: #999; font-size: 26px; margin-top: -2px">感谢您的支持</text>
+        <text>{{ $t('donate.wechat') }}</text>
+        <text style="color: #999; font-size: 26px; margin-top: -2px">{{ $t('donate.thanks') }}</text>
       </div>
       <div class="content">
         <d-back></d-back>
         <qrcode
           value="https://qr.alipay.com/tsx15421dkgubkqrf52i502"
           type="circle"></qrcode>
-        <text>支付宝打赏</text>
-        <text style="color: #999; font-size: 26px; margin-top: -2px">感谢您的支持</text>
+        <text>{{ $t('donate.alipay') }}</text>
+        <text style="color: #999; font-size: 26px; margin-top: -2px">{{ $t('donate.thanks') }}</text>
       </div>
       <list class="content" title="true">
         <list-item>
           <d-back></d-back>
         </list-item>
         <list-item class="list-header">
-          <text class="list-title">打赏名单</text>
-          <text class="list-desc">感谢以下支持者</text>
+          <text class="list-title">{{ $t('donate.list_title') }}</text>
+          <text class="list-desc">{{ $t('donate.list_desc') }}</text>
           <div class="refresh-bar" @click="fetchDonors">
             <text class="refresh-btn">
-              {{ isLoading ? '刷新中…' : '刷新数据' }}
+              {{ isLoading ? $t('donate.refreshing') : $t('donate.refresh') }}
             </text>
           </div>
         </list-item>
         <list-item class="error-box" show="{{ errInfo.length > 0 }}" style="padding: 0 10px">
           <div class="error-inner">
-            <text class="error-title">请求失败</text>
+            <text class="error-title">{{ $t('donate.error') }}</text>
             <text class="error-text">{{ errInfo }}</text>
           </div>
         </list-item>
@@ -46,18 +46,18 @@
         </list-item>
         <list-item class="small-item" show="{{ smallNames.length > 0 }}" style="padding: 0 10px">
           <div class="donor-group small-group">
-            <text class="group-amount small-amount">小额支持</text>
+            <text class="group-amount small-amount">{{ $t('donate.small') }}</text>
             <text class="donor-names small-names">{{ smallNames.join(', ') }}</text>
           </div>
         </list-item>
         <list-item class="empty-hint" show="{{ donorList.length === 0 && smallNames.length === 0 }}">
-          <text class="empty-text">请点击按钮获取打赏数据</text>
+          <text class="empty-text">{{ $t('donate.empty') }}</text>
         </list-item>
         <list-item class="total-item" show="{{ donorList.length > 0 || smallNames.length > 0 }}">
           <div class="total-box">
-            <text class="total-label">累计打赏</text>
+            <text class="total-label">{{ $t('donate.total') }}</text>
             <text class="total-amount">¥{{ totalAmount }}</text>
-            <text class="total-count">共 {{ totalCount }} 位支持者</text>
+            <text class="total-count">{{ $t('donate.supporters', {count: totalCount}) }}</text>
           </div>
           <text class="update-time">{{ updateTime }}</text>
         </list-item>
@@ -102,7 +102,7 @@
                 self.totalAmount = parsed.totalAmount || '0.00'
                 self.totalCount =
                   typeof parsed.totalCount === 'number' ? parsed.totalCount : 0
-                self.updateTime = parsed.updateTime || '本地缓存（未联网）'
+                self.updateTime = parsed.updateTime || this.$t('donate.cache')
               } catch (e) {}
             }
           },
@@ -144,7 +144,7 @@
           self.isLoading = false
           self.errInfo =
             // '请求 URL: ' + url + '\n' +
-            '请求超时（>18s），请检查手表是否正确连接到网络'
+            self.$t('donate.timeout')
         }
       }, 18000)
 
@@ -287,9 +287,9 @@
             }
 
             if (json.meta && json.meta.updatedAt) {
-              self.updateTime = '数据更新于 ' + self.formatTime(json.meta.updatedAt)
+              self.updateTime = self.$t('donate.updated_at') + ' ' + self.formatTime(json.meta.updatedAt)
             } else {
-              self.updateTime = '已更新 ' + self.formatTime(new Date().toISOString())
+              self.updateTime = self.$t('donate.updated') + ' ' + self.formatTime(new Date().toISOString())
             }
             self.errInfo = ''
             self.saveToLocal()

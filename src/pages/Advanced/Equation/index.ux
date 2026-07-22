@@ -3,17 +3,17 @@
 <template>
   <list class="wrapper" title="true">
     <list-item>
-      <d-back value="方程求解"></d-back>
+      <d-back value="{{ $t('equation.title') }}"></d-back>
     </list-item>
     <list-item type="card" class="content">
       <div class="nav-card" onclick="openLinear">
-        <text class="nav-label">一元一次方程</text>
+        <text class="nav-label">{{ $t('equation.linear') }}</text>
       </div>
       <div class="nav-card" style="margin-top: 14px" onclick="openQuadratic">
-        <text class="nav-label">一元二次方程</text>
+        <text class="nav-label">{{ $t('equation.quadratic') }}</text>
       </div>
       <div class="nav-card" style="margin-top: 14px" onclick="openSystem2">
-        <text class="nav-label">二元一次方程组</text>
+        <text class="nav-label">{{ $t('equation.system2') }}</text>
       </div>
     </list-item>
   </list>

@@ -7,11 +7,11 @@
     </list-item>
     <list-item class="content">
       <div class="card">
-        <text class="card-label">电子邮箱</text>
+        <text class="card-label">{{ $t('feedback.email') }}</text>
         <text class="card-value">s.9suns@outlook.com</text>
       </div>
       <div class="card">
-        <text class="card-label">轻腕社区</text>
+        <text class="card-label">{{ $t('feedback.community') }}</text>
         <text class="card-value">999999999</text>
       </div>
     </list-item>

@@ -3,49 +3,49 @@
 <template>
   <list class="wrapper" title="true">
     <list-item>
-      <d-back value="设置"></d-back>
+      <d-back value="{{ $t('settings.title') }}"></d-back>
     </list-item>
     <list-item class="content">
       <div style="flex-direction: column">
         <div class="option-card" onclick="toggleAngleMode">
-          <text class="card-label">角度模式</text>
+          <text class="card-label">{{ $t('settings.angle_mode') }}</text>
           <text class="card-value">
-            {{ angleMode === 'deg' ? 'DEG' : 'RAD' }}
+            {{ angleMode === 'deg' ? $t('settings.deg') : $t('settings.rad') }}
           </text>
         </div>
 
         <div class="hr"></div>
 
-        <text class="section-title">方程求解</text>
+        <text class="section-title">{{ $t('settings.equation') }}</text>
         <div class="option-card" onclick="toggleEquationOutputMode">
-          <text class="card-label">方程解输出</text>
+          <text class="card-label">{{ $t('settings.equation_output') }}</text>
           <text class="card-value">
-            {{ equationOutputMode === 'exact' ? '精确形式' : '小数' }}
+            {{ equationOutputMode === 'exact' ? $t('settings.exact') : $t('settings.decimal') }}
           </text>
         </div>
-        <text class="description">精确模式会增加求解时间，请避免输入过大数字以防设备卡顿</text>
+        <text class="description">{{ $t('settings.equation_desc') }}</text>
 
         <div class="hr"></div>
 
-        <text class="section-title">函数绘图</text>
+        <text class="section-title">{{ $t('settings.graph') }}</text>
         <div class="option-card" onclick="toggleInputDisplayMode">
-          <text class="card-label">输入显示</text>
+          <text class="card-label">{{ $t('settings.input_display') }}</text>
           <text class="card-value">
-            {{ inputDisplayMode === 'marquee' ? '跑马灯' : '静态文本' }}
+            {{ inputDisplayMode === 'marquee' ? $t('settings.marquee') : $t('settings.static') }}
           </text>
         </div>
-        <text class="description">静态文本模式下长表达式靠右显示，便于查看末尾输入</text>
+        <text class="description">{{ $t('settings.graph_desc') }}</text>
 
         <div class="hr"></div>
 
-        <text class="section-title">触感</text>
+        <text class="section-title">{{ $t('settings.haptic') }}</text>
         <div class="option-card">
-          <text class="card-label">振动反馈</text>
+          <text class="card-label">{{ $t('settings.vibration') }}</text>
           <switch
             checked="{{ hapticEnabled }}"
             onchange="toggleHaptic"></switch>
         </div>
-        <text class="description" style="margin-bottom: 30px">开启后点击按钮会触发轻微振动</text>
+        <text class="description" style="margin-bottom: 30px">{{ $t('settings.haptic_desc') }}</text>
       </div>
     </list-item>
   </list>

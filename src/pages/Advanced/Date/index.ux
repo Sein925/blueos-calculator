@@ -4,113 +4,113 @@
 <template>
   <list class="wrapper" title="true">
     <list-item>
-      <d-back value="日期计算"></d-back>
+      <d-back value="{{ $t('date.title') }}"></d-back>
     </list-item>
 
     <list-item class="content">
-      <text class="section-title" style="margin-top: 10px">计算类型</text>
+      <text class="section-title" style="margin-top: 10px">{{ $t('date.type') }}</text>
       <div class="btn-row">
         <div
           class="btn-card"
           style="background-color: {{ currentTab === 'diff' ? 'rgba(0, 255, 153, 0.3)' : 'rgba(0, 255, 153, 0.15)' }}; margin-right: 20px;"
           onclick="switchTab('diff')">
-          <text style="color: {{ currentTab === 'diff' ? '#00ff99' : '#ffffff' }};">日期差</text>
+          <text style="color: {{ currentTab === 'diff' ? '#00ff99' : '#ffffff' }};">{{ $t('date.diff') }}</text>
         </div>
         <div
           class="btn-card"
           style="background-color: {{ currentTab === 'add' ? 'rgba(0, 255, 153, 0.3)' : 'rgba(0, 255, 153, 0.15)' }};"
           onclick="switchTab('add')">
-          <text style="color: {{ currentTab === 'add' ? '#00ff99' : '#ffffff' }};">日期推算</text>
+          <text style="color: {{ currentTab === 'add' ? '#00ff99' : '#ffffff' }};">{{ $t('date.add') }}</text>
         </div>
       </div>
 
-      <text if="{{ currentTab === 'diff' }}" class="section-title">日期选择</text>
+      <text if="{{ currentTab === 'diff' }}" class="section-title">{{ $t('date.select') }}</text>
       <div if="{{ currentTab === 'diff' }}" class="input-card" onclick="openDatePicker('start')">
-        <text class="input-label">开始日期</text>
-        <text class="input-value {{ !startDateText ? 'placeholder' : '' }}">{{ startDateText || '选择日期' }}</text>
+        <text class="input-label">{{ $t('date.start') }}</text>
+        <text class="input-value {{ !startDateText ? 'placeholder' : '' }}">{{ startDateText || $t('date.choose') }}</text>
       </div>
       <div if="{{ currentTab === 'diff' }}" class="input-card" onclick="openDatePicker('end')">
-        <text class="input-label">结束日期</text>
-        <text class="input-value {{ !endDateText ? 'placeholder' : '' }}">{{ endDateText || '选择日期' }}</text>
+        <text class="input-label">{{ $t('date.end') }}</text>
+        <text class="input-value {{ !endDateText ? 'placeholder' : '' }}">{{ endDateText || $t('date.choose') }}</text>
       </div>
       <div if="{{ currentTab === 'diff' }}" class="calc-btn" onclick="calculateDiff">
-        <text class="calc-btn-text">计算</text>
+        <text class="calc-btn-text">{{ $t('date.calculate') }}</text>
       </div>
 
-      <text if="{{ currentTab === 'diff' && diffResult.days !== null }}" class="section-title" style="margin-top: 32px; margin-bottom: 12px;">计算结果</text>
+      <text if="{{ currentTab === 'diff' && diffResult.days !== null }}" class="section-title" style="margin-top: 32px; margin-bottom: 12px;">{{ $t('date.result') }}</text>
       <div if="{{ currentTab === 'diff' && diffResult.days !== null }}" class="result-item">
-        <text class="result-label">相差天数</text>
+        <text class="result-label">{{ $t('date.days') }}</text>
         <text class="result-value">{{ diffResult.days }} 天</text>
       </div>
       <div if="{{ currentTab === 'diff' && diffResult.days !== null }}" class="result-item">
-        <text class="result-label">相差周数</text>
+        <text class="result-label">{{ $t('date.weeks') }}</text>
         <text class="result-value">{{ diffResult.weeks }} 周 {{ diffResult.remainDays }} 天</text>
       </div>
       <div if="{{ currentTab === 'diff' && diffResult.days !== null }}" class="result-item">
-        <text class="result-label">相差月数</text>
+        <text class="result-label">{{ $t('date.months') }}</text>
         <text class="result-value">{{ diffResult.months }} 月 {{ diffResult.remainDaysAfterMonths }} 天</text>
       </div>
 
-      <text if="{{ currentTab === 'add' }}" class="section-title">日期推算</text>
+      <text if="{{ currentTab === 'add' }}" class="section-title">{{ $t('date.add') }}</text>
       <div if="{{ currentTab === 'add' }}" class="input-card" onclick="openDatePicker('base')">
-        <text class="input-label">基准日期</text>
-        <text class="input-value {{ !baseDateText ? 'placeholder' : '' }}">{{ baseDateText || '选择日期' }}</text>
+        <text class="input-label">{{ $t('date.base') }}</text>
+        <text class="input-value {{ !baseDateText ? 'placeholder' : '' }}">{{ baseDateText || $t('date.choose') }}</text>
       </div>
       <div if="{{ currentTab === 'add' }}" class="btn-row">
         <div
           class="btn-card opacity"
           style="background-color: {{ addType === 'add' ? 'rgba(0, 255, 153, 0.3)' : 'rgba(0, 255, 153, 0.15)' }}; margin-right: 20px;"
           onclick="setAddType('add')">
-          <text style="color: {{ addType === 'add' ? '#00ff99' : '#ffffff' }};">往后</text>
+          <text style="color: {{ addType === 'add' ? '#00ff99' : '#ffffff' }};">{{ $t('date.forward') }}</text>
         </div>
         <div
           class="btn-card opacity"
           style="background-color: {{ addType === 'sub' ? 'rgba(0, 255, 153, 0.3)' : 'rgba(0, 255, 153, 0.15)' }};"
           onclick="setAddType('sub')">
-          <text style="color: {{ addType === 'sub' ? '#00ff99' : '#ffffff' }};">往前</text>
+          <text style="color: {{ addType === 'sub' ? '#00ff99' : '#ffffff' }};">{{ $t('date.backward') }}</text>
         </div>
       </div>
       <div if="{{ currentTab === 'add' }}" class="input-card">
-        <text class="input-label">天数</text>
+        <text class="input-label">{{ $t('date.add_days') }}</text>
         <d-number-input
-          label="输入天数"
-          placeholder="点击输入"
+          label="{{ $t('date.add_days') }}"
+          placeholder="{{ $t('date.add_days') }}"
           value="{{ addDays }}"
           onchange="onAddDaysChange"
           integer-only="true"
           width="93%" />
       </div>
       <div if="{{ currentTab === 'add' }}" class="input-card">
-        <text class="input-label">周数</text>
+        <text class="input-label">{{ $t('date.add_weeks') }}</text>
         <d-number-input
-          label="输入周数"
-          placeholder="点击输入"
+          label="{{ $t('date.add_weeks') }}"
+          placeholder="{{ $t('date.add_weeks') }}"
           value="{{ addWeeks }}"
           onchange="onAddWeeksChange"
           integer-only="true"
           width="93%" />
       </div>
       <div if="{{ currentTab === 'add' }}" class="input-card">
-        <text class="input-label">月数</text>
+        <text class="input-label">{{ $t('date.add_months') }}</text>
         <d-number-input
-          label="输入月数"
-          placeholder="点击输入"
+          label="{{ $t('date.add_months') }}"
+          placeholder="{{ $t('date.add_months') }}"
           value="{{ addMonths }}"
           onchange="onAddMonthsChange"
           integer-only="true"
           width="93%" />
       </div>
       <div if="{{ currentTab === 'add' }}" class="calc-btn" onclick="calculateDate">
-        <text class="calc-btn-text">计算</text>
+        <text class="calc-btn-text">{{ $t('date.calculate') }}</text>
       </div>
 
-      <text if="{{ currentTab === 'add' && addResult.dateText }}" class="section-title" style="margin-top: 32px; margin-bottom: 12px;">计算结果</text>
+      <text if="{{ currentTab === 'add' && addResult.dateText }}" class="section-title" style="margin-top: 32px; margin-bottom: 12px;">{{ $t('date.result') }}</text>
       <div if="{{ currentTab === 'add' && addResult.dateText }}" class="result-item">
-        <text class="result-label">目标日期</text>
+        <text class="result-label">{{ $t('date.target') }}</text>
         <text class="result-value">{{ addResult.dateText }}</text>
       </div>
       <div if="{{ currentTab === 'add' && addResult.dateText }}" class="result-item">
-        <text class="result-label">星期</text>
+        <text class="result-label">{{ $t('date.weekday') }}</text>
         <text class="result-value">{{ addResult.weekDay }}</text>
       </div>
     </list-item>

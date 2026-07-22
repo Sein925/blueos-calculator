@@ -6,7 +6,7 @@
 <template>
   <list class="wrapper" title="true">
     <list-item>
-      <d-back value="一元一次方程"></d-back>
+      <d-back value="{{ $t('equation_1_1.title') }}"></d-back>
     </list-item>
 
     <list-item class="content">
@@ -40,7 +40,7 @@
       </div>
 
       <div class="solve-btn" onclick="solve">
-        <text class="solve-btn-text">求解</text>
+        <text class="solve-btn-text">{{ $t('equation_1_1.solve') }}</text>
       </div>
 
       <div if="{{ showResult }}" class="result-box">
@@ -180,16 +180,16 @@
 
       if (isNaN(a) || isNaN(b) || isNaN(c)) {
         this.showSimpleText = true
-        this.simpleText = '请输入有效的数字'
+        this.simpleText = this.$t('equation_1_1.invalid_input')
         return
       }
 
       if (a === 0) {
         this.showSimpleText = true
         if (b === c) {
-          this.simpleText = '方程有无穷多解'
+          this.simpleText = this.$t('equation_1_1.infinite_solutions')
         } else {
-          this.simpleText = '方程无解'
+          this.simpleText = this.$t('equation_1_1.no_solution')
         }
         return
       }
@@ -207,7 +207,7 @@
 
       if (!frac) {
         this.showSimpleText = true
-        this.simpleText = '计算错误'
+        this.simpleText = this.$t('equation_1_1.error')
         return
       }
 

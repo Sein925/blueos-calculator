@@ -3,7 +3,7 @@
 <template>
   <div class="wrapper">
     <div class="header">
-      <d-back value="选择日期" onclick="cancel"></d-back>
+      <d-back value="{{ $t('datepicker.title') }}" onclick="cancel"></d-back>
     </div>
     <div class="picker-area">
       <picker
@@ -15,7 +15,7 @@
     </div>
     <div class="footer">
       <div class="confirm-btn" onclick="confirm">
-        <text class="confirm-btn-text">确认</text>
+        <text class="confirm-btn-text">{{ $t('datepicker.confirm') }}</text>
       </div>
     </div>
   </div>

@@ -3,13 +3,13 @@
 <template>
   <list class="wrapper" title="true">
     <list-item>
-      <d-back value="函数绘图"></d-back>
+      <d-back value="{{ $t('graph.title') }}"></d-back>
     </list-item>
 
     <list-item class="content" disabled="{{ isLoading }}">
       <div show="{{ isLoading }}" class="loading-mask">
         <vw-loading size="100"></vw-loading>
-        <text style="color: white; font-size: 38px; margin-top: 16px">请稍等</text>
+        <text style="color: white; font-size: 38px; margin-top: 16px">{{ $t('graph.loading') }}</text>
       </div>
       <div show="{{ currentStep === 'input' }}" class="input-container">
         <div class="expr-tabs">
@@ -43,7 +43,7 @@
         <div class="input-display">
           <text class="y-label" style="color: {{ activeExprIndex === 0 ? '#00ff99' : (activeExprIndex === 1 ? '#ff6b6b' : '#4dabf7') }};">y =</text>
           <marquee if="{{ inputDisplayMode === 'marquee' }}" class="expression-text">
-            {{ expressions[activeExprIndex] || '输入函数' }}
+            {{ expressions[activeExprIndex] || $t('graph.input_hint') }}
           </marquee>
           <text if="{{ inputDisplayMode === 'static' }}" class="expression-static" lines="1">
             {{ displayExpr }}
@@ -230,7 +230,7 @@
               <text class="iconfont" style="font-size: 46px">&#xe62b;</text>
             </div>
             <div class="btn btn-draw" onclick="drawGraph">
-              <text class="draw-btn-text">绘图</text>
+              <text class="draw-btn-text">{{ $t('graph.draw') }}</text>
             </div>
           </div>
         </div>
@@ -276,7 +276,7 @@
             <text class="iconfont" style="font-size: 36px">&#xe604;</text>
           </div>
           <div class="action-btn" onclick="backToInput">
-            <text>编辑</text>
+            <text>{{ $t('graph.edit') }}</text>
           </div>
         </div>
 
@@ -319,7 +319,7 @@
       isLoading: false,
       compiledFns: [null, null, null],
       inputDisplayMode: 'static',
-      displayExpr: '输入函数',
+      displayExpr: this.$t('graph.input_hint'),
       maxDisplayLen: 12,
     },
 
