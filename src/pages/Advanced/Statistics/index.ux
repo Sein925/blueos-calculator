@@ -11,11 +11,11 @@
     <list-item type="card" class="content">
       <text class="section-title">{{ $t('statistics.input') }}</text>
       <div class="input-row">
-        <text class="input-label">{{ $t('statistics.data') }}</text>
+        <text class="input-label">{{ $t('statistics.data') }}:</text>
         <d-number-input
           value="{{ currentValue }}"
-          label="输入数据"
-          placeholder="点击输入"
+          label="{{ $t('common.input') }} {{ $t('statistics.data') }}"
+          placeholder="{{ $t('common.click_input') }}"
           @change="handleInputChange"></d-number-input>
       </div>
       <div class="btn-row">

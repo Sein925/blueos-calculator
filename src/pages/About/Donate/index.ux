@@ -102,7 +102,7 @@
                 self.totalAmount = parsed.totalAmount || '0.00'
                 self.totalCount =
                   typeof parsed.totalCount === 'number' ? parsed.totalCount : 0
-                self.updateTime = parsed.updateTime || this.$t('donate.cache')
+                self.updateTime = parsed.updateTime || self.$t('donate.cache')
               } catch (e) {}
             }
           },

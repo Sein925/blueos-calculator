@@ -17,8 +17,8 @@
         <text class="input-label">a =</text>
         <d-number-input
           value="{{ a }}"
-          label="输入 a"
-          placeholder="点击输入"
+          label="{{ $t('common.input') }} a"
+          placeholder="{{ $t('common.click_input') }}"
           @change="handleChangeA"></d-number-input>
       </div>
 
@@ -26,8 +26,8 @@
         <text class="input-label">b =</text>
         <d-number-input
           value="{{ b }}"
-          label="输入 b"
-          placeholder="点击输入"
+          label="{{ $t('common.input') }} b"
+          placeholder="{{ $t('common.click_input') }}"
           @change="handleChangeB"></d-number-input>
       </div>
 
@@ -35,8 +35,8 @@
         <text class="input-label">c =</text>
         <d-number-input
           value="{{ c }}"
-          label="输入 c"
-          placeholder="点击输入"
+          label="{{ $t('common.input') }} c"
+          placeholder="{{ $t('common.click_input') }}"
           @change="handleChangeC"></d-number-input>
       </div>
 

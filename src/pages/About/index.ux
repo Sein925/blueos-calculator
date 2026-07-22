@@ -110,6 +110,7 @@
     .app-desc {
       font-size: 5 * $size-factor;
       color: $light-gray;
+      text-align: center;
     }
 
     .option-card {

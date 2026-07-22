@@ -1,5 +1,10 @@
 {
   "appName": "科学计算器",
+  "common": {
+    "click_input": "点击输入",
+    "input": "输入",
+    "confirm": "确定"
+  },
   "welcome": {
     "name": "科学计算器",
     "hint": "如遇图标无法正常加载\n请尝试重启手表"
@@ -159,7 +164,7 @@
   "statistics": {
     "title": "统计分析",
     "input": "数据输入",
-    "data": "数据:",
+    "data": "数据",
     "add": "添加",
     "clear": "清空",
     "data_list": "已输入数据：",

@@ -1,5 +1,10 @@
 {
   "appName": "Scientific Calculator",
+  "common": {
+    "click_input": "Tap to input",
+    "input": "Input",
+    "confirm": "OK"
+  },
   "welcome": {
     "name": "Scientific Calculator",
     "hint": "If icons fail to load\nPlease try restarting the watch"
@@ -159,7 +164,7 @@
   "statistics": {
     "title": "Statistics",
     "input": "Data Input",
-    "data": "Data:",
+    "data": "Data",
     "add": "Add",
     "clear": "Clear",
     "data_list": "Entered Data: ",

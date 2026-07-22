@@ -17,8 +17,8 @@
         <text class="input-label">a₁ =</text>
         <d-number-input
           value="{{ a1 }}"
-          label="输入 a₁"
-          placeholder="点击输入"
+          label="{{ $t('common.input') }} a₁"
+          placeholder="{{ $t('common.click_input') }}"
           @change="handleChangeA1"></d-number-input>
       </div>
 
@@ -26,8 +26,8 @@
         <text class="input-label">b₁ =</text>
         <d-number-input
           value="{{ b1 }}"
-          label="输入 b₁"
-          placeholder="点击输入"
+          label="{{ $t('common.input') }} b₁"
+          placeholder="{{ $t('common.click_input') }}"
           @change="handleChangeB1"></d-number-input>
       </div>
 
@@ -35,8 +35,8 @@
         <text class="input-label">c₁ =</text>
         <d-number-input
           value="{{ c1 }}"
-          label="输入 c₁"
-          placeholder="点击输入"
+          label="{{ $t('common.input') }} c₁"
+          placeholder="{{ $t('common.click_input') }}"
           @change="handleChangeC1"></d-number-input>
       </div>
 
@@ -46,8 +46,8 @@
         <text class="input-label">a₂ =</text>
         <d-number-input
           value="{{ a2 }}"
-          label="输入 a₂"
-          placeholder="点击输入"
+          label="{{ $t('common.input') }} a₂"
+          placeholder="{{ $t('common.click_input') }}"
           @change="handleChangeA2"></d-number-input>
       </div>
 
@@ -55,8 +55,8 @@
         <text class="input-label">b₂ =</text>
         <d-number-input
           value="{{ b2 }}"
-          label="输入 b₂"
-          placeholder="点击输入"
+          label="{{ $t('common.input') }} b₂"
+          placeholder="{{ $t('common.click_input') }}"
           @change="handleChangeB2"></d-number-input>
       </div>
 
@@ -64,8 +64,8 @@
         <text class="input-label">c₂ =</text>
         <d-number-input
           value="{{ c2 }}"
-          label="输入 c₂"
-          placeholder="点击输入"
+          label="{{ $t('common.input') }} c₂"
+          placeholder="{{ $t('common.click_input') }}"
           @change="handleChangeC2"></d-number-input>
       </div>
 

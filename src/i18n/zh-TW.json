@@ -1,5 +1,10 @@
 {
   "appName": "科學計算器",
+  "common": {
+    "click_input": "點擊輸入",
+    "input": "輸入",
+    "confirm": "確定"
+  },
   "welcome": {
     "name": "科學計算器",
     "hint": "如遇圖標無法正常載入\n請嘗試重啟手錶"
@@ -159,7 +164,7 @@
   "statistics": {
     "title": "統計分析",
     "input": "數據輸入",
-    "data": "數據:",
+    "data": "數據",
     "add": "添加",
     "clear": "清空",
     "data_list": "已輸入數據：",
