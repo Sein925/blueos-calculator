@@ -338,7 +338,7 @@
     border-radius: 8 * $size-factor;
     flex-direction: row;
     justify-content: center;
-    background-color: rgba(0, 255, 153, 0.15);
+    background-color: $success-bg;
 
     text {
       font-size: 8 * $size-factor;
@@ -352,7 +352,7 @@
 
   .input-card {
     width: 100%;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: $card-bg;
     border-radius: 8 * $size-factor;
     padding: 24px 30px;
     margin-top: 14px;
@@ -378,7 +378,7 @@
   }
 
   .input-value.placeholder {
-    color: rgba(255, 255, 255, 0.4);
+    color: $text-placeholder;
     font-weight: normal;
   }
 
@@ -405,7 +405,7 @@
 
   .result-item {
     width: 100%;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: $card-bg;
     border-radius: 8 * $size-factor;
     padding: 24px 30px;
     margin-bottom: 12px;

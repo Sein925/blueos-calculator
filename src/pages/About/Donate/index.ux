@@ -479,7 +479,7 @@
 
       .donor-group {
         width: 100%;
-        background-color: #1a1a1a;
+        background-color: $panel-bg;
         border-radius: 8 * $size-factor;
         padding: 24px 30px;
         margin-bottom: 18px;
@@ -544,7 +544,7 @@
 
         .total-box {
           width: 100%;
-          background-color: #1a1a1a;
+          background-color: $panel-bg;
           border-radius: 8 * $size-factor;
           padding: 28px 30px;
           @include flex-box-mixins(column, center, center);

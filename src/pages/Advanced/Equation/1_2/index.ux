@@ -737,7 +737,7 @@
     width: 100%;
     text-align: center;
     font-size: 8 * $size-factor;
-    color: #00ff99;
+    color: $success;
     font-family: monospace;
   }
 
@@ -783,7 +783,7 @@
     width: 100%;
     flex-direction: column;
     padding: 4 * $size-factor;
-    background-color: rgba(0, 255, 153, 0.15);
+    background-color: $success-bg;
     border-radius: 8 * $size-factor;
     margin-bottom: 16px;
     max-height: 350px;
@@ -791,7 +791,7 @@
 
   .result-text {
     font-size: 6 * $size-factor;
-    color: #00ff99;
+    color: $success;
     font-family: monospace;
   }
 
@@ -810,13 +810,13 @@
 
   .result-label {
     font-size: 6 * $size-factor;
-    color: #00ff99;
+    color: $success;
     font-family: monospace;
   }
 
   .result-value {
     font-size: 6 * $size-factor;
-    color: #00ff99;
+    color: $success;
     font-family: monospace;
     margin-left: 8px;
   }
@@ -830,7 +830,7 @@
 
   .fraction-numerator {
     font-size: 6 * $size-factor;
-    color: #00ff99;
+    color: $success;
     font-family: monospace;
     padding-bottom: 2px;
     text-align: center;
@@ -838,14 +838,14 @@
 
   .fraction-line {
     font-size: 6 * $size-factor;
-    color: #00ff99;
+    color: $success;
     font-family: monospace;
     line-height: 2;
   }
 
   .fraction-denominator {
     font-size: 6 * $size-factor;
-    color: #00ff99;
+    color: $success;
     font-family: monospace;
     padding-top: 2px;
     text-align: center;

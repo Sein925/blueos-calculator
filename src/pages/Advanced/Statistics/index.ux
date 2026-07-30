@@ -464,7 +464,7 @@
 
     .clear-btn-text {
       font-size: 8 * $size-factor;
-      color: #ff6464;
+      color: $error;
       font-weight: bold;
     }
   }
@@ -490,7 +490,7 @@
   }
 
   .data-item {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: $card-bg;
     border-radius: 4 * $size-factor;
     padding: 2 * $size-factor 3 * $size-factor;
     font-size: 5.4 * $size-factor;
@@ -511,7 +511,7 @@
 
   .result-item {
     width: 100%;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: $card-bg;
     border-radius: 8 * $size-factor;
     padding: 24px 30px;
     margin-bottom: 12px;

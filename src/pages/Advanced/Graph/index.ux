@@ -1031,7 +1031,7 @@
 
     .y-label {
       font-size: 8 * $size-factor;
-      color: #00ff99;
+      color: $success;
       font-family: monospace;
       margin-left: 10px;
       margin-right: 4 * $size-factor;
@@ -1069,7 +1069,7 @@
   .btn {
     flex: 1;
     height: 72px;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: $card-bg;
     border-radius: 8 * $size-factor;
     @include flex-box-mixins(row, center, center);
 
@@ -1093,7 +1093,7 @@
   }
 
   .btn-number {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: $input-bg;
   }
 
   .btn-operator {
@@ -1101,7 +1101,7 @@
   }
 
   .btn-function {
-    background-color: rgba(9, 186, 7, 0.2);
+    background-color: $light-brand;
 
     text {
       color: $brand;
@@ -1162,7 +1162,7 @@
 
   .expr-tab {
     padding: 8px 26px;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: $card-bg;
     border-radius: 8 * $size-factor;
     margin-right: 12px;
 
@@ -1177,10 +1177,10 @@
   }
 
   .expr-tab-active {
-    background-color: rgba(0, 255, 153, 0.3);
+    background-color: $success-active;
 
     text {
-      color: #00ff99;
+      color: $success;
     }
   }
 
@@ -1193,7 +1193,7 @@
     text {
       font-size: 6 * $size-factor;
       font-weight: 700;
-      color: #00ff99;
+      color: $success;
     }
 
     &:active {
@@ -1204,7 +1204,7 @@
   .equation-display {
     width: 100%;
     padding: 20px 36px;
-    background-color: rgba(0, 255, 153, 0.15);
+    background-color: $success-bg;
     border-radius: 8 * $size-factor;
     margin-bottom: 20px;
     flex-direction: column;
@@ -1236,7 +1236,7 @@
 
     .action-btn {
       padding: 3 * $size-factor 0;
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: $card-bg;
       border-radius: 8 * $size-factor;
       align-items: center;
       justify-content: center;

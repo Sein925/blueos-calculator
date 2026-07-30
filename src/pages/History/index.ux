@@ -104,7 +104,7 @@
 
     .option-card {
       width: 100%;
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: $card-bg;
       border-radius: 8 * $size-factor;
       padding: 24px 30px;
       @include flex-box-mixins(row, flex-start, center);
@@ -121,7 +121,7 @@
 
     .history-card {
       width: 100%;
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: $card-bg;
       border-radius: 8 * $size-factor;
       padding: 24px 30px;
       @include flex-box-mixins(column, flex-start, flex-start);

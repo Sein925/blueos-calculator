@@ -167,15 +167,15 @@
 
   .wrapper { width: 100%; }
   .content { width: 100%; flex-direction: column; padding: 0 2 * $size-factor 4 * $size-factor 2 * $size-factor; }
-  .input-card { width: 100%; background-color: rgba(255, 255, 255, 0.1); border-radius: 8 * $size-factor; padding: 2 * $size-factor; margin-top: 20px; }
-  .input-label { font-size: 6 * $size-factor; color: rgba(255, 255, 255, 0.6); margin-bottom: 8px; }
+  .input-card { width: 100%; background-color: $card-bg; border-radius: 8 * $size-factor; padding: 2 * $size-factor; margin-top: 20px; }
+  .input-label { font-size: 6 * $size-factor; color: $text-secondary; margin-bottom: 8px; }
   .unit-row { width: 100%; display: flex; align-items: center; justify-content: space-between; margin-top: 20px; }
-  .unit-select { flex: 1; background-color: rgba(255, 255, 255, 0.1); border-radius: 8 * $size-factor; padding: 16px 12px; flex-direction: column; align-items: center; &:active { opacity: 0.4; } }
-  .unit-label { font-size: 6 * $size-factor; color: rgba(255, 255, 255, 0.6); margin-bottom: 4px; }
+  .unit-select { flex: 1; background-color: $card-bg; border-radius: 8 * $size-factor; padding: 16px 12px; flex-direction: column; align-items: center; &:active { opacity: 0.4; } }
+  .unit-label { font-size: 6 * $size-factor; color: $text-secondary; margin-bottom: 4px; }
   .unit-value { font-size: 7 * $size-factor; color: $white; }
   .swap-btn { width: 48px; height: 48px; background-color: $brand; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 12px; &:active { opacity: 0.4; } }
   .swap-icon { font-size: 28px; color: white; transform: rotate(90deg); }
-  .result-card { width: 100%; background-color: rgba(0, 255, 153, 0.15); border-radius: 8 * $size-factor; border-left-width: 3px; border-left-color: #00ff99; padding: 2 * $size-factor; margin-top: 24px; }
-  .result-label { font-size: 6 * $size-factor; color: rgba(255, 255, 255, 0.6); margin-bottom: 8px; }
-  .result-value { font-size: 8 * $size-factor; color: #00ff99; font-family: monospace; }
+  .result-card { width: 100%; background-color: $success-bg; border-radius: 8 * $size-factor; border-left-width: 3px; border-left-color: $success; padding: 2 * $size-factor; margin-top: 24px; }
+  .result-label { font-size: 6 * $size-factor; color: $text-secondary; margin-bottom: 8px; }
+  .result-value { font-size: 8 * $size-factor; color: $success; font-family: monospace; }
 </style>

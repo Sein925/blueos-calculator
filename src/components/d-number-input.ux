@@ -241,7 +241,7 @@
   }
 
   .input-display {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: $input-bg;
     border-radius: 8 * $size-factor;
     padding: 2 * $size-factor;
     display: flex;
@@ -259,7 +259,7 @@
 
   .input-label text {
     font-size: 6 * $size-factor;
-    color: rgba(255, 255, 255, 0.6);
+    color: $text-secondary;
   }
 
   .input-value {
@@ -274,7 +274,7 @@
   }
 
   .input-text.placeholder {
-    color: rgba(255, 255, 255, 0.4);
+    color: $text-placeholder;
     margin-right: 8px;
   }
 
@@ -284,7 +284,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: $overlay-bg;
     z-index: 1000;
     display: flex;
     align-items: flex-end;
@@ -293,7 +293,7 @@
 
   .keypad-panel {
     width: 100%;
-    background-color: #1a1a1a;
+    background-color: $panel-bg;
     border-radius: 12 * $size-factor 12 * $size-factor 0 0;
     padding: 4 * $size-factor;
     flex-direction: column;
@@ -340,7 +340,7 @@
   .keypad-btn {
     width: 25%;
     height: 62px;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: $card-bg;
     border-radius: 6 * $size-factor;
     display: flex;
     align-items: center;
@@ -357,7 +357,7 @@
   }
 
   .keypad-btn-fn {
-    background-color: rgba(9, 186, 7, 0.2);
+    background-color: $light-brand;
   }
 
   .keypad-btn-fn text {

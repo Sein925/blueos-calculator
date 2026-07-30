@@ -762,7 +762,7 @@
 
     .feature-card {
       width: 100%;
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: $card-bg;
       border-radius: 8 * $size-factor;
       padding: 5 * $size-factor 6 * $size-factor;
       @include flex-box-mixins(row, flex-start, center);
@@ -774,7 +774,7 @@
 
       .feature-icon {
         font-size: 56px;
-        color: #00ff99;
+        color: $success;
         margin: -12px 12px -12px 0;
         font-family: 'iconfont';
       }
@@ -896,7 +896,7 @@
   .btn {
     flex: 1;
     height: 72px;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: $card-bg;
     border-radius: 8 * $size-factor;
     @include flex-box-mixins(row, center, center);
 
@@ -920,7 +920,7 @@
   }
 
   .btn-number {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: $input-bg;
   }
 
   .btn-operator {
@@ -928,7 +928,7 @@
   }
 
   .btn-function {
-    background-color: rgba(9, 186, 7, 0.2);
+    background-color: $light-brand;
 
     text {
       color: $brand;
@@ -951,7 +951,7 @@
 
   .nav-card {
     width: 100%;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: $card-bg;
     border-radius: 8 * $size-factor;
     padding: 24px 30px;
     @include flex-box-mixins(row, flex-start, center);

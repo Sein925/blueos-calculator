@@ -5,6 +5,20 @@ $white: #ffffff;
 $gray: #999;
 $light-gray: #ccc;
 
+$success: #00ff99;
+$error: #ff6464;
+
+$card-bg: rgba(255, 255, 255, 0.1);
+$input-bg: rgba(255, 255, 255, 0.15);
+$text-secondary: rgba(255, 255, 255, 0.6);
+$text-placeholder: rgba(255, 255, 255, 0.4);
+
+$success-bg: rgba(0, 255, 153, 0.15);
+$success-active: rgba(0, 255, 153, 0.3);
+
+$panel-bg: #1a1a1a;
+$overlay-bg: rgba(0, 0, 0, 0.6);
+
 $size-factor: 5px;
 
 .hr {
