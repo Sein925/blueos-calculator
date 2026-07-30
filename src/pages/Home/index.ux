@@ -188,8 +188,7 @@
             <text class="advanced-title">{{ $t('home.advanced_title') }}</text>
           </list-item>
           <list-item type="card" style="margin-top: 4 * $size-factor">
-            <div class="feature-card" onclick="navigateTo('pages/Advanced/Equation')">
-
+            <div class="feature-card" onclick="navigateTo('pages/Advanced/Equation')" onlongpress="showFeatureDialog('equation')">
               <div class="feature-icon-wrapper">
                 <text class="feature-icon">&#xe66f;</text>
               </div>
@@ -197,8 +196,7 @@
             </div>
           </list-item>
           <list-item type="card" style="margin-top: 3 * $size-factor">
-            <div class="feature-card" onclick="navigateTo('pages/Advanced/Graph')">
-
+            <div class="feature-card" onclick="navigateTo('pages/Advanced/Graph')" onlongpress="showFeatureDialog('graph')">
               <div class="feature-icon-wrapper">
                 <text class="feature-icon">&#xe63f;</text>
               </div>
@@ -206,8 +204,7 @@
             </div>
           </list-item>
           <list-item type="card" style="margin-top: 3 * $size-factor">
-            <div class="feature-card" onclick="navigateTo('pages/Advanced/Statistics')">
-
+            <div class="feature-card" onclick="navigateTo('pages/Advanced/Statistics')" onlongpress="showFeatureDialog('statistics')">
               <div class="feature-icon-wrapper">
                 <text class="feature-icon">&#xe644;</text>
               </div>
@@ -215,8 +212,7 @@
             </div>
           </list-item>
           <list-item type="card" style="margin-top: 3 * $size-factor">
-            <div class="feature-card" onclick="navigateTo('pages/Advanced/Date')">
-
+            <div class="feature-card" onclick="navigateTo('pages/Advanced/Date')" onlongpress="showFeatureDialog('date')">
               <div class="feature-icon-wrapper">
                 <text class="feature-icon">&#xe645;</text>
               </div>
@@ -225,7 +221,6 @@
           </list-item>
           <!-- <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="navigateTo('pages/Advanced/Convert')">
-
               <div class="feature-icon-wrapper">
                 <text class="feature-icon">&#xe63c;</text>
               </div>
@@ -234,14 +229,16 @@
           </list-item> -->
           <list-item
             type="card"
-            style="margin-top: 3 * $size-factor; margin-bottom: 80px">
-            <div class="feature-card" onclick="navigateTo('pages/Advanced/Random')">
-
+            style="margin-top: 3 * $size-factor; margin-bottom: {{ hasPinnedFeatures ? '80px' : '0' }}">
+            <div class="feature-card" onclick="navigateTo('pages/Advanced/Random')" onlongpress="showFeatureDialog('random')">
               <div class="feature-icon-wrapper">
                 <text class="feature-icon">&#xe7de;</text>
               </div>
               <text class="feature-name">{{ $t('home.random') }}</text>
             </div>
+          </list-item>
+          <list-item if="{{ !hasPinnedFeatures }}" type="text" style="margin-top: 6 * $size-factor; margin-bottom: 80px;">
+            <text class="app-desc">{{ $t('home.pin_tip') }}</text>
           </list-item>
         </list>
       </div>
@@ -272,6 +269,25 @@
         </list>
       </div>
     </swiper>
+
+    <div if="{{ featureDialogVisible }}" class="dialog-mask {{ featureDialogHiding ? 'mask-hide' : 'mask-show' }}" onclick="hideFeatureDialog">
+      <div class="dialog-panel {{ featureDialogHiding ? 'pop-out' : 'pop-in' }}" onclick="stopDialogPropagation">
+        <div class="dialog-content">
+          <text class="dialog-title">{{ $t('home.' + featureDialogKey) }}</text>
+          <text class="dialog-subtitle">{{ pinnedFeatures[featureDialogKey] ? $t('home.confirm_unpin') : $t('home.confirm_pin') }}</text>
+        </div>
+        <div class="dialog-divider"></div>
+        <div class="dialog-btn-area">
+          <div class="dialog-btn" onclick="hideFeatureDialog">
+            <text class="dialog-cancel-text">{{ $t('home.cancel') }}</text>
+          </div>
+          <div class="dialog-divider-v"></div>
+          <div class="dialog-btn" onclick="toggleFeaturePin">
+            <text class="dialog-confirm-text">{{ $t('common.confirm') }}</text>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -377,9 +393,18 @@
       error: false,
       pendingFunction: '',
       expression: [],
+      featureDialogVisible: false,
+      featureDialogHiding: false,
+      featureDialogKey: '',
+      featureDialogTimer: null,
+      pinnedFeatures: {},
+      hasPinnedFeatures: false,
     },
 
-    onInit() {},
+    onInit() {
+      this.pinnedFeatures = global.pinnedFeatures || {}
+      this.updatePinnedFlag()
+    },
 
     onShow() {
       if (global.pendingHistoryItem) {
@@ -727,6 +752,52 @@
     navigateTo(uri) {
       global.router.push({ uri: uri })
     },
+
+    showFeatureDialog(key) {
+      global.triggerHaptic()
+      this.featureDialogKey = key
+      this.featureDialogHiding = false
+      this.featureDialogVisible = true
+    },
+
+    hideFeatureDialog() {
+      this.featureDialogHiding = true
+      if (this.featureDialogTimer) clearTimeout(this.featureDialogTimer)
+      this.featureDialogTimer = setTimeout(() => {
+        this.featureDialogVisible = false
+      }, 250)
+    },
+
+    stopDialogPropagation(e) {
+      if (e && e.stopPropagation) e.stopPropagation()
+    },
+
+    toggleFeaturePin() {
+      global.triggerHaptic()
+      const key = this.featureDialogKey
+      const pinned = Object.assign({}, this.pinnedFeatures)
+      if (pinned[key]) {
+        delete pinned[key]
+      } else {
+        pinned[key] = true
+      }
+      this.pinnedFeatures = pinned
+      global.pinnedFeatures = pinned
+      global.savePinnedFeatures()
+      this.updatePinnedFlag()
+      this.hideFeatureDialog()
+    },
+
+    updatePinnedFlag() {
+      let hasPin = false
+      for (const key in this.pinnedFeatures) {
+        if (this.pinnedFeatures[key]) {
+          hasPin = true
+          break
+        }
+      }
+      this.hasPinnedFeatures = hasPin
+    },
   }
 </script>
 
@@ -779,6 +850,13 @@
       }
     }
 
+    .app-desc {
+      font-size: 6 * $size-factor;
+      margin-top: 14px;
+      color: $light-gray;
+      width: 100%;
+      text-align: center;
+    }
 
     .feature-card {
       width: 100%;
@@ -993,5 +1071,131 @@
     &:active {
       opacity: 0.4;
     }
+  }
+
+  .dialog-mask {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: $overlay-bg;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .dialog-panel {
+    width: 340px;
+    flex-direction: column;
+    align-items: center;
+    background-color: $panel-bg;
+    border-radius: 28px;
+  }
+
+  .dialog-content {
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
+    width: 100%;
+  }
+
+  .dialog-title {
+    font-size: 34px;
+    color: $white;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .dialog-subtitle {
+    font-size: 26px;
+    color: $text-secondary;
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  .dialog-divider {
+    width: 100%;
+    height: 2px;
+    background-color: $card-bg;
+  }
+
+  .dialog-btn-area {
+    width: 100%;
+    height: 80px;
+    flex-direction: row;
+  }
+
+  .dialog-btn {
+    flex: 1;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+
+    &:active {
+      opacity: 0.4;
+    }
+  }
+
+  .dialog-divider-v {
+    width: 2px;
+    height: 100%;
+    background-color: $card-bg;
+  }
+
+  .dialog-cancel-text {
+    font-size: 32px;
+    color: $text-secondary;
+  }
+
+  .dialog-confirm-text {
+    font-size: 32px;
+    font-weight: bold;
+    color: $success;
+  }
+
+  @keyframes maskFadeIn {
+    0% { background-color: rgba(0, 0, 0, 0); }
+    100% { background-color: $overlay-bg; }
+  }
+
+  @keyframes maskFadeOut {
+    0% { background-color: $overlay-bg; }
+    100% { background-color: rgba(0, 0, 0, 0); }
+  }
+
+  @keyframes popIn {
+    0% { transform: scale(0.6); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  @keyframes popOut {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(0.8); opacity: 0; }
+  }
+
+  .mask-show {
+    animation-name: maskFadeIn;
+    animation-duration: 250ms;
+    animation-fill-mode: forwards;
+  }
+
+  .mask-hide {
+    animation-name: maskFadeOut;
+    animation-duration: 250ms;
+    animation-fill-mode: forwards;
+  }
+
+  .pop-in {
+    animation-name: popIn;
+    animation-duration: 350ms;
+    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation-fill-mode: forwards;
+  }
+
+  .pop-out {
+    animation-name: popOut;
+    animation-duration: 200ms;
+    animation-timing-function: ease-in;
+    animation-fill-mode: forwards;
   }
 </style>

@@ -25,10 +25,13 @@ declare const global: {
   triggerHaptic: () => void;
   pendingHistoryItem: HistoryItem | null;
   pendingDateValue: string;
+  pinnedFeatures: Record<string, boolean>;
   loadHistory: () => void;
   saveHistory: () => void;
   loadSettings: () => void;
   saveSettings: () => void;
+  loadPinnedFeatures: () => void;
+  savePinnedFeatures: () => void;
 }
 
 declare const Promise: typeof Promise

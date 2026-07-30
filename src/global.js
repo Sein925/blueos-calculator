@@ -19,9 +19,11 @@ global.inputDisplayMode = 'static'
 global.hapticEnabled = false
 global.pendingHistoryItem = null
 global.pendingDateValue = ''
+global.pinnedFeatures = {}
 
 const HISTORY_STORAGE_KEY = 'calculator_history'
 const SETTINGS_STORAGE_KEY = 'calculator_settings'
+const PINNED_STORAGE_KEY = 'calculator_pinned_features'
 
 global.loadHistory = function () {
   try {
@@ -125,4 +127,43 @@ global.triggerHaptic = function () {
   }
 }
 
+global.loadPinnedFeatures = function () {
+  try {
+    storage.get({
+      key: PINNED_STORAGE_KEY,
+      success: function (data) {
+        if (data) {
+          try {
+            global.pinnedFeatures = JSON.parse(data) || {}
+          } catch (e) {
+            global.pinnedFeatures = {}
+          }
+        } else {
+          global.pinnedFeatures = {}
+        }
+      },
+      fail: function () {
+        global.pinnedFeatures = {}
+      },
+    })
+  } catch (e) {
+    global.pinnedFeatures = {}
+  }
+}
+
+global.savePinnedFeatures = function () {
+  try {
+    storage.set({
+      key: PINNED_STORAGE_KEY,
+      value: JSON.stringify(global.pinnedFeatures),
+      success: function () {
+      },
+      fail: function () {
+      },
+    })
+  } catch (e) {
+  }
+}
+
 global.loadSettings()
+global.loadPinnedFeatures()

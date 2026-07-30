@@ -15,7 +15,6 @@
     "from": "從",
     "to": "到",
     "result": "結果",
-    "common_units": "常用單位",
     "units": {
       "m": "公尺 (m)",
       "km": "公里 (km)",
@@ -85,7 +84,11 @@
     "history": "歷史記錄",
     "other": "其他",
     "settings": "設定",
-    "about": "關於"
+    "about": "關於",
+    "cancel": "取消",
+    "confirm_pin": "是否置頂該功能？",
+    "confirm_unpin": "是否取消置頂該功能？",
+    "pin_tip": "tip: 長按功能選項可置頂哦"
   },
   "history": {
     "title": "歷史記錄",

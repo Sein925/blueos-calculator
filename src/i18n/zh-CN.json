@@ -15,7 +15,6 @@
     "from": "从",
     "to": "到",
     "result": "结果",
-    "common_units": "常用单位",
     "units": {
       "m": "米 (m)",
       "km": "千米 (km)",
@@ -85,7 +84,11 @@
     "history": "历史记录",
     "other": "其他",
     "settings": "设置",
-    "about": "关于"
+    "about": "关于",
+    "cancel": "取消",
+    "confirm_pin": "是否置顶该功能？",
+    "confirm_unpin": "是否取消置顶该功能？",
+    "pin_tip": "tip: 长按功能选项可置顶哦"
   },
   "history": {
     "title": "历史记录",

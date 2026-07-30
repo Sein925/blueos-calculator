@@ -15,7 +15,6 @@
     "from": "From",
     "to": "To",
     "result": "Result",
-    "common_units": "Common Units",
     "units": {
       "m": "Meter (m)",
       "km": "Kilometer (km)",
@@ -85,7 +84,11 @@
     "history": "History",
     "other": "Others",
     "settings": "Settings",
-    "about": "About"
+    "about": "About",
+    "cancel": "Cancel",
+    "confirm_pin": "Pin this feature to top?",
+    "confirm_unpin": "Unpin this feature?",
+    "pin_tip": "tip: Long press a feature to pin it"
   },
   "history": {
     "title": "History",
