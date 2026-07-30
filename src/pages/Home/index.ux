@@ -211,12 +211,19 @@
               <text class="feature-name">{{ $t('home.date') }}</text>
             </div>
           </list-item>
-          <list-item
-            type="card"
-            style="margin-top: 3 * $size-factor; margin-bottom: 80px">
+          <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="navigateTo('pages/Advanced/Random')">
               <text class="feature-icon">&#xe7de;</text>
               <text class="feature-name">{{ $t('home.random') }}</text>
+            </div>
+          </list-item>
+          <list-item
+            disabled="true"
+            type="card"
+            style="margin-top: 3 * $size-factor; margin-bottom: 80px">
+            <div class="feature-card" onclick="navigateTo('pages/Advanced/Convert')">
+              <text class="feature-icon">&#xe63c;</text>
+              <text class="feature-name">{{ $t('home.convert') }}</text>
             </div>
           </list-item>
         </list>

@@ -42,6 +42,7 @@
         <div class="option-card">
           <text class="card-label">{{ $t('settings.vibration') }}</text>
           <switch
+            class="switch"
             checked="{{ hapticEnabled }}"
             onchange="toggleHaptic"></switch>
         </div>

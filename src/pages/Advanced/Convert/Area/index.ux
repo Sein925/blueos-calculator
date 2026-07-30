@@ -1,0 +1,162 @@
+<import name="d-back" src="./../../../../components/d-back"></import>
+<import name="d-number-input" src="./../../../../components/d-number-input"></import>
+<import name="d-unit-picker" src="./../../../../components/d-unit-picker"></import>
+
+<template>
+  <list class="wrapper" title="true">
+    <list-item>
+      <d-back value="{{ $t('convert.area') }}"></d-back>
+    </list-item>
+
+    <list-item class="content">
+      <div class="input-card">
+        <text class="input-label">{{ $t('common.input') }}</text>
+        <d-number-input
+          label="{{ $t('convert.area') }}"
+          placeholder="{{ $t('common.click_input') }}"
+          value="{{ inputValue }}"
+          onchange="handleInputChange"
+          width="92%"></d-number-input>
+      </div>
+
+      <div class="unit-row">
+        <div class="unit-select" onclick="openUnitPicker('from')">
+          <text class="unit-label">{{ $t('convert.from') }}</text>
+          <text class="unit-value">{{ $t('convert.units.' + fromUnit) }}</text>
+        </div>
+        <div class="swap-btn" onclick="swapUnits">
+          <text class="swap-icon">&#xe62a;</text>
+        </div>
+        <div class="unit-select" onclick="openUnitPicker('to')">
+          <text class="unit-label">{{ $t('convert.to') }}</text>
+          <text class="unit-value">{{ $t('convert.units.' + toUnit) }}</text>
+        </div>
+      </div>
+
+      <div class="result-card">
+        <text class="result-label">{{ $t('convert.result') }}</text>
+        <text class="result-value">{{ result }}</text>
+      </div>
+    </list-item>
+  </list>
+
+  <d-unit-picker
+    show="{{ showPicker }}"
+    title="{{ pickerTitle }}"
+    current-unit="{{ pickerType === 'from' ? fromUnit : toUnit }}"
+    unit-list="{{ unitList }}"
+    onclose="closePicker"
+    onselect="handleUnitSelect"></d-unit-picker>
+</template>
+
+<script>
+  var UNIT_FACTORS = {
+    m2: 1,
+    km2: 1000000,
+    cm2: 0.0001,
+    mm2: 0.000001,
+    ha: 10000,
+    ac: 4046.8564224,
+    sqft: 0.09290304,
+    sqin: 0.00064516,
+  }
+
+  var UNIT_KEYS = ['m2', 'km2', 'cm2', 'mm2', 'ha', 'ac', 'sqft', 'sqin']
+
+  export default {
+    data: {
+      inputValue: '',
+      fromUnit: 'm2',
+      toUnit: 'ac',
+      result: '',
+      showPicker: false,
+      pickerType: 'from',
+      pickerTitle: '',
+      unitList: [],
+    },
+
+    onInit() {
+      this.buildUnitList()
+    },
+
+    buildUnitList() {
+      var list = []
+      for (var i = 0; i < UNIT_KEYS.length; i++) {
+        var key = UNIT_KEYS[i]
+        list.push({ key: key, label: this.$t('convert.units.' + key) })
+      }
+      this.unitList = list
+    },
+
+    handleInputChange(evt) {
+      this.inputValue = evt.value
+      this.calculate()
+    },
+
+    openUnitPicker(type) {
+      this.pickerType = type
+      this.pickerTitle = type === 'from' ? this.$t('convert.from') : this.$t('convert.to')
+      this.showPicker = true
+    },
+
+    closePicker() {
+      this.showPicker = false
+    },
+
+    handleUnitSelect(evt) {
+      var key = evt.key
+      if (this.pickerType === 'from') {
+        this.fromUnit = key
+      } else {
+        this.toUnit = key
+      }
+      this.showPicker = false
+      this.calculate()
+    },
+
+    swapUnits() {
+      var temp = this.fromUnit
+      this.fromUnit = this.toUnit
+      this.toUnit = temp
+      this.calculate()
+    },
+
+    calculate() {
+      var value = parseFloat(this.inputValue)
+      if (isNaN(value)) { this.result = ''; return }
+
+      var fromFactor = UNIT_FACTORS[this.fromUnit]
+      var toFactor = UNIT_FACTORS[this.toUnit]
+      if (!fromFactor || !toFactor) { this.result = ''; return }
+
+      var m2 = value * fromFactor
+      var result = m2 / toFactor
+      this.result = this.formatNumber(result) + ' ' + this.$t('convert.units.' + this.toUnit)
+    },
+
+    formatNumber(num) {
+      if (!isFinite(num)) return 'Error'
+      if (Math.abs(num) < 1e-10) return '0'
+      var str = num.toPrecision(10)
+      return parseFloat(str).toString()
+    },
+  }
+</script>
+
+<style lang="scss">
+  @import './../../../../assets/styles/style.scss';
+
+  .wrapper { width: 100%; }
+  .content { width: 100%; flex-direction: column; padding: 0 2 * $size-factor 4 * $size-factor 2 * $size-factor; }
+  .input-card { width: 100%; background-color: rgba(255, 255, 255, 0.1); border-radius: 8 * $size-factor; padding: 2 * $size-factor; margin-top: 20px; }
+  .input-label { font-size: 6 * $size-factor; color: rgba(255, 255, 255, 0.6); margin-bottom: 8px; }
+  .unit-row { width: 100%; display: flex; align-items: center; justify-content: space-between; margin-top: 20px; }
+  .unit-select { flex: 1; background-color: rgba(255, 255, 255, 0.1); border-radius: 8 * $size-factor; padding: 16px 12px; flex-direction: column; align-items: center; &:active { opacity: 0.4; } }
+  .unit-label { font-size: 6 * $size-factor; color: rgba(255, 255, 255, 0.6); margin-bottom: 4px; }
+  .unit-value { font-size: 7 * $size-factor; color: $white; }
+  .swap-btn { width: 48px; height: 48px; background-color: $brand; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 12px; &:active { opacity: 0.4; } }
+  .swap-icon { font-size: 28px; color: white; transform: rotate(90deg); }
+  .result-card { width: 100%; background-color: rgba(0, 255, 153, 0.15); border-radius: 8 * $size-factor; border-left-width: 3px; border-left-color: #00ff99; padding: 2 * $size-factor; margin-top: 24px; }
+  .result-label { font-size: 6 * $size-factor; color: rgba(255, 255, 255, 0.6); margin-bottom: 8px; }
+  .result-value { font-size: 8 * $size-factor; color: #00ff99; font-family: monospace; }
+</style>

@@ -1,4 +1,5 @@
 $brand: #09ba07;
+$light-brand: #0b2f0b;
 
 $white: #ffffff;
 $gray: #999;
@@ -7,9 +8,14 @@ $light-gray: #ccc;
 $size-factor: 5px;
 
 .hr {
-  height: 1px;
+  height: 2px;
   background-color: #333;
   margin: 30px 15px 0 15px;
+}
+
+.switch {
+  thumb-color: $brand;
+  track-color: $light-brand;
 }
 
 @mixin flex-box-mixins(

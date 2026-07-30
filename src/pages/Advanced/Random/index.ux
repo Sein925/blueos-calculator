@@ -59,6 +59,7 @@
       <div if="{{ mode === 'int' }}" class="input-card">
         <text class="input-label">{{ $t('random.unique') }}</text>
         <switch
+          class="switch"
           checked="{{ unique }}"
           onchange="handleUniqueChange"></switch>
       </div>

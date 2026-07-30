@@ -1,0 +1,90 @@
+<import name="d-back" src="./../../../components/d-back"></import>
+
+<template>
+  <list class="wrapper" title="true">
+    <list-item>
+      <d-back value="{{ $t('convert.title') }}"></d-back>
+    </list-item>
+    <list-item type="card" class="content">
+      <div class="nav-card" onclick="openLength">
+        <text class="nav-label">{{ $t('convert.length') }}</text>
+      </div>
+      <div class="nav-card" style="margin-top: 14px" onclick="openWeight">
+        <text class="nav-label">{{ $t('convert.weight') }}</text>
+      </div>
+      <div class="nav-card" style="margin-top: 14px" onclick="openTemperature">
+        <text class="nav-label">{{ $t('convert.temperature') }}</text>
+      </div>
+      <div class="nav-card" style="margin-top: 14px" onclick="openArea">
+        <text class="nav-label">{{ $t('convert.area') }}</text>
+      </div>
+      <div class="nav-card" style="margin-top: 14px" onclick="openVolume">
+        <text class="nav-label">{{ $t('convert.volume') }}</text>
+      </div>
+    </list-item>
+  </list>
+</template>
+
+<script>
+  export default {
+    openLength() {
+      global.router.push({
+        uri: 'pages/Advanced/Convert/Length',
+      })
+    },
+
+    openWeight() {
+      global.router.push({
+        uri: 'pages/Advanced/Convert/Weight',
+      })
+    },
+
+    openTemperature() {
+      global.router.push({
+        uri: 'pages/Advanced/Convert/Temperature',
+      })
+    },
+
+    openArea() {
+      global.router.push({
+        uri: 'pages/Advanced/Convert/Area',
+      })
+    },
+
+    openVolume() {
+      global.router.push({
+        uri: 'pages/Advanced/Convert/Volume',
+      })
+    },
+  }
+</script>
+
+<style lang="scss">
+  @import './../../../assets/styles/style.scss';
+
+  .wrapper {
+    width: 100%;
+  }
+
+  .content {
+    width: 100%;
+    padding: 2 * $size-factor;
+    flex-direction: column;
+  }
+
+  .nav-card {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8 * $size-factor;
+    padding: 24px 30px;
+
+    .nav-label {
+      font-size: 8 * $size-factor;
+      color: $white;
+    }
+
+    &:active {
+      opacity: 0.4;
+    }
+  }
+</style>
