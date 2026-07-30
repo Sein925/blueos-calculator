@@ -187,43 +187,60 @@
             <text class="title-icon">&#xe629;</text>
             <text class="advanced-title">{{ $t('home.advanced_title') }}</text>
           </list-item>
-          <list-item type="card" style="margin-top: 3 * $size-factor">
+          <list-item type="card" style="margin-top: 4 * $size-factor">
             <div class="feature-card" onclick="navigateTo('pages/Advanced/Equation')">
-              <text class="feature-icon">&#xe66f;</text>
+
+              <div class="feature-icon-wrapper">
+                <text class="feature-icon">&#xe66f;</text>
+              </div>
               <text class="feature-name">{{ $t('home.equation') }}</text>
             </div>
           </list-item>
           <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="navigateTo('pages/Advanced/Graph')">
-              <text class="feature-icon">&#xe63f;</text>
+
+              <div class="feature-icon-wrapper">
+                <text class="feature-icon">&#xe63f;</text>
+              </div>
               <text class="feature-name">{{ $t('home.graph') }}</text>
             </div>
           </list-item>
           <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="navigateTo('pages/Advanced/Statistics')">
-              <text class="feature-icon">&#xe644;</text>
+
+              <div class="feature-icon-wrapper">
+                <text class="feature-icon">&#xe644;</text>
+              </div>
               <text class="feature-name">{{ $t('home.statistics') }}</text>
             </div>
           </list-item>
           <list-item type="card" style="margin-top: 3 * $size-factor">
             <div class="feature-card" onclick="navigateTo('pages/Advanced/Date')">
-              <text class="feature-icon">&#xe645;</text>
+
+              <div class="feature-icon-wrapper">
+                <text class="feature-icon">&#xe645;</text>
+              </div>
               <text class="feature-name">{{ $t('home.date') }}</text>
             </div>
           </list-item>
-          <list-item type="card" style="margin-top: 3 * $size-factor">
-            <div class="feature-card" onclick="navigateTo('pages/Advanced/Random')">
-              <text class="feature-icon">&#xe7de;</text>
-              <text class="feature-name">{{ $t('home.random') }}</text>
+          <!-- <list-item type="card" style="margin-top: 3 * $size-factor">
+            <div class="feature-card" onclick="navigateTo('pages/Advanced/Convert')">
+
+              <div class="feature-icon-wrapper">
+                <text class="feature-icon">&#xe63c;</text>
+              </div>
+              <text class="feature-name">{{ $t('home.convert') }}</text>
             </div>
-          </list-item>
+          </list-item> -->
           <list-item
-            disabled="true"
             type="card"
             style="margin-top: 3 * $size-factor; margin-bottom: 80px">
-            <div class="feature-card" onclick="navigateTo('pages/Advanced/Convert')">
-              <text class="feature-icon">&#xe63c;</text>
-              <text class="feature-name">{{ $t('home.convert') }}</text>
+            <div class="feature-card" onclick="navigateTo('pages/Advanced/Random')">
+
+              <div class="feature-icon-wrapper">
+                <text class="feature-icon">&#xe7de;</text>
+              </div>
+              <text class="feature-name">{{ $t('home.random') }}</text>
             </div>
           </list-item>
         </list>
@@ -741,24 +758,27 @@
 
     .title {
       @include flex-box-mixins(column, center, center);
-
-      .advanced-title {
-        color: $light-gray;
-        font-size: 45px;
-        margin-top: 4 * $size-factor;
-
-        @media (device: watch-round) {
-          font-size: 40px;
-        }
-      }
     }
 
     .title-icon {
-      font-size: 66px;
-      color: $light-gray;
-      margin: 10px 0 -20px 0;
+      font-size: 64px;
+      color: $success;
       font-family: 'iconfont';
+
+      @media (device: watch-round) {
+        font-size: 54px;
+      }
     }
+
+    .advanced-title {
+      color: $light-gray;
+      font-size: 44px;
+
+      @media (device: watch-round) {
+        font-size: 40px;
+      }
+    }
+
 
     .feature-card {
       width: 100%;
@@ -772,10 +792,19 @@
         opacity: 0.4;
       }
 
+      .feature-icon-wrapper {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(to bottom, rgba(0, 255, 153, 0.35), rgba(0, 255, 153, 0.05));
+        border-radius: 10 * $size-factor;
+        @include flex-box-mixins(row, center, center);
+        margin-right: 3 * $size-factor;
+        flex-shrink: 0;
+      }
+
       .feature-icon {
-        font-size: 56px;
+        font-size: 42px;
         color: $success;
-        margin: -12px 12px -12px 0;
         font-family: 'iconfont';
       }
 

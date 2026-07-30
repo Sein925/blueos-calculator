@@ -119,7 +119,6 @@
     },
 
     focusInput() {
-      global.triggerHaptic()
       this.inputValue = this.lastRaw || this.value || '0'
       this.hasDecimal = this.inputValue.indexOf('.') !== -1
       this.isNegative = this.inputValue.indexOf('-') !== -1
