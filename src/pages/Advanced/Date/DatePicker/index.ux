@@ -75,10 +75,10 @@
 
   .date-picker {
     width: 466px;
-    height: 260px;
+    height: 250px;
     linecolor: $brand;
     font-size: 44px;
-    selected-font-size: 56px;
+    selected-font-size: 60px;
 
     @media (device: watch-round) {
       height: 210px;
@@ -89,16 +89,17 @@
 
   .footer {
     width: 100%;
-    margin-top: 44px;
+    justify-content: center;
+    margin-top: 48px;
     padding-left: 10px;
     padding-right: 10px;
   }
 
   .confirm-btn {
-    width: 100%;
+    width: 90%;
     padding: 3 * $size-factor 0;
     background-color: $brand;
-    border-radius: 8 * $size-factor;
+    border-radius: 10 * $size-factor;
     flex-direction: row;
     justify-content: center;
 

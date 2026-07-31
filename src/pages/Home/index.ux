@@ -202,7 +202,7 @@
             </div>
           </list-item>
           <list-item if="{{ hasPinnedFeatures }}">
-            <text class="section-title">{{ $t('home.feature-all') }}</text>
+            <text class="section-title">{{ $t('home.all') }}</text>
           </list-item>
           <list-item
             for="(index, item) in unpinnedList"
@@ -833,10 +833,10 @@
 
     .advanced-title {
       color: $light-gray;
-      font-size: 44px;
+      font-size: 46px;
 
       @media (device: watch-round) {
-        font-size: 40px;
+        font-size: 44px;
       }
     }
 

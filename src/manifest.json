@@ -2,7 +2,7 @@
   "package": "com.dasein.calculator",
   "name": "${appName}",
   "versionName": "1.2.1",
-  "versionCode": 260724,
+  "versionCode": 260731,
   "appCategory": [
     "education"
   ],
@@ -79,25 +79,7 @@
       },
       "pages/Advanced/Statistics": {
         "component": "index"
-      },
-      "pages/Advanced/Convert": {
-        "component": "index"
-      },
-      "pages/Advanced/Convert/Area": {
-        "component": "index"
-      },
-      "pages/Advanced/Convert/Length": {
-        "component": "index"
-      },
-      "pages/Advanced/Convert/Temperature": {
-        "component": "index"
-      },
-      "pages/Advanced/Convert/Volume": {
-        "component": "index"
-      },
-      "pages/Advanced/Convert/Weight": {
-        "component": "index"
-      },
+       },
       "pages/Advanced/Random": {
         "component": "index"
       }
