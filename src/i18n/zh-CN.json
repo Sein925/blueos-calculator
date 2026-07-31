@@ -74,6 +74,7 @@
   },
   "home": {
     "advanced_title": "高级功能",
+    "pinned": "已置顶",
     "equation": "方程求解",
     "graph": "函数绘图",
     "statistics": "统计分析",
@@ -88,7 +89,8 @@
     "cancel": "取消",
     "confirm_pin": "是否置顶该功能？",
     "confirm_unpin": "是否取消置顶该功能？",
-    "pin_tip": "tip: 长按功能选项可置顶哦"
+    "pin_tip": "tip: 长按功能选项可置顶哦",
+    "all": "全部"
   },
   "history": {
     "title": "历史记录",

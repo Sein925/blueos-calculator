@@ -74,6 +74,7 @@
   },
   "home": {
     "advanced_title": "Advanced Functions",
+    "pinned": "Pinned",
     "equation": "Equation Solver",
     "graph": "Function Graph",
     "statistics": "Statistics",
@@ -88,7 +89,8 @@
     "cancel": "Cancel",
     "confirm_pin": "Pin this feature to top?",
     "confirm_unpin": "Unpin this feature?",
-    "pin_tip": "tip: Long press a feature to pin it"
+    "pin_tip": "tip: Long press a feature to pin it",
+    "all": "All"
   },
   "history": {
     "title": "History",

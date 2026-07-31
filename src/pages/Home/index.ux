@@ -183,61 +183,39 @@
 
       <div class="swiper-slide advanced-panel">
         <list class="content" title="true">
-          <list-item class="title">
+          <list-item class="title" style="margin-top: 20px">
             <text class="title-icon">&#xe629;</text>
             <text class="advanced-title">{{ $t('home.advanced_title') }}</text>
           </list-item>
-          <list-item type="card" style="margin-top: 4 * $size-factor">
-            <div class="feature-card" onclick="navigateTo('pages/Advanced/Equation')" onlongpress="showFeatureDialog('equation')">
-              <div class="feature-icon-wrapper">
-                <text class="feature-icon">&#xe66f;</text>
-              </div>
-              <text class="feature-name">{{ $t('home.equation') }}</text>
-            </div>
+          <list-item if="{{ hasPinnedFeatures }}">
+            <text class="section-title">{{ $t('home.pinned') }}</text>
           </list-item>
-          <list-item type="card" style="margin-top: 3 * $size-factor">
-            <div class="feature-card" onclick="navigateTo('pages/Advanced/Graph')" onlongpress="showFeatureDialog('graph')">
-              <div class="feature-icon-wrapper">
-                <text class="feature-icon">&#xe63f;</text>
-              </div>
-              <text class="feature-name">{{ $t('home.graph') }}</text>
-            </div>
-          </list-item>
-          <list-item type="card" style="margin-top: 3 * $size-factor">
-            <div class="feature-card" onclick="navigateTo('pages/Advanced/Statistics')" onlongpress="showFeatureDialog('statistics')">
-              <div class="feature-icon-wrapper">
-                <text class="feature-icon">&#xe644;</text>
-              </div>
-              <text class="feature-name">{{ $t('home.statistics') }}</text>
-            </div>
-          </list-item>
-          <list-item type="card" style="margin-top: 3 * $size-factor">
-            <div class="feature-card" onclick="navigateTo('pages/Advanced/Date')" onlongpress="showFeatureDialog('date')">
-              <div class="feature-icon-wrapper">
-                <text class="feature-icon">&#xe645;</text>
-              </div>
-              <text class="feature-name">{{ $t('home.date') }}</text>
-            </div>
-          </list-item>
-          <!-- <list-item type="card" style="margin-top: 3 * $size-factor">
-            <div class="feature-card" onclick="navigateTo('pages/Advanced/Convert')">
-              <div class="feature-icon-wrapper">
-                <text class="feature-icon">&#xe63c;</text>
-              </div>
-              <text class="feature-name">{{ $t('home.convert') }}</text>
-            </div>
-          </list-item> -->
           <list-item
+            for="(index, item) in pinnedList"
             type="card"
-            style="margin-top: 3 * $size-factor; margin-bottom: {{ hasPinnedFeatures ? '80px' : '0' }}">
-            <div class="feature-card" onclick="navigateTo('pages/Advanced/Random')" onlongpress="showFeatureDialog('random')">
+            style="margin-top: 4px">
+            <div class="feature-card" onclick="navigateTo(item.route)" onlongpress="showFeatureDialog(item.key)">
               <div class="feature-icon-wrapper">
-                <text class="feature-icon">&#xe7de;</text>
+                <text class="feature-icon">{{ item.icon }}</text>
               </div>
-              <text class="feature-name">{{ $t('home.random') }}</text>
+              <text class="feature-name">{{ $t('home.' + item.key) }}</text>
             </div>
           </list-item>
-          <list-item if="{{ !hasPinnedFeatures }}" type="text" style="margin-top: 6 * $size-factor; margin-bottom: 80px;">
+          <list-item if="{{ hasPinnedFeatures }}">
+            <text class="section-title">{{ $t('home.feature-all') }}</text>
+          </list-item>
+          <list-item
+            for="(index, item) in unpinnedList"
+            type="card"
+            style="margin-top: 4px">
+            <div class="feature-card" onclick="navigateTo(item.route)" onlongpress="showFeatureDialog(item.key)">
+              <div class="feature-icon-wrapper">
+                <text class="feature-icon">{{ item.icon }}</text>
+              </div>
+              <text class="feature-name">{{ $t('home.' + item.key) }}</text>
+            </div>
+          </list-item>
+          <list-item if="{{ !hasPinnedFeatures }}" type="text">
             <text class="app-desc">{{ $t('home.pin_tip') }}</text>
           </list-item>
         </list>
@@ -245,7 +223,7 @@
 
       <div class="swiper-slide nav-panel">
         <list class="content">
-          <list-item>
+          <list-item style="margin-top: 15px">
             <text class="section-title">{{ $t('home.calculation') }}</text>
           </list-item>
           <list-item type="card" style="margin-top: 14px">
@@ -292,6 +270,8 @@
 </template>
 
 <script>
+  import features from './features.js'
+
   const PI = 3.141592653589793
   const E = 2.718281828459045
 
@@ -399,6 +379,9 @@
       featureDialogTimer: null,
       pinnedFeatures: {},
       hasPinnedFeatures: false,
+      features: features,
+      pinnedList: [],
+      unpinnedList: [],
     },
 
     onInit() {
@@ -790,13 +773,20 @@
 
     updatePinnedFlag() {
       let hasPin = false
-      for (const key in this.pinnedFeatures) {
-        if (this.pinnedFeatures[key]) {
+      const pinned = []
+      const unpinned = []
+      for (let i = 0; i < this.features.length; i++) {
+        const f = this.features[i]
+        if (this.pinnedFeatures[f.key]) {
+          pinned.push(f)
           hasPin = true
-          break
+        } else {
+          unpinned.push(f)
         }
       }
       this.hasPinnedFeatures = hasPin
+      this.pinnedList = pinned
+      this.unpinnedList = unpinned
     },
   }
 </script>
@@ -824,7 +814,7 @@
   .advanced-panel {
     .content {
       width: 100%;
-      padding: 4 * $size-factor 2 * $size-factor;
+      padding: 0 10px 80px 10px;
     }
 
     .title {
@@ -903,7 +893,7 @@
   .nav-panel {
     .content {
       width: 100%;
-      padding: 3 * $size-factor 2 * $size-factor;
+      padding: 0 2 * $size-factor;
     }
   }
 
