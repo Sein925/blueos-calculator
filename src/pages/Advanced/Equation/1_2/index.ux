@@ -133,6 +133,9 @@
     if (a === 0) return b
     if (b === 0) return a
 
+    // 位运算（|、>>）会把小数截断为 0 导致死循环，非整数参数直接返回 1（不化简）
+    if (Math.floor(a) !== a || Math.floor(b) !== b) return 1
+
     // 找到 a 和 b 中 2 的最高次幂因子
     let shift = 0
     while (((a | b) & 1) === 0) {
@@ -190,10 +193,10 @@
     const [intPart, decPart = ''] = s.split('.')
     if (!decPart) return { num: parseInt(intPart), den: 1 }
     const den = Math.pow(10, decPart.length)
+    // parseInt(intPart + decPart) 已含符号（如 "-1.5625" → -15625），直接约分即可
     const num = parseInt(intPart + decPart)
     const g = gcd(Math.abs(num), den)
-    const sign = n < 0 ? -1 : 1
-    return { num: sign * (num / g), den: den / g }
+    return { num: num / g, den: den / g }
   }
 
   // 最小公倍数
@@ -269,20 +272,14 @@
     return f.num + '/' + f.den
   }
 
-  // 检查 delta 是否为完全平方分数 (p/q)²
-  // 返回 { p, q }；q 是使 sqrt(delta) * q 为整数的最小 q
-  // 例如 delta=6.25 → sqrt=2.5 → { p: 5, q: 2 }，即 √(25/4)
-  // delta=2.25 → sqrt=1.5 → { p: 3, q: 2 }
-  // delta=6（无理）→ null
-  function tryRationalSqrt(d) {
-    if (d < 0) return null
-    const sqrtD = Math.sqrt(d)
-    for (let q = 1; q <= 1000; q++) {
-      const p = sqrtD * q
-      if (Math.abs(p - Math.round(p)) < 1e-9) {
-        return { p: Math.round(p), q }
-      }
-    }
+  // 基于精确分数判断 delta 是否为完全平方分数 (p/q)²（无 q 上限、无浮点容差）
+  // 例如 delta=25/4 → { p: 5, q: 2 }，即 √(25/4)；delta=9/4 → { p: 3, q: 2 }
+  // delta 非有理平方（如 6）→ null
+  function tryRationalSqrtExact(num, den) {
+    if (num <= 0) return null
+    const p = Math.round(Math.sqrt(num))
+    const q = Math.round(Math.sqrt(den))
+    if (p * p === num && q * q === den) return { p, q }
     return null
   }
 
@@ -468,7 +465,7 @@
         this.showRoots = false
         this.showSimpleText = true
         const realPart = -b / (2 * a)
-        const imagPart = Math.sqrt(-delta) / (2 * a)
+        const imagPart = Math.sqrt(-delta) / (2 * Math.abs(a))
         this.simpleText =
           'Δ = ' +
           this.formatNumber(delta) +
@@ -513,11 +510,23 @@
       if (isInteger(sqrtDelta)) {
         const sqrtD = Math.round(sqrtDelta)
 
+        // 用精确分数算根，避免浮点 -b±sqrtD、2a 传入 gcd（位运算截断小数会导致死循环）
+        // x = (-b ± sqrtD)/(2a) = ((-bFrac.num ± sqrtD*bFrac.den) * aFrac.den) / (bFrac.den * 2*aFrac.num)
+        const aFracN = this.aFrac.num
+        const aFracD = this.aFrac.den
+        const bFracN = this.bFrac.num
+        const bFracD = this.bFrac.den
+        const rootFrac = sign =>
+          simplifyFraction(
+            (-bFracN + sign * sqrtD * bFracD) * aFracD,
+            bFracD * 2 * aFracN
+          )
+
         if (delta > 0) {
           this.rootsLabel = this.$t('equation_1_2.two_roots')
           this.showX2 = true
 
-          const frac1 = simplifyFraction(-b + sqrtD, 2 * a)
+          const frac1 = rootFrac(1)
           if (frac1.den === 1) {
             this.x1IsInt = true
             this.x1IntValue = frac1.num.toString()
@@ -529,7 +538,7 @@
             this.x1Line = getFractionLine(maxLen1)
           }
 
-          const frac2 = simplifyFraction(-b - sqrtD, 2 * a)
+          const frac2 = rootFrac(-1)
           if (frac2.den === 1) {
             this.x2IsInt = true
             this.x2IntValue = frac2.num.toString()
@@ -545,7 +554,7 @@
           this.showX2 = false
           this.isDoubleRoot = true
 
-          const frac = simplifyFraction(-b, 2 * a)
+          const frac = rootFrac(0)
           if (frac.den === 1) {
             this.x1IsInt = true
             this.x1IntValue = frac.num.toString()
@@ -562,7 +571,7 @@
 
       // 分支 1.5：delta 是有理平方 (p/q)²（如 6.25 = (5/2)²、2.25 = (3/2)²）
       // 把 -b 也按 q 整数化后用分数算根，避免落入根式分支后被错误 round
-      const rationalSqrt = tryRationalSqrt(delta)
+      const rationalSqrt = tryRationalSqrtExact(deltaFrac.num, deltaFrac.den)
       if (rationalSqrt) {
         const p = rationalSqrt.p
         const q = rationalSqrt.q
@@ -634,24 +643,32 @@
       }
 
       // 算 x = N ± (K*sqrt(D)/M) / (2a)
-      //   = N.num/N.den ± (K*aFrac.den)*sqrt(D) / (M*2aFrac.num)
-      // 整体分子：N.num*M*2a.num ± K*aFrac.den*sqrt(D)*N.den
-      // 整体分母：N.den*M*2a.num
-      // numInt = N.num * M * 2a.num
-      // coefK  = K * aFrac.den * N.den
-      // denInt = N.den * M * 2a.num
+      //   = N.num/N.den ± (K*twoA.den)*sqrt(D) / (M*twoA.num)
+      // 注意：twoA = 2*aFrac 是约分后的分数，sqrt(Δ)/(2a) 也必须用约分后的 twoA，
+      // 否则当 a 是 x/2 形式（twoA 约掉因子 2）时，根式系数会多算 aFrac.den/twoA.den 倍。
+      // 整体分子：N.num*M*twoA.num ± K*twoA.den*sqrt(D)*N.den
+      // 整体分母：N.den*M*twoA.num
+      // numInt = N.num * M * twoA.num
+      // coefK  = K * twoA.den * N.den
+      // denInt = N.den * M * twoA.num
       const numInt = N.num * M * twoA.num
-      const coefK = K * this.aFrac.den * N.den
+      const coefK = K * twoA.den * N.den
       const denInt = N.den * M * twoA.num
 
       // 整体化简：三者最大公因
       const g = gcd3(Math.abs(numInt), Math.abs(coefK), Math.abs(denInt))
-      const N_out = numInt / g
-      const K_out = coefK / g
-      const Den_out = denInt / g
+      let N_out = numInt / g
+      let K_out = coefK / g
+      let Den_out = denInt / g
 
-      this.rootsLabel = delta > 0 ? '有两个不等实根：' : '有两个相等实根：'
-      this.isDoubleRoot = delta === 0
+      // 分母符号归一化：保证 Den_out > 0（a<0 时 twoA.num<0 会令 Den_out 为负）
+      if (Den_out < 0) {
+        N_out = -N_out
+        K_out = -K_out
+        Den_out = -Den_out
+      }
+
+      this.rootsLabel = this.$t('equation_1_2.two_roots')
 
       // x1 = N_out + K_out*sqrt(D),  x2 = N_out - K_out*sqrt(D)
       // 共同根号部分：|K_out|*sqrt(D)

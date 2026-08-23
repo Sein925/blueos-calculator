@@ -1,8 +1,8 @@
 {
   "package": "com.dasein.calculator",
   "name": "${appName}",
-  "versionName": "1.2.1",
-  "versionCode": 260731,
+  "versionName": "1.2.2",
+  "versionCode": 260823,
   "appCategory": [
     "education"
   ],
