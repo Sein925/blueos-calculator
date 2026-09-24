@@ -580,7 +580,9 @@
         // 不再 numToFrac(b) 从浮点重建，避免二次误差
         const bFrac = this.bFrac
         const aFrac = this.aFrac
-        const commonDen = lcm(bFrac.den, q)
+        // 分母必须同时覆盖 q 和 aFrac.den，否则 twoAInt 可能不是整数，
+        // 传给 gcd（位运算/取余）会算出错误结果
+        const commonDen = lcm(lcm(bFrac.den, q), aFrac.den)
 
         // 把所有项乘以 commonDen 转为整数
         const bInt = bFrac.num * (commonDen / bFrac.den)

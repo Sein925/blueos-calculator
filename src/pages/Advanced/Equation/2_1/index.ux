@@ -156,6 +156,20 @@
     return { num: numInt / g, den: denInt / g }
   }
 
+  // 小数转精确分数（makeFrac 会把小数四舍五入成整数，输入 0.1 会变成 0）
+  function numToFrac(n) {
+    if (!isFinite(n)) return { num: 0, den: 1 }
+    if (Math.floor(n) === n) return { num: n, den: 1 }
+    const s = n.toFixed(12).replace(/\.?0+$/, '')
+    const [intPart, decPart = ''] = s.split('.')
+    if (!decPart) return { num: parseInt(intPart), den: 1 }
+    const den = Math.pow(10, decPart.length)
+    // parseInt(intPart + decPart) 已含符号（如 "-1.5625" → -15625），直接约分即可
+    const num = parseInt(intPart + decPart)
+    const g = gcd(Math.abs(num), den)
+    return { num: num / g, den: den / g }
+  }
+
   // 分数减法
   function subF(a, b) {
     return makeFrac(a.num * b.den - b.num * a.den, a.den * b.den)
@@ -216,7 +230,7 @@
       if (evt.isFraction) {
         this.a1Frac = { num: evt.num, den: evt.den }
       } else {
-        this.a1Frac = makeFrac(parseFloat(evt.value), 1) || { num: 1, den: 1 }
+        this.a1Frac = numToFrac(parseFloat(evt.value)) || { num: 1, den: 1 }
       }
     },
     handleChangeB1(evt) {
@@ -224,7 +238,7 @@
       if (evt.isFraction) {
         this.b1Frac = { num: evt.num, den: evt.den }
       } else {
-        this.b1Frac = makeFrac(parseFloat(evt.value), 1) || { num: 1, den: 1 }
+        this.b1Frac = numToFrac(parseFloat(evt.value)) || { num: 1, den: 1 }
       }
     },
     handleChangeC1(evt) {
@@ -232,7 +246,7 @@
       if (evt.isFraction) {
         this.c1Frac = { num: evt.num, den: evt.den }
       } else {
-        this.c1Frac = makeFrac(parseFloat(evt.value), 1) || { num: 0, den: 1 }
+        this.c1Frac = numToFrac(parseFloat(evt.value)) || { num: 0, den: 1 }
       }
     },
     handleChangeA2(evt) {
@@ -240,7 +254,7 @@
       if (evt.isFraction) {
         this.a2Frac = { num: evt.num, den: evt.den }
       } else {
-        this.a2Frac = makeFrac(parseFloat(evt.value), 1) || { num: 1, den: 1 }
+        this.a2Frac = numToFrac(parseFloat(evt.value)) || { num: 1, den: 1 }
       }
     },
     handleChangeB2(evt) {
@@ -248,7 +262,7 @@
       if (evt.isFraction) {
         this.b2Frac = { num: evt.num, den: evt.den }
       } else {
-        this.b2Frac = makeFrac(parseFloat(evt.value), 1) || { num: 1, den: 1 }
+        this.b2Frac = numToFrac(parseFloat(evt.value)) || { num: 1, den: 1 }
       }
     },
     handleChangeC2(evt) {
@@ -256,7 +270,7 @@
       if (evt.isFraction) {
         this.c2Frac = { num: evt.num, den: evt.den }
       } else {
-        this.c2Frac = makeFrac(parseFloat(evt.value), 1) || { num: 0, den: 1 }
+        this.c2Frac = numToFrac(parseFloat(evt.value)) || { num: 0, den: 1 }
       }
     },
 
@@ -330,7 +344,7 @@
         const y = Dy.num / Dy.den / (D.num / D.den)
         this.simpleText =
           'D = ' +
-          (D.num / D.den).toString() +
+          this.formatNumber(D.num / D.den) +
           '\nx = ' +
           this.formatNumber(x) +
           '\ny = ' +
@@ -339,7 +353,7 @@
       }
 
       this.showSolutions = true
-      this.dValue = D.num / D.den + ''
+      this.dValue = this.formatNumber(D.num / D.den)
 
       // x = Dx / D：用整数化结果传给 simplifyFraction
       const xFrac = simplifyFraction(Dx.num * D.den, Dx.den * D.num)

@@ -93,6 +93,20 @@
     return { num: numInt / g, den: denInt / g }
   }
 
+  // 小数转精确分数（makeFrac 会把小数四舍五入成整数，输入 0.1 会变成 0）
+  function numToFrac(n) {
+    if (!isFinite(n)) return { num: 0, den: 1 }
+    if (Math.floor(n) === n) return { num: n, den: 1 }
+    const s = n.toFixed(12).replace(/\.?0+$/, '')
+    const [intPart, decPart = ''] = s.split('.')
+    if (!decPart) return { num: parseInt(intPart), den: 1 }
+    const den = Math.pow(10, decPart.length)
+    // parseInt(intPart + decPart) 已含符号（如 "-1.5625" → -15625），直接约分即可
+    const num = parseInt(intPart + decPart)
+    const g = gcd(Math.abs(num), den)
+    return { num: num / g, den: den / g }
+  }
+
   // 分数减法
   function subF(a, b) {
     return makeFrac(a.num * b.den - b.num * a.den, a.den * b.den)
@@ -140,7 +154,7 @@
       if (evt.isFraction) {
         this.aFrac = { num: evt.num, den: evt.den }
       } else {
-        this.aFrac = makeFrac(parseFloat(evt.value), 1) || { num: 1, den: 1 }
+        this.aFrac = numToFrac(parseFloat(evt.value)) || { num: 1, den: 1 }
       }
     },
     handleChangeB(evt) {
@@ -148,7 +162,7 @@
       if (evt.isFraction) {
         this.bFrac = { num: evt.num, den: evt.den }
       } else {
-        this.bFrac = makeFrac(parseFloat(evt.value), 1) || { num: 0, den: 1 }
+        this.bFrac = numToFrac(parseFloat(evt.value)) || { num: 0, den: 1 }
       }
     },
     handleChangeC(evt) {
@@ -156,7 +170,7 @@
       if (evt.isFraction) {
         this.cFrac = { num: evt.num, den: evt.den }
       } else {
-        this.cFrac = makeFrac(parseFloat(evt.value), 1) || { num: 0, den: 1 }
+        this.cFrac = numToFrac(parseFloat(evt.value)) || { num: 0, den: 1 }
       }
     },
 
