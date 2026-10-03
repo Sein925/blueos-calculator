@@ -319,7 +319,9 @@
       isLoading: false,
       compiledFns: [null, null, null],
       inputDisplayMode: 'static',
-      displayExpr: this.$t('graph.input_hint'),
+      // data 在组件实例初始化前解析，此处不能调用 this.$t（会取不到导致实例创建失败），
+      // 占位文案统一在 onInit/updateDisplayExpr 里设置
+      displayExpr: '',
       maxDisplayLen: 12,
     },
 
@@ -398,7 +400,7 @@
     updateDisplayExpr() {
       var expr = this.expressions[this.activeExprIndex] || ''
       if (expr.length === 0) {
-        this.displayExpr = '输入函数'
+        this.displayExpr = this.$t('graph.input_hint')
         return
       }
       var maxLen = this.maxDisplayLen
@@ -1057,13 +1059,20 @@
 
   .buttons-container {
     width: 100%;
+    display: flex;
     @include flex-box-mixins(column, space-between, space-between);
+
+    @media (device: watch-round) {
+      justify-content: flex-start;
+    }
   }
 
   .button-row {
     width: 100%;
+    display: flex;
+    // 不使用 gap：部分设备（如 watch6）对无 display:flex 的 flex 容器不支持 gap，
+    // 会导致整行按键塌陷为 0 高度、键盘区域显示为空白（与主页键盘保持一致的做法）
     @include flex-box-mixins(row, space-between, center);
-    gap: 8px;
   }
 
   .btn {
