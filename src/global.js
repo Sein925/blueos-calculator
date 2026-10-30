@@ -1,14 +1,12 @@
 import router from '@blueos.app.appmanager.router'
 import storage from '@blueos.storage.storage'
 import fetch from '@blueos.network.fetch'
-import device from '@blueos.hardware.deviceInfo'
 import app from '@blueos.app.context'
 import vibrator from '@blueos.hardware.vibrator.vibrator'
 
 global.router = router
 global.storage = storage
 global.fetch = fetch
-global.device = device
 global.app = app
 global.vibrator = vibrator
 
@@ -16,6 +14,7 @@ global.calculatorHistory = []
 global.angleMode = 'deg'
 global.equationOutputMode = 'exact'
 global.inputDisplayMode = 'static'
+global.thousandSeparator = true
 global.hapticEnabled = false
 global.pendingHistoryItem = null
 global.pendingDateValue = ''
@@ -68,6 +67,7 @@ global.loadSettings = function () {
     global.angleMode = 'deg'
     global.equationOutputMode = 'exact'
     global.inputDisplayMode = 'static'
+    global.thousandSeparator = true
     global.hapticEnabled = false
   }
   try {
@@ -80,6 +80,8 @@ global.loadSettings = function () {
             global.angleMode = settings.angleMode || 'deg'
             global.equationOutputMode = settings.equationOutputMode || 'exact'
             global.inputDisplayMode = settings.inputDisplayMode || 'marquee'
+            // 老版本没有这个字段，按开启处理
+            global.thousandSeparator = settings.thousandSeparator !== false
             global.hapticEnabled = settings.hapticEnabled === true
           } catch (e) {
             applyDefaults()
@@ -103,6 +105,7 @@ global.saveSettings = function () {
       angleMode: global.angleMode || 'deg',
       equationOutputMode: global.equationOutputMode || 'exact',
       inputDisplayMode: global.inputDisplayMode || 'marquee',
+      thousandSeparator: global.thousandSeparator !== false,
       hapticEnabled: global.hapticEnabled === true,
     }
     storage.set({

@@ -115,7 +115,9 @@
     "graph_desc": "靜態文本模式下長表達式靠右顯示，便於查看末尾輸入",
     "haptic": "觸感",
     "vibration": "振動反饋",
-    "haptic_desc": "開啟後點擊按鈕會觸發輕微振動"
+    "haptic_desc": "開啟後點擊按鈕會觸發輕微振動",
+    "thousand_sep": "千分位分隔",
+    "thousand_sep_desc": "計算結果的整數部分每三位加一個逗號，如 1,234,567"
   },
   "about": {
     "title": "關於",
@@ -215,7 +217,9 @@
     "loading": "請稍等",
     "input_hint": "輸入函數",
     "draw": "繪圖",
-    "edit": "編輯"
+    "edit": "編輯",
+    "empty_expr": "請先輸入函數",
+    "invalid_expr": "表達式有誤"
   },
   "statistics": {
     "title": "統計分析",

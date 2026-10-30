@@ -49,6 +49,7 @@
             {{ displayExpr }}
           </text>
         </div>
+        <text if="{{ errorHint }}" class="error-hint">{{ errorHint }}</text>
 
         <div class="buttons-container">
           <div class="button-row">
@@ -261,6 +262,8 @@
           </marquee>
         </div>
 
+        <text if="{{ errorHint }}" class="error-hint">{{ errorHint }}</text>
+
         <div class="canvas-container">
           <canvas class="graph-canvas" id="graphCanvas"></canvas>
         </div>
@@ -302,6 +305,10 @@
 <script>
   const PI = 3.141592653589793
   const E = 2.718281828459045
+  // 交给 canvas 的坐标硬上限：超过先钳制，避免 1e17 级坐标进 webview canvas
+  const COORD_LIMIT = 1e7
+  // 裁剪框外扩像素：2px 线宽的描边自然溢出画布边缘
+  const CLIP_MARGIN = 2
 
   export default {
     data: {
@@ -323,6 +330,10 @@
       // 占位文案统一在 onInit/updateDisplayExpr 里设置
       displayExpr: '',
       maxDisplayLen: 12,
+      // 绘制失败提示（空输入 / 表达式无效），编辑输入时清空
+      errorHint: '',
+      // 画布尚未渲染时的重试次数，避免 isLoading 卡死
+      retryCount: 0,
     },
 
     onInit() {
@@ -399,6 +410,8 @@
     // 关键：不能把 cos/log/sin 这类函数名截成 "co" + "s"，要么完整保留要么整体删除
     updateDisplayExpr() {
       var expr = this.expressions[this.activeExprIndex] || ''
+      // 一编辑输入就清掉上一次的绘制错误提示
+      this.errorHint = ''
       if (expr.length === 0) {
         this.displayExpr = this.$t('graph.input_hint')
         return
@@ -464,7 +477,32 @@
             num += expr[i]
             i++
           }
-          tokens.push({ type: 'num', value: parseFloat(num) })
+          // 科学计数法：1e6 / 2.5E-3。e 之后必须真的是数字，
+          // 否则 2e 仍按 2×e 处理（e 是欧拉数，不是指数）
+          if (i < expr.length && (expr[i] === 'e' || expr[i] === 'E')) {
+            var expSign = ''
+            var k = i + 1
+            if (k < expr.length && (expr[k] === '+' || expr[k] === '-')) {
+              expSign = expr[k]
+              k++
+            }
+            var expDigits = ''
+            while (k < expr.length && expr[k] >= '0' && expr[k] <= '9') {
+              expDigits += expr[k]
+              k++
+            }
+            if (expDigits.length > 0) {
+              num += 'e' + expSign + expDigits
+              i = k
+            }
+          }
+          // 非法数字字面量（"." / "5..2"）标记为坏 token，交给解析器报错，
+          // 不能靠 parseFloat 悄悄截成 5
+          if (num === '.' || num.indexOf('.') !== num.lastIndexOf('.')) {
+            tokens.push({ type: 'bad' })
+          } else {
+            tokens.push({ type: 'num', value: parseFloat(num) })
+          }
           continue
         }
         if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
@@ -520,7 +558,7 @@
     },
 
     parseTerm(tokens, pos, x) {
-      var result = this.parsePower(tokens, pos, x)
+      var result = this.parseUnary(tokens, pos, x)
       if (result.err) return result
       pos = result.pos
       var val = result.value
@@ -528,7 +566,7 @@
         var t = tokens[pos]
         if (t.type !== 'op' || (t.value !== '*' && t.value !== '/')) break
         pos++
-        var right = this.parsePower(tokens, pos, x)
+        var right = this.parseUnary(tokens, pos, x)
         if (right.err) return right
         pos = right.pos
         if (t.value === '*') val = val * right.value
@@ -537,8 +575,9 @@
       return { value: val, pos: pos }
     },
 
+    // 乘方：底数是原子，指数交给 unary（这样 2^-3 合法，且 2^3^2 右结合）
     parsePower(tokens, pos, x) {
-      var result = this.parseUnary(tokens, pos, x)
+      var result = this.parseAtom(tokens, pos, x)
       if (result.err) return result
       pos = result.pos
       var val = result.value
@@ -548,25 +587,25 @@
         tokens[pos].value === '^'
       ) {
         pos++
-        var right = this.parsePower(tokens, pos, x)
+        var right = this.parseUnary(tokens, pos, x)
         if (right.err) return right
         return { value: Math.pow(val, right.value), pos: right.pos }
       }
       return { value: val, pos: pos }
     },
 
+    // 一元负号：优先级低于乘方（-x^2 = -(x^2)，与数学写法一致），高于 * 和 /
     parseUnary(tokens, pos, x) {
       if (
         pos < tokens.length &&
         tokens[pos].type === 'op' &&
         tokens[pos].value === '-'
       ) {
-        pos++
-        var result = this.parseAtom(tokens, pos, x)
+        var result = this.parseUnary(tokens, pos + 1, x)
         if (result.err) return result
         return { value: -result.value, pos: result.pos }
       }
-      return this.parseAtom(tokens, pos, x)
+      return this.parsePower(tokens, pos, x)
     },
 
     parseAtom(tokens, pos, x) {
@@ -646,10 +685,40 @@
           var currIsNum = (curr >= '0' && curr <= '9') || curr === '.'
           var currIsOpen = curr === '('
 
-          if (prevIsNum && (currIsLetter || currIsOpen)) {
+          // 1e6 / 2.5E-3 是科学计数法，不能插乘号（交给 tokenize 处理）
+          var isExponent = false
+          if (prevIsNum && (curr === 'e' || curr === 'E')) {
+            var n1 = expr[i + 1] || ''
+            var n2 = expr[i + 2] || ''
+            if (n1 >= '0' && n1 <= '9') isExponent = true
+            else if ((n1 === '+' || n1 === '-') && n2 >= '0' && n2 <= '9') {
+              isExponent = true
+            }
+          }
+
+          if (prevIsNum && !isExponent && (currIsLetter || currIsOpen)) {
             result += '*'
           } else if (prevIsClose && (currIsNum || currIsLetter || currIsOpen)) {
             result += '*'
+          } else if (prevIsLetter && currIsNum) {
+            // x2 / pi2 这类"值后面跟值"也要补乘号，
+            // 否则尾部的数字会被解析器静默丢掉（以前 x2 画出来是 y=x）。
+            // 但 1e6 里的 e 是科学计数法的一部分，不能拆成 1*e*6
+            var prevRun = ''
+            var j2 = i - 1
+            while (
+              j2 >= 0 &&
+              ((expr[j2] >= 'a' && expr[j2] <= 'z') ||
+                (expr[j2] >= 'A' && expr[j2] <= 'Z'))
+            ) {
+              prevRun = expr[j2] + prevRun
+              j2--
+            }
+            var numPrefix =
+              j2 >= 0 && ((expr[j2] >= '0' && expr[j2] <= '9') || expr[j2] === '.')
+            if (!(numPrefix && (prevRun === 'e' || prevRun === 'E'))) {
+              result += '*'
+            }
           } else if (prevIsLetter && currIsOpen) {
             var funcName = ''
             var j = i - 1
@@ -672,22 +741,16 @@
       return result
     },
 
-    evalExpr(expr, x) {
-      // 保留旧入口兼容：未编译时回退到旧实现
-      var processed = this.preprocessExpression(expr)
-      var tokens = this.tokenize(processed)
-      if (tokens.length === 0) return 0 / 0
-      var result = this.parseExpr(tokens, 0, x)
-      if (result.err) return 0 / 0
-      return result.value
-    },
-
     // 预编译：把表达式解析为求值闭包，后续每像素只跑一次函数调用
     compileExpr(expr) {
       if (!expr) return null
       var processed = this.preprocessExpression(expr)
       var tokens = this.tokenize(processed)
       if (tokens.length === 0) return null
+      // 整体校验一次：解析必须恰好走完所有 token。以前尾部残留会被
+      // 静默忽略（x2 画成 y=x），现在按非法表达式处理，由调用方给提示
+      var check = this.parseExpr(tokens, 0, 0)
+      if (check.err || check.pos !== tokens.length) return null
       var self = this
       return function (x) {
         var result = self.parseExpr(tokens, 0, x)
@@ -707,12 +770,34 @@
       for (var i = 0; i < this.expressions.length; i++) {
         if (this.expressions[i]) hasExpr = true
       }
-      if (!hasExpr) return
-      this.clearTimer()
-      this.isLoading = true
-      this.currentStep = 'result'
+      // 空输入点"绘制"以前毫无反应，这里给一句提示
+      if (!hasExpr) {
+        this.errorHint = this.$t('graph.empty_expr')
+        return
+      }
+
       // 预编译所有表达式，避免每帧重复词法/语法分析
       this.compileAll()
+
+      // 找出解析失败的曲线：全失败就不进结果页（进去也只有一块空白画布）
+      var labels = ['f₁', 'f₂', 'f₃']
+      var names = ''
+      var validCount = 0
+      for (var k = 0; k < this.expressions.length; k++) {
+        if (!this.expressions[k]) continue
+        if (this.compiledFns[k]) {
+          validCount++
+        } else {
+          names += (names ? ', ' : '') + labels[k]
+        }
+      }
+      this.errorHint = names ? names + ' ' + this.$t('graph.invalid_expr') : ''
+      if (validCount === 0) return
+
+      this.clearTimer()
+      this.isLoading = true
+      this.retryCount = 0
+      this.currentStep = 'result'
       this.scheduleDraw()
     },
 
@@ -727,14 +812,26 @@
 
     doDrawGraph() {
       var canvas = this.$element('graphCanvas')
-      if (!canvas) return
+      // 画布可能还没渲染出来（慢设备首帧可能超过 100ms）。以前直接 return
+      // 会让 isLoading 永远为 true：遮罩不消失、整页 disabled 卡死
+      if (!canvas || !canvas.getContext) {
+        this.isLoading = false
+        if (this.currentStep === 'result' && this.retryCount < 5) {
+          this.retryCount++
+          this.scheduleDraw()
+        }
+        return
+      }
 
       // 使用 1x 物理像素，避免快应用 webview 高 DPI canvas 不稳定 / 性能差
       canvas.width = this.canvasWidth
       canvas.height = this.canvasHeight
 
       var ctx = canvas.getContext('2d')
-      if (!ctx) return
+      if (!ctx) {
+        this.isLoading = false
+        return
+      }
 
       var width = this.canvasWidth
       var height = this.canvasHeight
@@ -748,6 +845,7 @@
       this.drawCurves(ctx, width, height, centerX, centerY, scale)
 
       this.isLoading = false
+      this.retryCount = 0
     },
 
     // 绘制网格、坐标轴、刻度文字（纯静态，可独立刷新区分）
@@ -836,12 +934,10 @@
       }
     },
 
-    // 绘制函数曲线：使用预编译闭包，加入跳变检测与自适应降采样
+    // 绘制函数曲线：使用预编译闭包，加入极点检测与自适应降采样
     drawCurves(ctx, width, height, centerX, centerY, scale) {
       var colors = ['#00ff99', '#ff6b6b', '#4dabf7']
       var fns = this.compiledFns
-      // 跳变阈值：相邻样本 y 差超过半屏视为不连续
-      var jumpThreshold = (height / scale) * 0.5
 
       // 统计活动函数数量，决定采样步长：3 个函数时减半采样，避免主线程卡死
       var activeCount = 0
@@ -864,8 +960,7 @@
             scale,
             fn,
             colors[ei],
-            sampleStep,
-            jumpThreshold
+            sampleStep
           )
         } catch (e) {
           // 静默跳过出错曲线
@@ -873,6 +968,8 @@
       }
     },
 
+    // 逐列采样 + 线段裁剪：陡峭连续函数靠裁剪保留，
+    // 真极点（垂直渐近线）靠"二分后跳变是否收敛"探测抬笔
     drawSingleCurve(
       ctx,
       width,
@@ -882,52 +979,170 @@
       scale,
       fn,
       color,
-      sampleStep,
-      jumpThreshold
+      sampleStep
     ) {
       ctx.strokeStyle = color
       ctx.lineWidth = 2
       ctx.beginPath()
 
-      var started = false
-      var lastY = 0 / 0
-      var screenY
+      var self = this
+      var xmin = -CLIP_MARGIN
+      var ymin = -CLIP_MARGIN
+      var xmax = width + CLIP_MARGIN
+      var ymax = height + CLIP_MARGIN
+      // 屏幕纵向跳变超过半屏才值得怀疑极点（与 scale 解耦）
+      var jumpPx = height * 0.5
+      // 可视区纵向半高（数学单位）：两端都超出它才可能夹住渐近线
+      var halfH = height / (2 * scale)
+
+      var penDown = false
+      var hasPrev = false
+      var prevX = 0
+      var prevY = 0
+      var prevPx = 0
+      var prevSy = 0
+      var prevWild = false
+
+      // 落一段线段：先裁剪到画布矩形，只把框内坐标交给 canvas
+      var emit = function (fx, fy, tx, ty) {
+        var seg = self.clipSegment(fx, fy, tx, ty, xmin, ymin, xmax, ymax)
+        if (!seg) {
+          penDown = false
+          return
+        }
+        if (!penDown || seg[4]) ctx.moveTo(seg[0], seg[1])
+        ctx.lineTo(seg[2], seg[3])
+        penDown = !seg[4]
+      }
 
       for (var px = 0; px < width; px += sampleStep) {
         var cx = (px - centerX) / scale
         var y = fn(cx)
 
-        // 跳过 NaN / Infinity
+        // 无定义：1/x 的 0、ln/log 的非正数、sqrt 的负数
         if (y !== y || y === 1 / 0 || y === -1 / 0) {
-          started = false
-          lastY = 0 / 0
+          penDown = false
+          hasPrev = false
           continue
         }
 
-        screenY = centerY - y * scale
+        var sy = centerY - y * scale
+        // 数值保底：先钳制再裁剪，canvas 只会收到框内坐标。
+        // 被钳制的采样点等于"落在极点附近"，wild 参与后面的判定
+        var wild = sy > COORD_LIMIT || sy < -COORD_LIMIT
+        if (sy > COORD_LIMIT) sy = COORD_LIMIT
+        else if (sy < -COORD_LIMIT) sy = -COORD_LIMIT
 
-        // 越界直接跳过
-        if (screenY < -100 || screenY > height + 100) {
-          started = false
-          lastY = 0 / 0
+        if (!hasPrev) {
+          prevX = cx
+          prevY = y
+          prevPx = px
+          prevSy = sy
+          prevWild = wild
+          hasPrev = true
           continue
         }
 
-        // 跳变检测：y 值剧变说明函数不连续，抬笔重起一段
-        if (started && Math.abs(y - lastY) > jumpThreshold) {
-          started = false
+        var isBreak = false
+        if (prevWild !== wild) {
+          // 一端贴在极点、另一端还在可视区：跨越画布中心上下两侧说明中间
+          // 是垂直渐近线（如 tan(pi*x) 采样正好打在极点上），不能连
+          var syIn = wild ? prevSy : sy
+          var syFar = wild ? sy : prevSy
+          if (Math.abs(syIn - centerY) <= height * 0.5) {
+            isBreak = (syIn - centerY) * (syFar - centerY) < 0
+          }
+        } else if (Math.abs(sy - prevSy) > jumpPx) {
+          // 只有两端都跑出可视纵向范围时才可能是渐近线；
+          // 视图内的陡峭段直接连线（y=300x 之类以前整条画不出的原因）
+          if (Math.abs(y) > halfH && Math.abs(prevY) > halfH) {
+            isBreak = this.isPoleJump(fn, prevX, prevY, cx, y)
+          }
         }
 
-        if (!started) {
-          ctx.moveTo(px, screenY)
-          started = true
+        if (isBreak) {
+          penDown = false
         } else {
-          ctx.lineTo(px, screenY)
+          emit(prevPx, prevSy, px, sy)
         }
-        lastY = y
+
+        prevX = cx
+        prevY = y
+        prevPx = px
+        prevSy = sy
+        prevWild = wild
       }
 
       ctx.stroke()
+    },
+
+    // 可疑的一对采样是否跨越极点：连续函数二分后跳变至少减半，
+    // 跨极点时跳变不收敛（甚至变大）。比"内部极值"判据更稳，
+    // 也能认出极点贴着采样点的情形（如 tan(x) 的部分极点）
+    isPoleJump(fn, x1, y1, x2, y2) {
+      var d1 = Math.abs(y2 - y1)
+      if (d1 === 0) return false
+      var xm = (x1 + x2) * 0.5
+      var ym = fn(xm)
+      var ya = fn((x1 + xm) * 0.5)
+      var yb = fn((xm + x2) * 0.5)
+      if (!this.isFiniteNum(ym)) return true
+      if (!this.isFiniteNum(ya)) return true
+      if (!this.isFiniteNum(yb)) return true
+      var sub = Math.abs(ym - ya)
+      if (Math.abs(ya - y1) > sub) sub = Math.abs(ya - y1)
+      if (Math.abs(yb - ym) > sub) sub = Math.abs(yb - ym)
+      if (Math.abs(y2 - yb) > sub) sub = Math.abs(y2 - yb)
+      return sub > d1 * 0.5
+    },
+
+    isFiniteNum(v) {
+      return v === v && v !== 1 / 0 && v !== -1 / 0
+    },
+
+    // Liang–Barsky：整段在框外返回 null，否则 [x0,y0,x1,y1,是否被裁]
+    clipSegment(x0, y0, x1, y1, xmin, ymin, xmax, ymax) {
+      var dx = x1 - x0
+      var dy = y1 - y0
+      var t0 = 0
+      var t1 = 1
+      var p
+      var q
+      var r
+      for (var i = 0; i < 4; i++) {
+        if (i === 0) {
+          p = -dx
+          q = x0 - xmin
+        } else if (i === 1) {
+          p = dx
+          q = xmax - x0
+        } else if (i === 2) {
+          p = -dy
+          q = y0 - ymin
+        } else {
+          p = dy
+          q = ymax - y0
+        }
+        if (p === 0) {
+          if (q < 0) return null
+        } else {
+          r = q / p
+          if (p < 0) {
+            if (r > t1) return null
+            if (r > t0) t0 = r
+          } else {
+            if (r < t0) return null
+            if (r < t1) t1 = r
+          }
+        }
+      }
+      return [
+        x0 + t0 * dx,
+        y0 + t0 * dy,
+        x0 + t1 * dx,
+        y0 + t1 * dy,
+        t0 > 0 || t1 < 1,
+      ]
     },
 
     zoomIn() {
@@ -1057,6 +1272,16 @@
     }
   }
 
+  // 绘制失败提示（空输入 / 表达式无效）：红色小字，右对齐贴在输入框下方
+  .error-hint {
+    width: 100%;
+    font-size: 6.5 * $size-factor;
+    color: #ff6b6b;
+    text-align: right;
+    margin-top: -4 * $size-factor;
+    margin-bottom: 4 * $size-factor;
+  }
+
   .buttons-container {
     width: 100%;
     display: flex;
@@ -1124,16 +1349,6 @@
     text {
       color: #1976d2;
       font-weight: 500;
-    }
-  }
-
-  .btn-equals {
-    background-color: $brand;
-
-    text {
-      font-size: 7 * $size-factor;
-      font-weight: 600;
-      color: $white;
     }
   }
 

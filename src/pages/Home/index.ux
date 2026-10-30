@@ -10,7 +10,7 @@
               </marquee>
             </div>
             <div class="scroll-display">
-              <marquee class="main-display">{{ display }}</marquee>
+              <marquee class="main-display">{{ displayText }}</marquee>
             </div>
           </div>
 
@@ -279,6 +279,25 @@
     return num === Math.floor(num)
   }
 
+  // 千分位：只处理十进制数字串（可带负号 / 小数 / 末尾小数点），
+  // Error、"1e-7" 这类科学计数法原样返回
+  function addThousandSep(str) {
+    if (!/^-?\d+(\.\d*)?$/.test(str)) return str
+    var neg = str.charAt(0) === '-'
+    var body = neg ? str.slice(1) : str
+    var dot = body.indexOf('.')
+    var intPart = dot === -1 ? body : body.slice(0, dot)
+    var rest = dot === -1 ? '' : body.slice(dot)
+    var out = ''
+    var count = 0
+    for (var i = intPart.length - 1; i >= 0; i--) {
+      out = intPart.charAt(i) + out
+      count++
+      if (count % 3 === 0 && i > 0) out = ',' + out
+    }
+    return (neg ? '-' : '') + out + rest
+  }
+
   function evaluateExpression(expr) {
     if (expr.length === 0) return 0
     if (expr.length === 1) return parseFloat(expr[0])
@@ -365,7 +384,9 @@
 
   export default {
     data: {
+      // display 存原始数字串（参与运算 / 写历史），displayText 是它的显示态
       display: '0',
+      displayText: '0',
       history: '',
       operator: '',
       waitingForOperand: false,
@@ -391,7 +412,7 @@
 
     onShow() {
       if (global.pendingHistoryItem) {
-        this.display = global.pendingHistoryItem.result
+        this.setDisplay(global.pendingHistoryItem.result)
         this.expression = [global.pendingHistoryItem.result]
         this.waitingForOperand = true
         this.history = global.pendingHistoryItem.expression + ' ='
@@ -399,6 +420,16 @@
         this.pendingFunction = ''
         global.pendingHistoryItem = null
       }
+      // 设置页可能改过千分位开关，回到首页时重新格式化一次
+      this.setDisplay(this.display)
+    },
+
+    // display 始终是原始数字串（parseFloat / 退格 / 历史都用它），
+    // displayText 只负责显示：开了千分位就对整数部分插逗号
+    setDisplay(value) {
+      this.display = value
+      this.displayText =
+        global.thousandSeparator === true ? addThousandSep(value) : value
     },
 
     inputNumber(num) {
@@ -408,14 +439,14 @@
       }
 
       if (this.waitingForOperand) {
-        this.display = num
+        this.setDisplay(num)
         this.waitingForOperand = false
         if (this.expression.length === 1) {
           this.expression = []
           this.history = ''
         }
       } else {
-        this.display = this.display === '0' ? num : this.display + num
+        this.setDisplay(this.display === '0' ? num : this.display + num)
       }
     },
 
@@ -426,14 +457,14 @@
       }
 
       if (this.waitingForOperand) {
-        this.display = '0.'
+        this.setDisplay('0.')
         this.waitingForOperand = false
         if (this.expression.length === 1) {
           this.expression = []
           this.history = ''
         }
       } else if (this.display.indexOf('.') === -1) {
-        this.display += '.'
+        this.setDisplay(this.display + '.')
       }
     },
 
@@ -532,20 +563,31 @@
 
       const exprStr = this.buildHistory().replace(/ $/, '') + ' ='
       const result = evaluateExpression(this.expression)
+      const formatted = this.formatResult(result)
 
-      if (result === 'Error' || !isFinite(result)) {
-        this.display = 'Error'
-        this.error = true
-        this.expression = []
+      // 除零/无效运算，以及结果超出显示范围（|x| > 1e15）都统一进 Error 态，
+      // 不能把字符串 'Error' 当结果写进表达式和历史（以前会污染历史）
+      if (result === 'Error' || formatted === 'Error') {
+        this.setError()
         this.history = ''
         return
       }
 
       this.history = `${exprStr}`
-      this.addToHistory(exprStr.replace(' =', ''), this.formatResult(result))
-      this.display = this.formatResult(result)
-      this.expression = [this.formatResult(result)]
+      this.addToHistory(exprStr.replace(' =', ''), formatted)
+      this.setDisplay(formatted)
+      this.expression = [formatted]
       this.waitingForOperand = true
+    },
+
+    // 运算失败的统一收口：置 Error 态并清空表达式，
+    // 避免 'Error' 字符串被当成操作数继续参与运算
+    setError() {
+      this.setDisplay('Error')
+      this.error = true
+      this.expression = []
+      this.pendingFunction = ''
+      this.waitingForOperand = false
     },
 
     formatResult(num) {
@@ -567,7 +609,7 @@
 
     clearAll() {
       global.triggerHaptic()
-      this.display = '0'
+      this.setDisplay('0')
       this.history = ''
       this.operator = ''
       this.waitingForOperand = false
@@ -576,24 +618,36 @@
       this.pendingFunction = ''
     },
 
+    // 结果态（表达式已收缩为单个数值）下修改屏幕上的数字，等于开新的一轮计算：
+    // 丢弃旧结果，否则 "5+5= → ⌫ 显示 1 → ×2 =" 仍会按 10 算
+    dropFinishedResult() {
+      if (!this.waitingForOperand || this.expression.length !== 1) return
+      this.expression = []
+      this.history = ''
+    },
+
     backspace() {
       global.triggerHaptic()
       if (this.error) return
+      this.dropFinishedResult()
+      this.waitingForOperand = false
       if (
         this.display.length === 1 ||
         (this.display.length === 2 && this.display.startsWith('-'))
       ) {
-        this.display = '0'
+        this.setDisplay('0')
       } else {
-        this.display = this.display.slice(0, -1)
+        this.setDisplay(this.display.slice(0, -1))
       }
     },
 
     toggleSign() {
       global.triggerHaptic()
       if (this.error) return
+      this.dropFinishedResult()
+      this.waitingForOperand = false
       const value = parseFloat(this.display)
-      this.display = this.formatResult(-value)
+      this.setDisplay(this.formatResult(-value))
     },
 
     toggleAdvanced() {
@@ -607,10 +661,8 @@
         this.clearAll()
       }
 
-      if (this.pendingFunction) {
-        this.executePendingFunction()
-      }
-
+      // 连按两个函数键 = 换一个函数。不能先把上一个函数算掉，
+      // 否则历史里会多出一条 "sin(0) = 0" 这类幽灵记录
       this.pendingFunction = func
       this.history = `${func}(`
       this.waitingForOperand = true
@@ -634,12 +686,6 @@
           result = tan(value)
           break
         case 'sqrt':
-          if (value < 0) {
-            this.display = 'Error'
-            this.error = true
-            this.pendingFunction = ''
-            return
-          }
           result = Math.sqrt(value)
           break
         case 'square':
@@ -649,21 +695,9 @@
           result = Math.pow(value, 3)
           break
         case 'log':
-          if (value <= 0) {
-            this.display = 'Error'
-            this.error = true
-            this.pendingFunction = ''
-            return
-          }
           result = Math.log10(value)
           break
         case 'ln':
-          if (value <= 0) {
-            this.display = 'Error'
-            this.error = true
-            this.pendingFunction = ''
-            return
-          }
           result = Math.log(value)
           break
         default:
@@ -673,15 +707,20 @@
 
       const formattedResult = this.formatResult(result)
       const expressionStr = `${funcName}(${value})`
-      this.display = formattedResult
+      this.history = `${expressionStr} =`
+
+      // tan(90°)、sqrt(-1)、ln(0)、超范围结果等统一进 Error 态：
+      // 以前 sqrt/log/ln 单独拦，tan 和超范围结果会把 'Error' 留在表达式里
+      if (formattedResult === 'Error') {
+        this.setError()
+        return
+      }
+
+      this.setDisplay(formattedResult)
       this.expression = [formattedResult]
       this.waitingForOperand = true
       this.pendingFunction = ''
-      this.history = `${expressionStr} =`
-
-      if (formattedResult !== 'Error' && isFinite(result)) {
-        this.addToHistory(expressionStr, formattedResult)
-      }
+      this.addToHistory(expressionStr, formattedResult)
     },
 
     inputConstant(constant) {
@@ -704,21 +743,30 @@
 
       const formattedValue = this.formatResult(value)
 
+      // 常量作为挂起函数的实参：sin → π → = 得到 sin(π)，
+      // 否则结果会先入表达式、再被常量追加，拼成三段垃圾
       if (this.pendingFunction) {
+        this.setDisplay(formattedValue)
         this.executePendingFunction()
-        const funcResult = this.display
-        this.expression.push(funcResult)
+        return
       }
 
-      this.display = formattedValue
+      // 结果态（表达式已收缩为单个数值）下输入常量 = 开启新一轮计算，
+      // 与数字键一致；否则等号会把常量追加上去，预览行出现
+      // "123.231 3.14159265359 =" 这种拼接
+      this.dropFinishedResult()
+
+      this.setDisplay(formattedValue)
       this.waitingForOperand = false
     },
 
     inputPercent() {
       global.triggerHaptic()
       if (this.error) return
+      this.dropFinishedResult()
+      this.waitingForOperand = false
       const value = parseFloat(this.display)
-      this.display = this.formatResult(value / 100)
+      this.setDisplay(this.formatResult(value / 100))
     },
 
     addToHistory(expression, result) {

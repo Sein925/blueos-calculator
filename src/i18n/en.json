@@ -115,7 +115,9 @@
     "graph_desc": "Static mode shows long expressions aligned right for easier viewing",
     "haptic": "Haptic",
     "vibration": "Vibration",
-    "haptic_desc": "Enables vibration feedback on button tap"
+    "haptic_desc": "Enables vibration feedback on button tap",
+    "thousand_sep": "Thousands separator",
+    "thousand_sep_desc": "Groups the integer part of results by three, e.g. 1,234,567"
   },
   "about": {
     "title": "About",
@@ -215,7 +217,9 @@
     "loading": "Please wait",
     "input_hint": "Enter function",
     "draw": "Draw",
-    "edit": "Edit"
+    "edit": "Edit",
+    "empty_expr": "Enter a function first",
+    "invalid_expr": "is invalid"
   },
   "statistics": {
     "title": "Statistics",

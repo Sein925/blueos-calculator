@@ -251,16 +251,6 @@
     }
   }
 
-  .input-label {
-    width: 100%;
-    margin-bottom: 1 * $size-factor;
-  }
-
-  .input-label text {
-    font-size: 6 * $size-factor;
-    color: $text-secondary;
-  }
-
   .input-value {
     width: 100%;
     display: flex;

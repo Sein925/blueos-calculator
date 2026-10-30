@@ -2,7 +2,6 @@
 type Router = typeof import('@blueos.app.appmanager.router');
 type Storage = typeof import('@blueos.storage.storage');
 type Fetch = typeof import('@blueos.network.fetch');
-type Device = typeof import('@blueos.hardware.deviceInfo');
 type App = typeof import('@blueos.app.context');
 
 interface HistoryItem {
@@ -14,12 +13,12 @@ declare const global: {
   router: Router;
   storage: Storage;
   fetch: Fetch;
-  device: Device;
   app: App;
   calculatorHistory: HistoryItem[];
   angleMode: 'deg' | 'rad';
   equationOutputMode: 'exact' | 'decimal';
   inputDisplayMode: 'marquee' | 'static';
+  thousandSeparator: boolean;
   hapticEnabled: boolean;
   vibrator: typeof import('@blueos.hardware.vibrator.vibrator');
   triggerHaptic: () => void;
